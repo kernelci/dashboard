@@ -1,5 +1,6 @@
 """Subscription YAML and metrics rules. Sending behavior is unchanged."""
 
+from dataclasses import dataclass
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Annotated, Literal
@@ -14,6 +15,8 @@ from pydantic import (
     ValidationError,
     model_validator,
 )
+
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 IssueKind = Literal["build", "boot", "test"]
 
@@ -36,11 +39,20 @@ def validate_address(value: str) -> str:
 Address = Annotated[str, AfterValidator(validate_address)]
 
 
+class NewIssuesSubscription(BaseModel):
+    """Hourly new-issues summary opt-in. The issues list is a separate record."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    issue_types: list[IssueKind] = Field(min_length=1)
+
+
 class Recipient(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     email: Address
     issues: list[IssueKind] | None = Field(default=None, min_length=1)
+    new_issues: NewIssuesSubscription | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -54,8 +66,60 @@ _RECIPIENTS = TypeAdapter(list[Recipient])
 
 
 def cc_addresses(recipients: list) -> list[str]:
-    """Addresses passed to current mails."""
+    """Addresses passed to current mails. Ignores a new_issues block."""
     return [item.email for item in _RECIPIENTS.validate_python(recipients)]
+
+
+@dataclass(frozen=True)
+class NewIssueSubscriber:
+    email: str
+    issue_types: frozenset[IssueKind]
+    tree_url: str | None = None
+    hardware: str | None = None
+    origin: str | None = None
+
+
+def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
+    """Recipients that opted into the hourly new-issues summary.
+
+    A plain address or an issues list does not opt in. Tree scope is the git
+    URL. Hardware scope is the platform name and origin.
+    """
+    subscribers: list[NewIssueSubscriber] = []
+    for path in _yaml_files(directory):
+        data = _load_mapping(path)
+        hardware_file = is_hardware_filename(path.name)
+        model = TypeAdapter(
+            dict[str, HardwareSubscription]
+            if hardware_file
+            else dict[str, TreeSubscription]
+        )
+        try:
+            parsed = model.validate_python(data)
+        except ValidationError as exc:
+            raise _validation_error(path, exc) from exc
+        for name, body in parsed.items():
+            for recipient in body.default_recipients:
+                if recipient.new_issues is None:
+                    continue
+                if hardware_file:
+                    subscribers.append(
+                        NewIssueSubscriber(
+                            email=recipient.email,
+                            issue_types=frozenset(recipient.new_issues.issue_types),
+                            hardware=name,
+                            origin=body.origin or DEFAULT_ORIGIN,
+                        )
+                    )
+                else:
+                    subscribers.append(
+                        NewIssueSubscriber(
+                            email=recipient.email,
+                            issue_types=frozenset(recipient.new_issues.issue_types),
+                            tree_url=body.url,
+                        )
+                    )
+    return subscribers
 
 
 class TreeSubscription(BaseModel):

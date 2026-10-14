@@ -12,6 +12,7 @@ from kernelCI_app.typeModels.notificationSubscriptions import (
     cc_addresses,
     load_metrics_rules,
     load_subscriptions,
+    new_issue_subscribers,
 )
 
 NOTIFICATIONS = Path(__file__).resolve().parents[4] / "data" / "notifications"
@@ -57,6 +58,122 @@ def test_invalid_plain_address_names_the_address(tmp_path):
     assert error.file == "qcs6490_hardware.yaml"
     assert error.field == "qcs6490-rb3gen2.default_recipients.0.email"
     assert "invalid email address: Trilok Soni <not-an-email>" in str(error)
+
+
+def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
+    _write(
+        tmp_path,
+        "sound.yaml",
+        {
+            "broonie-sound": {
+                "url": "https://example.com/sound.git",
+                "default_recipients": [
+                    "plain@example.com",
+                    {"email": "build-only@example.com", "issues": ["build"]},
+                    {
+                        "email": "broonie@kernel.org",
+                        "issues": ["build"],
+                        "new_issues": {"issue_types": ["boot", "test"]},
+                    },
+                ],
+            }
+        },
+    )
+    _write(
+        tmp_path,
+        "board_hardware.yaml",
+        {
+            "qcs6490-rb3gen2": {
+                "default_recipients": [
+                    {
+                        "email": "tsoni@quicinc.com",
+                        "new_issues": {"issue_types": ["boot"]},
+                    }
+                ],
+            }
+        },
+    )
+
+    subscribers = new_issue_subscribers(tmp_path)
+    listed = [
+        (item.email, item.issue_types, item.tree_url, item.hardware, item.origin)
+        for item in subscribers
+    ]
+    assert listed == [
+        (
+            "tsoni@quicinc.com",
+            frozenset({"boot"}),
+            None,
+            "qcs6490-rb3gen2",
+            "maestro",
+        ),
+        (
+            "broonie@kernel.org",
+            frozenset({"boot", "test"}),
+            "https://example.com/sound.git",
+            None,
+            None,
+        ),
+    ]
+    assert cc_addresses(
+        [
+            {
+                "email": "broonie@kernel.org",
+                "issues": ["build"],
+                "new_issues": {"issue_types": ["boot"]},
+            }
+        ]
+    ) == ["broonie@kernel.org"]
+
+
+def test_current_subscription_files_have_no_new_issues_subscribers():
+    assert new_issue_subscribers(SUBSCRIPTIONS) == []
+
+
+def test_invalid_new_issues_type_names_file_and_field(tmp_path):
+    _write(
+        tmp_path,
+        "tree.yaml",
+        {
+            "demo": {
+                "url": "https://example.com/linux.git",
+                "default_recipients": [
+                    {
+                        "email": "person@example.com",
+                        "new_issues": {"issue_types": ["flaky"]},
+                    }
+                ],
+            }
+        },
+    )
+    with pytest.raises(NotificationConfigError) as raised:
+        load_subscriptions(tmp_path)
+    error = raised.value
+    assert error.file == "tree.yaml"
+    assert "new_issues" in error.field
+    assert "issue_types" in error.field
+
+
+def test_empty_new_issues_types_fail(tmp_path):
+    _write(
+        tmp_path,
+        "tree.yaml",
+        {
+            "demo": {
+                "url": "https://example.com/linux.git",
+                "default_recipients": [
+                    {
+                        "email": "person@example.com",
+                        "new_issues": {"issue_types": []},
+                    }
+                ],
+            }
+        },
+    )
+    with pytest.raises(NotificationConfigError) as raised:
+        new_issue_subscribers(tmp_path)
+    assert raised.value.file == "tree.yaml"
+    assert "issue_types" in raised.value.field
 
 
 def test_invalid_issue_kind_names_file_and_field(tmp_path):
