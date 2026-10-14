@@ -151,13 +151,24 @@ def _issues_of_type(issues: list[dict], issue_type: str) -> list[dict]:
     return [issue for issue in issues if issue["type"] == issue_type]
 
 
-def look_for_new_issues(*, service, signup_folder, email_args):
+def look_for_new_issues(
+    *,
+    service,
+    signup_folder,
+    email_args,
+    issue_report_origins=None,
+    issue_report_types=None,
+):
     if get_running_instance() == "staging":
         print("This command only runs on production or dev environments.")
         return
 
     if not signup_folder:
         signup_folder = SIGNUP_FOLDER
+    if issue_report_origins is None:
+        issue_report_origins = ["maestro"]
+    if issue_report_types is None:
+        issue_report_types = ["build"]
 
     subscribers = []
     if not email_args.ignore_recipients:
@@ -233,14 +244,17 @@ def look_for_new_issues(*, service, signup_folder, email_args):
 
     email_args.add_mailing_lists = True
     email_args.update = True
-    for issue in new_build_issues:
-        if issue["origin"] == "maestro":
-            generate_issue_report(
-                service=service,
-                issue_id=issue["id"],
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
+    for issue in new_build_issues + new_boot_issues + new_test_issues:
+        if issue["origin"] not in issue_report_origins:
+            continue
+        if issue["type"] not in issue_report_types:
+            continue
+        generate_issue_report(
+            service=service,
+            issue_id=issue["id"],
+            email_args=email_args,
+            signup_folder=signup_folder,
+        )
 
 
 def ask_ignore_issue():
@@ -1111,6 +1125,24 @@ class Command(BaseCommand):
             help="Limit checkout summary to specific origins (summary only, comma-separated list)",
         )
         parser.add_argument(
+            "--issue-report-origins",
+            type=lambda s: [origin.strip() for origin in s.split(",")],
+            default=["maestro"],
+            help=(
+                "Origins that get an automatic regression report "
+                "(new_issues only, comma-separated, default: maestro)"
+            ),
+        )
+        parser.add_argument(
+            "--issue-report-types",
+            type=lambda s: [issue_type.strip() for issue_type in s.split(",")],
+            default=["build"],
+            help=(
+                "Issue types that get an automatic regression report "
+                "(new_issues only, comma-separated, default: build)"
+            ),
+        )
+        parser.add_argument(
             "--skip-sent-reports",
             action="store_true",
             help="Skip reports that have already been sent (summary only)",
@@ -1165,6 +1197,8 @@ class Command(BaseCommand):
                     service=service,
                     email_args=email_args,
                     signup_folder=signup_folder,
+                    issue_report_origins=options.get("issue_report_origins"),
+                    issue_report_types=options.get("issue_report_types"),
                 )
 
             case "issue_report":

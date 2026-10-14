@@ -45,7 +45,15 @@ def _email_args(**overrides):
     return args
 
 
-def _run(issues, subscribers, email_args, *, other_issues=None):
+def _run(
+    issues,
+    subscribers,
+    email_args,
+    *,
+    other_issues=None,
+    issue_report_origins=None,
+    issue_report_types=None,
+):
     def query(*, include_other_tests=False):
         if include_other_tests:
             return other_issues or []
@@ -65,6 +73,8 @@ def _run(issues, subscribers, email_args, *, other_issues=None):
             service=object(),
             signup_folder="notifications/subscriptions",
             email_args=email_args,
+            issue_report_origins=issue_report_origins,
+            issue_report_types=issue_report_types,
         )
     return fetched, send, regression
 
@@ -170,6 +180,35 @@ def test_test_subscription_fetches_other_tests_only_for_that_copy():
     assert "test-1" in send.call_args.kwargs["report"]["content"]
     assert "Test regressions" in send.call_args.kwargs["report"]["content"]
     regression.assert_not_called()
+
+
+def test_issue_report_flags_select_origin_and_type():
+    issues = [
+        _issue(id="build-maestro"),
+        _issue(id="boot-maestro", build_id=None, test_id="t1"),
+        _issue(id="build-microsoft", origin="microsoft"),
+    ]
+    _, _, boot_only = _run(
+        issues,
+        [],
+        _email_args(send=True),
+        issue_report_origins=["maestro"],
+        issue_report_types=["boot"],
+    )
+    assert [call.kwargs["issue_id"] for call in boot_only.call_args_list] == [
+        "boot-maestro"
+    ]
+
+    _, _, microsoft_build = _run(
+        issues,
+        [],
+        _email_args(send=True),
+        issue_report_origins=["microsoft"],
+        issue_report_types=["build"],
+    )
+    assert [call.kwargs["issue_id"] for call in microsoft_build.call_args_list] == [
+        "build-microsoft"
+    ]
 
 
 def test_ignore_recipients_skips_subscription_copies():

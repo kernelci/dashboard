@@ -55,6 +55,8 @@ These options are available for all actions and are always optional:
 | `--update-storage` / `-u` | `issue_report` | Optional | Update JSON storage while generating/sending reports |
 | `--summary-signup-folder` | `summary` | Optional | Alternative signup folder under `/backend/data` |
 | `--summary-origins` | `summary` | Optional | Comma-separated list to limit to specific origins |
+| `--issue-report-origins` | `new_issues` | Optional | Comma-separated origins for the automatic regression report. Default: `maestro` |
+| `--issue-report-types` | `new_issues` | Optional | Comma-separated issue types (`build`, `boot`, `test`) for the automatic regression report. Default: `build` |
 | `--skip-sent-reports` | `summary` | Optional | Skip reports that have already been sent |
 | `--hardware-origins` | `hardware_summary` | Optional | Comma-separated list to limit to specific origins |
 | `--tree` | `fake_report` | Optional | Add recipients for the given tree name |
@@ -144,6 +146,8 @@ default_recipients:
 ```
 
 `test` issues are not part of the community mail. They are included only in copies whose `issue_types` list `test`.
+
+The same run can also send a `[REGRESSION]` report. Without `--issue-report-origins` or `--issue-report-types`, that report stays limited to build issues from `maestro`. Boot issues and other origins are sent only when a flag lists them. The flags do not change who is on To or Cc: the list stays on To, the tree's `default_recipients` stay on Cc, and `regressions@lists.linux.dev` plus regzbot stay on mainline, next, and stable.
 
 Hardware files keep plain address strings. Those addresses receive the Monday board summary and no issue mail, so there is no kind to list:
 
