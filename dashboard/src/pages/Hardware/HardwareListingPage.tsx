@@ -14,6 +14,7 @@ import type {
 import {
   useHardwareListing,
   useHardwareListingByRevision,
+  useHardwareRegistrySync,
   useHardwareSelectors,
 } from '@/api/hardware';
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
@@ -30,6 +31,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import type { SearchIntent } from '@/lib/intent';
 
+import { HardwareRegistrySync } from './HardwareRegistrySync';
 import { HardwareTable } from './HardwareTable';
 import {
   decodeBranchValue,
@@ -84,6 +86,7 @@ const HardwareListingPage = ({
   const { data: selectorsData, status: selectorsStatus } = useHardwareSelectors(
     urlFromMap.search,
   );
+  const { data: registrySync } = useHardwareRegistrySync();
 
   const trees = Array.isArray(selectorsData?.trees)
     ? selectorsData.trees
@@ -343,6 +346,10 @@ const HardwareListingPage = ({
           onTreeChange={onTreeChange}
           onClearSelection={onClearSelection}
         />
+
+        {registrySync?.synced_at ? (
+          <HardwareRegistrySync sync={registrySync} />
+        ) : null}
       </div>
     </>
   );
