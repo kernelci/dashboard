@@ -246,6 +246,10 @@ export const messages = {
     'hardwareListing.clearSelection': 'Clear selection',
     'hardwareListing.description': 'List of hardware from kernel tests',
     'hardwareListing.notFound': 'No hardware information available',
+    'hardwareListing.registryFiles': 'Registry files',
+    'hardwareListing.registrySyncDelay':
+      'Updates once a day. A file just merged upstream can keep its previous hash until the next sync.',
+    'hardwareListing.registryTitle': 'Hardware registry',
     'hardwareListing.revisionEmpty':
       'The selected revision has no hardware rows yet. Data ingestion may still be in progress.',
     'hardwareListing.revisionSelectorEmpty': 'No revision found.',

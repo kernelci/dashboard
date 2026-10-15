@@ -5,6 +5,7 @@ import { useSearch } from '@tanstack/react-router';
 
 import type {
   HardwareListingResponse,
+  HardwareRegistrySyncResponse,
   HardwareRevisionSelection,
   HardwareSelectorsResponse,
 } from '@/types/hardware';
@@ -47,6 +48,22 @@ const fetchHardwareListing = async (
 
   return data;
 };
+
+const fetchHardwareRegistrySync =
+  async (): Promise<HardwareRegistrySyncResponse> => {
+    return RequestData.get<HardwareRegistrySyncResponse>(
+      '/api/hardware/registry-sync/',
+    );
+  };
+
+export const useHardwareRegistrySync =
+  (): UseQueryResult<HardwareRegistrySyncResponse> => {
+    return useQuery({
+      queryKey: ['hardwareRegistrySync'],
+      queryFn: fetchHardwareRegistrySync,
+      refetchOnWindowFocus: false,
+    });
+  };
 
 export const useHardwareListing = (
   startTimestampInSeconds: number,
