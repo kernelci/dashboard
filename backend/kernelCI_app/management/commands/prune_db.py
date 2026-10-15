@@ -23,6 +23,13 @@ HARDWARE_DAILY_TABLES = ("hardware_daily_builds", "hardware_daily_tests")
 VALID_TABLES = PRUNABLE_TABLES + HARDWARE_DAILY_TABLES
 
 
+def format_count_table(counts):
+    w = max(map(len, counts)) + 1
+    lines = [f"* {t + ':':<{w}}{n:>8}" for t, n in counts.items()]
+    lines += ["-" * (w + 10), f"* {'total:':<{w}}{sum(counts.values()):>8}"]
+    return "\n".join(lines)
+
+
 class Command(BaseCommand):
     help = "Prune checkouts, builds and tests older than a given age"
 
@@ -39,6 +46,7 @@ class Command(BaseCommand):
             type=lambda s: [origin.strip() for origin in s.split(",")],
             default=[],
             help="Limit age-based pruning to specific origins (comma-separated). "
+            "Raw rows match origin; hardware_daily_* match checkout_origin. "
             "Children of pruned parents are removed regardless of origin. "
             "If not provided, any origin is considered.",
         )
@@ -126,29 +134,24 @@ class Command(BaseCommand):
                 counts = {
                     t: self._count(cursor, temp_tables[t]) for t in selected_tables
                 }
-                daily_counts = {
-                    t: self._count_hardware_daily(cursor, t, cutoff.date())
+                counts |= {
+                    t: self._count_hardware_daily(cursor, t, cutoff.date(), origins)
                     for t in selected_daily_tables
                 }
-                total = sum(counts.values()) + sum(daily_counts.values())
+                total = sum(counts.values())
 
-                lines = [f"Rows older than {cutoff.isoformat()}:"]
-                lines += [f"* {t}:\t{counts[t]:>8}" for t in selected_tables]
-                lines += [
-                    f"* {t}:\t{daily_counts[t]:>8}" for t in selected_daily_tables
-                ]
-                lines += ["----------------------", f"* total:\t{total:>8}"]
+                self.stdout.write(f"Rows older than {cutoff.isoformat()}:")
+                self.stdout.write(format_count_table(counts))
                 if selected_tables:
-                    lines.append(
+                    self.stdout.write(
                         "Note: counts include children cascaded from pruned parents."
                     )
                 if protect_incidents and selected_tables:
-                    lines.append("Note: rows linked to an incident are kept.")
-                if daily_counts:
-                    lines.append(
+                    self.stdout.write("Note: rows linked to an incident are kept.")
+                if selected_daily_tables:
+                    self.stdout.write(
                         "Note: hardware daily rows are pruned by their own checkout_day."
                     )
-                self.stdout.write("\n".join(lines))
 
                 if total == 0:
                     self.stdout.write(self.style.SUCCESS("Nothing to prune."))
@@ -175,7 +178,7 @@ class Command(BaseCommand):
                 deleted = 0
                 for table in selected_daily_tables:
                     deleted += self._batch_delete_hardware_daily(
-                        cursor, table, cutoff.date(), options["batch_size"]
+                        cursor, table, cutoff.date(), options["batch_size"], origins
                     )
 
                 # Child-first: a crash must not leave orphans.
@@ -273,22 +276,31 @@ class Command(BaseCommand):
             self.stdout.write(f"Deleted {table}(n={deleted}) total={deleted_total}")
         return deleted_total
 
-    def _count_hardware_daily(self, cursor, table, cutoff_day):
-        cursor.execute(
-            f'SELECT COUNT(*) FROM "{table}" WHERE checkout_day < %(cutoff_day)s',
-            {"cutoff_day": cutoff_day},
-        )
+    def _count_hardware_daily(self, cursor, table, cutoff_day, origins):
+        sql = f'SELECT COUNT(*) FROM "{table}" WHERE checkout_day < %(cutoff_day)s'
+        params = {"cutoff_day": cutoff_day}
+        if origins:
+            sql += " AND checkout_origin = ANY(%(origins)s)"
+            params["origins"] = origins
+        cursor.execute(sql, params)
         return cursor.fetchone()[0]
 
-    def _batch_delete_hardware_daily(self, cursor, table, cutoff_day, batch_size):
+    def _batch_delete_hardware_daily(
+        self, cursor, table, cutoff_day, batch_size, origins
+    ):
+        where = "checkout_day < %(cutoff_day)s"
+        params = {"cutoff_day": cutoff_day, "batch_size": batch_size}
+        if origins:
+            where += " AND checkout_origin = ANY(%(origins)s)"
+            params["origins"] = origins
         sql = (
             f'DELETE FROM "{table}" WHERE ctid IN ('
-            f'SELECT ctid FROM "{table}" WHERE checkout_day < %(cutoff_day)s '
+            f'SELECT ctid FROM "{table}" WHERE {where} '
             f"LIMIT %(batch_size)s)"
         )
         deleted_total = 0
         while True:
-            cursor.execute(sql, {"cutoff_day": cutoff_day, "batch_size": batch_size})
+            cursor.execute(sql, params)
             deleted = cursor.rowcount
             if deleted == 0:
                 break
