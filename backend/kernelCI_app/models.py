@@ -37,6 +37,41 @@ class Labs(models.Model):
         return self.name
 
 
+class LabDaily(models.Model):
+    id = models.AutoField(primary_key=True)
+    day = models.DateField()
+    origin = models.CharField(max_length=100)
+    lab = models.ForeignKey(
+        Labs,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
+
+    build_pass = models.IntegerField(default=0)
+    build_failed = models.IntegerField(default=0)
+    build_inc = models.IntegerField(default=0)
+
+    boot_pass = models.IntegerField(default=0)
+    boot_failed = models.IntegerField(default=0)
+    boot_inc = models.IntegerField(default=0)
+
+    test_pass = models.IntegerField(default=0)
+    test_failed = models.IntegerField(default=0)
+    test_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "lab_daily"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["day", "origin", "lab"],
+                name="lab_daily_grain",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["origin", "day"], name="lab_daily_origin_day"),
+        ]
+
+
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
