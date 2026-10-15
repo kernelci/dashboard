@@ -19,6 +19,7 @@ Human onboarding and contribution process live in [docs/Onboarding.md](docs/Onbo
 | [thermos](.agents/skills/thermos/SKILL.md) | Run both thermo reviews, then synthesize |
 | [typescript-best-practices](.agents/skills/typescript-best-practices/SKILL.md) | Editing `.ts` / `.tsx` |
 | [unslop](.agents/skills/unslop/SKILL.md) | Cut AI tells from writing |
+| [fix-dependabot-alerts](.agents/skills/fix-dependabot-alerts/SKILL.md) | Fixing security alerts from Dependabot |
 
 ### Rules
 
