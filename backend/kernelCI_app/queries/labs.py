@@ -1,7 +1,6 @@
 from django.db import connection
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
-from kernelCI_app.queries.checkout import ORIGINS_CACHE_TIMEOUT
 
 
 def get_lab_origins(*, interval_in_days: int) -> list[str]:
@@ -11,24 +10,16 @@ def get_lab_origins(*, interval_in_days: int) -> list[str]:
         return cached
 
     query = """
-        SELECT DISTINCT origin FROM tests
-        WHERE start_time >= CURRENT_DATE - INTERVAL '%(interval_in_days)s days'
-          AND lab_id IS NOT NULL
-        UNION
-        SELECT DISTINCT origin FROM builds
-        WHERE start_time >= CURRENT_DATE - INTERVAL '%(interval_in_days)s days'
-          AND lab_id IS NOT NULL
+        SELECT DISTINCT origin
+        FROM lab_daily
+        WHERE day >= CURRENT_DATE - %(interval_in_days)s
     """
 
     with connection.cursor() as cursor:
         cursor.execute(query, {"interval_in_days": interval_in_days})
         origins = [row[0] for row in cursor.fetchall() if row[0]]
         if origins:
-            set_query_cache(
-                key=cache_key,
-                rows=origins,
-                timeout=ORIGINS_CACHE_TIMEOUT,
-            )
+            set_query_cache(key=cache_key, rows=origins)
         return origins
 
 
@@ -37,84 +28,36 @@ def get_lab_listing_data(
     origin: str,
     interval_in_days: int,
 ) -> list[tuple]:
-    params = {
-        "origin": origin,
-        "interval": f"{interval_in_days} days",
-    }
+    cache_key = "labListing"
+    params = {"origin": origin, "interval_in_days": interval_in_days}
+
+    rows = get_query_cache(cache_key, params)
+    if rows is not None:
+        return rows
 
     query = """
-        WITH status_counts AS (
-            SELECT
-                bl.name AS lab_name,
-                'build' AS item_type,
-                CASE
-                    WHEN b.status IN ('PASS', 'FAIL') THEN b.status
-                    ELSE 'INCONCLUSIVE'
-                END AS item_status,
-                COUNT(*) AS item_count
-            FROM builds b
-            INNER JOIN labs bl ON b.lab_id = bl.id
-            WHERE
-                b.origin = %(origin)s
-                AND b.start_time >= NOW() - INTERVAL %(interval)s
-                AND b.id NOT LIKE 'maestro:dummy_%%'
-            GROUP BY 1, 2, 3
-
-            UNION ALL
-
-            SELECT
-                tl.name AS lab_name,
-                CASE
-                    WHEN t.path = 'boot' OR t.path LIKE 'boot.%%' THEN 'boot'
-                    ELSE 'test'
-                END AS item_type,
-                CASE
-                    WHEN t.status IN ('PASS', 'FAIL') THEN t.status
-                    ELSE 'INCONCLUSIVE'
-                END AS item_status,
-                COUNT(*) AS item_count
-            FROM tests t
-            INNER JOIN labs tl ON t.lab_id = tl.id
-            WHERE
-                t.origin = %(origin)s
-                AND t.start_time >= NOW() - INTERVAL %(interval)s
-                AND t.path IS NOT NULL
-            GROUP BY 1, 2, 3
-        )
         SELECT
-            lab_name,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'build' AND item_status = 'PASS'
-            ), 0) AS build_pass,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'build' AND item_status = 'FAIL'
-            ), 0) AS build_fail,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'build' AND item_status = 'INCONCLUSIVE'
-            ), 0) AS build_inc,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'boot' AND item_status = 'PASS'
-            ), 0) AS boot_pass,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'boot' AND item_status = 'FAIL'
-            ), 0) AS boot_fail,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'boot' AND item_status = 'INCONCLUSIVE'
-            ), 0) AS boot_inc,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'test' AND item_status = 'PASS'
-            ), 0) AS test_pass,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'test' AND item_status = 'FAIL'
-            ), 0) AS test_fail,
-            COALESCE(SUM(item_count) FILTER (
-                WHERE item_type = 'test' AND item_status = 'INCONCLUSIVE'
-            ), 0) AS test_inc
-        FROM status_counts
-        GROUP BY lab_name
-        ORDER BY lab_name
+            bl.name AS lab_name,
+            COALESCE(SUM(d.build_pass), 0) AS build_pass,
+            COALESCE(SUM(d.build_failed), 0) AS build_fail,
+            COALESCE(SUM(d.build_inc), 0) AS build_inc,
+            COALESCE(SUM(d.boot_pass), 0) AS boot_pass,
+            COALESCE(SUM(d.boot_failed), 0) AS boot_fail,
+            COALESCE(SUM(d.boot_inc), 0) AS boot_inc,
+            COALESCE(SUM(d.test_pass), 0) AS test_pass,
+            COALESCE(SUM(d.test_failed), 0) AS test_fail,
+            COALESCE(SUM(d.test_inc), 0) AS test_inc
+        FROM lab_daily d
+        JOIN labs bl ON d.lab_id = bl.id
+        WHERE d.origin = %(origin)s
+          AND d.day >= CURRENT_DATE - %(interval_in_days)s
+        GROUP BY bl.name
+        ORDER BY bl.name
     """
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+
+    set_query_cache(key=cache_key, params=params, rows=rows)
+    return rows
