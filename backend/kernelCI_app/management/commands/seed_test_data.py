@@ -3,6 +3,7 @@ Management command to seed test database with realistic data.
 """
 
 import sys
+from datetime import timezone
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -22,6 +23,7 @@ from kernelCI_app.models import (
     HardwareStatus,
     Incidents,
     Issues,
+    LabDaily,
     Labs,
     LatestCheckout,
     PendingBuilds,
@@ -100,6 +102,7 @@ class Command(BaseCommand):
             daily_build_count, daily_test_count = self.create_hardware_daily(
                 checkouts=checkouts
             )
+            lab_daily_count = self.create_lab_daily(builds=builds, tests=tests)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -113,6 +116,7 @@ class Command(BaseCommand):
                 f"- {len(hardware_rows)} hardware_status rows\n"
                 f"- {daily_build_count} hardware_daily_builds rows\n"
                 f"- {daily_test_count} hardware_daily_tests rows\n"
+                f"- {lab_daily_count} lab_daily rows\n"
             )
         )
 
@@ -143,6 +147,7 @@ class Command(BaseCommand):
         """Clear existing test data."""
         HardwareDailyBuilds.objects.all().delete()
         HardwareDailyTests.objects.all().delete()
+        LabDaily.objects.all().delete()
         ProcessedListingItems.objects.all().delete()
         PendingTest.objects.all().delete()
         PendingBuilds.objects.all().delete()
@@ -358,3 +363,15 @@ class Command(BaseCommand):
             HardwareDailyBuilds.objects.count(),
             HardwareDailyTests.objects.count(),
         )
+
+    def create_lab_daily(self, *, builds: list[Builds], tests: list[Tests]) -> int:
+        """Fill lab_daily with the production command for every seeded UTC day."""
+        self.stdout.write("Creating lab_daily aggregations...")
+        days = {
+            row.start_time.astimezone(timezone.utc).date()
+            for row in [*builds, *tests]
+            if row.start_time
+        }
+        for day in sorted(days):
+            call_command("recompute_lab_daily", day=day)
+        return LabDaily.objects.count()
