@@ -3,7 +3,9 @@ Management command to seed test database with realistic data.
 """
 
 import sys
+from datetime import timezone
 
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -20,6 +22,7 @@ from kernelCI_app.models import (
     HardwareStatus,
     Incidents,
     Issues,
+    LabDaily,
     Labs,
     LatestCheckout,
     SimplifiedStatusChoices,
@@ -88,6 +91,7 @@ class Command(BaseCommand):
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
             latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
             hardware_rows = self.create_hardware_status(tests=tests)
+            lab_daily_count = self.create_lab_daily(builds=builds, tests=tests)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -100,6 +104,7 @@ class Command(BaseCommand):
                 f"- {len(rollup_rows)} tree_tests_rollup rows\n"
                 f"- {len(latest_checkouts)} latest_checkout rows\n"
                 f"- {len(hardware_rows)} hardware_status rows\n"
+                f"- {lab_daily_count} lab_daily rows\n"
             )
         )
 
@@ -128,6 +133,7 @@ class Command(BaseCommand):
 
     def clear_data(self) -> None:
         """Clear existing test data."""
+        LabDaily.objects.all().delete()
         HardwareStatus.objects.all().delete()
         LatestCheckout.objects.all().delete()
         TreeTestsRollup.objects.all().delete()
@@ -441,3 +447,15 @@ class Command(BaseCommand):
 
         hardware_rows = [HardwareStatus(**data) for data in hardware_data.values()]
         return HardwareStatus.objects.bulk_create(hardware_rows)
+
+    def create_lab_daily(self, *, builds: list[Builds], tests: list[Tests]) -> int:
+        """Fill lab_daily with the production command for every seeded UTC day."""
+        self.stdout.write("Creating lab_daily aggregations...")
+        days = {
+            row.start_time.astimezone(timezone.utc).date()
+            for row in [*builds, *tests]
+            if row.start_time
+        }
+        for day in sorted(days):
+            call_command("recompute_lab_daily", day=day)
+        return LabDaily.objects.count()
