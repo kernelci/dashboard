@@ -10,8 +10,9 @@ from django.db import transaction
 
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.management.commands.helpers.aggregation_helpers import (
-    aggregate_checkouts_and_pendings,
+    aggregate_checkouts,
     simplify_status,
+    update_tree_listing,
 )
 from kernelCI_app.models import (
     Builds,
@@ -89,7 +90,10 @@ class Command(BaseCommand):
             incidents = self.create_incidents(issues=issues, builds=builds, tests=tests)
             rollup_count = self.create_tests_rollup(tests=tests)
             self.stdout.write("Updating listing aggregates...")
-            aggregate_checkouts_and_pendings(checkouts, tests, builds)
+            aggregate_checkouts(checkouts)
+            update_tree_listing(checkouts)
+            for checkout in checkouts:
+                call_command("recompute_tree_listing", checkout_id=checkout.id)
             hardware_rows = self.create_hardware_status(tests=tests)
 
         self.stdout.write(
