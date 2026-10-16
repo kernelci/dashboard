@@ -13,7 +13,9 @@ class HardwareClient(BaseClient):
         self, *, query: HardwareQueryParamsDocumentationOnly
     ) -> requests.Response:
         path = reverse("hardware")
-        url = self.get_endpoint(path=path, query=query.model_dump())
+        url = self.get_endpoint(
+            path=path, query=query.model_dump(exclude_defaults=True)
+        )
         return requests.get(url)
 
     def post_hardware_boots(
