@@ -50,8 +50,8 @@ def kcidb_new_issues(*, include_other_tests: bool = False):
     """Fetch issues from the last hour, including the first incident's checkout.
 
     Boot-path tests stay in the default result. Other tests are included only
-    when a new_issues subscriber asked for them, so the community summary can
-    keep its current rows.
+    when a subscriber listed test, so the community summary can keep its
+    current rows.
     """
 
     params = {"interval": "1 hour"}

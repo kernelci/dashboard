@@ -62,7 +62,7 @@ def test_invalid_plain_address_names_the_address(tmp_path):
     assert "invalid email address: Trilok Soni <not-an-email>" in str(error)
 
 
-def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
+def test_boot_and_test_in_issues_list_subscribers(tmp_path):
     _write(
         tmp_path,
         "sound.yaml",
@@ -74,8 +74,7 @@ def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
                     {"email": "build-only@example.com", "issues": ["build"]},
                     {
                         "email": "broonie@kernel.org",
-                        "issues": ["build"],
-                        "new_issues": {"issue_types": ["boot", "test"]},
+                        "issues": ["build", "boot", "test"],
                     },
                 ],
             }
@@ -89,7 +88,7 @@ def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
                 "default_recipients": [
                     {
                         "email": "tsoni@quicinc.com",
-                        "new_issues": {"issue_types": ["boot"]},
+                        "issues": ["boot"],
                     }
                 ],
             }
@@ -121,8 +120,7 @@ def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
         [
             {
                 "email": "broonie@kernel.org",
-                "issues": ["build"],
-                "new_issues": {"issue_types": ["boot"]},
+                "issues": ["build", "boot"],
             }
         ]
     ) == ["broonie@kernel.org"]
@@ -180,52 +178,6 @@ def test_issues_for_subscriber_filters_type_and_scope():
 
 def test_current_subscription_files_have_no_new_issues_subscribers():
     assert new_issue_subscribers(SUBSCRIPTIONS) == []
-
-
-def test_invalid_new_issues_type_names_file_and_field(tmp_path):
-    _write(
-        tmp_path,
-        "tree.yaml",
-        {
-            "demo": {
-                "url": "https://example.com/linux.git",
-                "default_recipients": [
-                    {
-                        "email": "person@example.com",
-                        "new_issues": {"issue_types": ["flaky"]},
-                    }
-                ],
-            }
-        },
-    )
-    with pytest.raises(NotificationConfigError) as raised:
-        load_subscriptions(tmp_path)
-    error = raised.value
-    assert error.file == "tree.yaml"
-    assert "new_issues" in error.field
-    assert "issue_types" in error.field
-
-
-def test_empty_new_issues_types_fail(tmp_path):
-    _write(
-        tmp_path,
-        "tree.yaml",
-        {
-            "demo": {
-                "url": "https://example.com/linux.git",
-                "default_recipients": [
-                    {
-                        "email": "person@example.com",
-                        "new_issues": {"issue_types": []},
-                    }
-                ],
-            }
-        },
-    )
-    with pytest.raises(NotificationConfigError) as raised:
-        new_issue_subscribers(tmp_path)
-    assert raised.value.file == "tree.yaml"
-    assert "issue_types" in raised.value.field
 
 
 def test_invalid_issue_kind_names_file_and_field(tmp_path):

@@ -1,7 +1,7 @@
 """Subscription YAML and metrics rules.
 
-The issues list records which regression mail an address already gets.
-A new_issues block opts that address into the hourly summary.
+`issues: [build]` records the regression mail an address already gets.
+`boot` and `test` in that list opt the address into the hourly summary.
 """
 
 from dataclasses import dataclass
@@ -42,13 +42,7 @@ def validate_address(value: str) -> str:
 
 Address = Annotated[str, AfterValidator(validate_address)]
 
-
-class NewIssuesSubscription(BaseModel):
-    """Hourly new-issues summary opt-in. The issues list is a separate record."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    issue_types: list[IssueKind] = Field(min_length=1)
+SUMMARY_ISSUE_KINDS = frozenset({"boot", "test"})
 
 
 class Recipient(BaseModel):
@@ -56,7 +50,6 @@ class Recipient(BaseModel):
 
     email: Address
     issues: list[IssueKind] | None = Field(default=None, min_length=1)
-    new_issues: NewIssuesSubscription | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -70,7 +63,7 @@ _RECIPIENTS = TypeAdapter(list[Recipient])
 
 
 def cc_addresses(recipients: list) -> list[str]:
-    """Addresses passed to current mails. Ignores a new_issues block."""
+    """Addresses passed to current mails."""
     return [item.email for item in _RECIPIENTS.validate_python(recipients)]
 
 
@@ -84,10 +77,11 @@ class NewIssueSubscriber:
 
 
 def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
-    """Recipients that opted into the hourly new-issues summary.
+    """Recipients whose issues list includes boot or test.
 
-    A plain address or an issues list does not opt in. Tree scope is the git
-    URL. Hardware scope is the platform name and origin.
+    `build` stays the regression mail and does not opt into the summary.
+    A plain address does not opt in. Tree scope is the git URL. Hardware
+    scope is the platform name and origin.
     """
     subscribers: list[NewIssueSubscriber] = []
     for path in _yaml_files(directory):
@@ -104,13 +98,14 @@ def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
             raise _validation_error(path, exc) from exc
         for name, body in parsed.items():
             for recipient in body.default_recipients:
-                if recipient.new_issues is None:
+                kinds = frozenset(recipient.issues or []) & SUMMARY_ISSUE_KINDS
+                if not kinds:
                     continue
                 if hardware_file:
                     subscribers.append(
                         NewIssueSubscriber(
                             email=recipient.email,
-                            issue_types=frozenset(recipient.new_issues.issue_types),
+                            issue_types=kinds,
                             hardware=name,
                             origin=body.origin or DEFAULT_ORIGIN,
                         )
@@ -119,7 +114,7 @@ def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
                     subscribers.append(
                         NewIssueSubscriber(
                             email=recipient.email,
-                            issue_types=frozenset(recipient.new_issues.issue_types),
+                            issue_types=kinds,
                             tree_url=body.url,
                         )
                     )

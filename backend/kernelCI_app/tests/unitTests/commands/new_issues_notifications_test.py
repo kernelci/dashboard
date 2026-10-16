@@ -111,7 +111,7 @@ def test_no_new_issues_block_sends_one_community_summary_and_maestro_build_repor
     assert "issues: build-maestro, build-other, boot-1" in printed
 
 
-def test_new_issues_block_sends_a_filtered_copy_and_skips_an_empty_one():
+def test_boot_in_issues_sends_a_filtered_copy_and_skips_an_empty_one():
     boot_on_tree = _issue(
         id="boot-sound",
         build_id=None,

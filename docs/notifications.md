@@ -109,9 +109,9 @@ Edit the corresponding tree file in the [subscriptions folder](../backend/data/n
 Use the git tree name reported by the
 Web Dashboard.
 
-Every address in `default_recipients` is Cc on the mail that file already sends. A tree file sends the `[STATUS]` checkout summary, one per entry under `reports`, and the `[REGRESSION]` mail, one message per new build issue on that git URL. A `*_hardware.yaml` file sends the Monday `hardware <board> summary`. The hourly `new issues summary` still goes to `kernelci-results@groups.io` with every new build and boot issue. A `new_issues` block on a recipient adds a second copy for that address.
+Every address in `default_recipients` is Cc on the mail that file already sends. A tree file sends the `[STATUS]` checkout summary, one per entry under `reports`, and the `[REGRESSION]` mail, one message per new build issue on that git URL. A `*_hardware.yaml` file sends the Monday `hardware <board> summary`. The hourly `new issues summary` still goes to `kernelci-results@groups.io` with every new build and boot issue.
 
-An entry is either an address string, including `Name <email>`, or a mapping with `email` and an optional `issues` list. `issues` names the issue kinds that address is notified about on the mails above: `build`, `boot`, or `test`. It does not subscribe anyone to the hourly summary.
+An entry is either an address string, including `Name <email>`, or a mapping with `email` and an optional `issues` list. `issues` names the issue kinds that address is notified about: `build`, `boot`, or `test`.
 
 ```yaml
 broonie-sound:
@@ -123,29 +123,27 @@ broonie-sound:
       issues: [build, boot, test]
 ```
 
-`build` is the kind with a `[REGRESSION]` sender today. Every tree file lists `[build]` on each address, which states the mail those addresses already receive. Adding `boot` or `test` to `issues` records a request that the regression mail does not cover yet. Full regression reports prefer `build` when a checkout has both build and test incidents.
+`build` is the `[REGRESSION]` mail. Every tree file lists `[build]` on each address, which states the mail those addresses already receive. Full regression reports prefer `build` when a checkout has both build and test incidents.
 
 ### Hourly new-issues summary
 
 The summary runs once an hour, the same run as the community mail. There is no per-address schedule.
 
-Add `new_issues` to opt an address into a filtered copy. `issue_types` is `build`, `boot`, `test`, or a combination. The copy contains only issues of those types in that file's scope:
+Adding `boot` or `test` to `issues` opts that address into a filtered copy. The copy contains only those kinds, in that file's scope:
 
 - a tree file matches `git_repository_url`
 - a hardware file matches the platform and its `origin` (`maestro` when omitted)
 
-An issue is tied to its first incident, the same row the community summary prints. The copy is skipped when nothing matches. Someone on `kernelci-results@groups.io` who also has a block may get two mails. `--ignore-recipients` skips the copies. With `--send` left off, the command prints `To` and the issue ids for the community mail and for each copy.
+`issues: [build]` does not add a copy. An issue is tied to its first incident, the same row the community summary prints. The copy is skipped when nothing matches. Someone on `kernelci-results@groups.io` who also lists `boot` or `test` may get two mails. `--ignore-recipients` skips the copies. With `--send` left off, the command prints `To` and the issue ids for the community mail and for each copy.
 
 ```yaml
 default_recipients:
   - someone-else@kernel.org
   - email: broonie@kernel.org
-    issues: [build]
-    new_issues:
-      issue_types: [boot]
+    issues: [build, boot]
 ```
 
-`test` issues are not part of the community mail. They are included only in copies whose `issue_types` list `test`.
+`test` issues are not part of the community mail. They are included only in copies for addresses whose `issues` list includes `test`.
 
 The same run can also send a `[REGRESSION]` report. Without `--issue-report-origins` or `--issue-report-types`, that report stays limited to build issues from `maestro`. Boot issues and other origins are sent only when a flag lists them. The flags do not change who is on To or Cc: the list stays on To, the tree's `default_recipients` stay on Cc, and `regressions@lists.linux.dev` plus regzbot stay on mainline, next, and stable.
 
@@ -161,9 +159,9 @@ qcs6490-rb3gen2:
     - Shiraz Hashim <shashim@qti.qualcomm.com>
 ```
 
-A hardware recipient can add the same `new_issues` block. The copy is limited to that platform.
+A hardware recipient can use the same `issues` list. `boot` or `test` there limits the copy to that platform.
 
-Editing a file in that folder runs these checks in CI. A malformed file, an unknown issue kind, an unknown `issue_types` value, or an address without a single `@` fails with the file name and the field.
+Editing a file in that folder runs these checks in CI. A malformed file, an unknown issue kind, or an address without a single `@` fails with the file name and the field.
 
 ## Metrics rules
 
