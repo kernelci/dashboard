@@ -4,7 +4,6 @@ from typing import Optional, TypedDict
 from django.db import connection, connections
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
-from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
@@ -434,7 +433,7 @@ def get_hardware_details_data(
     start_datetime: datetime,
     end_datetime: datetime,
 ):
-    cache_key = "hardwareDetailsFullDataByCheckout"
+    cache_key = "hardwareDetailsFullData"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -459,48 +458,17 @@ def get_hardware_details_data(
     return records
 
 
-def _checkout_commit_values(
-    checkouts: list[tuple[str, str, str, str, str]],
-) -> tuple[str, dict[str, str]]:
-    """Hash and origin still match another tree that checked out the same commit."""
-    tuples = []
-    params = {}
-
-    for index, (tree_name, url, branch, commit_hash, checkout_origin) in enumerate(
-        checkouts
-    ):
-        name_key = f"tree_name{index}"
-        url_key = f"git_repository_url{index}"
-        branch_key = f"git_repository_branch{index}"
-        hash_key = f"commit_hash{index}"
-        origin_key = f"checkout_origin{index}"
-        tuples.append(
-            f"(%({name_key})s, %({url_key})s, %({branch_key})s,"
-            f" %({hash_key})s, %({origin_key})s)"
-        )
-        params[name_key] = tree_name
-        params[url_key] = url
-        params[branch_key] = branch
-        params[hash_key] = commit_hash
-        params[origin_key] = checkout_origin
-
-    return ", ".join(tuples), params
-
-
 def get_hardware_details_summary(
     *,
     hardware_id: str,
     origin: str,
-    checkouts: list[tuple[str, str, str, str, str]],
+    commit_hashes: list[str],
     builds_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
     boots_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
     tests_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
     start_datetime: datetime,
     end_datetime: datetime,
 ):
-    if not checkouts:
-        return []
-
     if builds_duration is None:
         builds_duration = (None, None)
     if boots_duration is None:
@@ -508,12 +476,12 @@ def get_hardware_details_summary(
     if tests_duration is None:
         tests_duration = (None, None)
 
-    cache_key = "hardwareDetailsSummaryByCheckout"
+    cache_key = "hardwareDetailsSummary"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
         "origin": origin,
-        "checkouts": checkouts,
+        "commit_hashes": commit_hashes,
         "start_date": start_datetime.timestamp(),
         "end_date": end_datetime.timestamp(),
         "builds_duration": builds_duration,
@@ -525,8 +493,6 @@ def get_hardware_details_summary(
 
     if query_rows is not None:
         return query_rows
-
-    checkout_clause, checkout_params = _checkout_commit_values(checkouts)
 
     query = """
             WITH platform_tests AS (
@@ -589,13 +555,7 @@ def get_hardware_details_summary(
                 AND builds.origin = %(origin)s
                 AND builds.start_time >= %(start_date)s
                 AND builds.start_time <= %(end_date)s
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN (VALUES {checkout_values}) {builds_duration_clause}
+                AND (checkouts.git_commit_hash = ANY(%(commits)s)) {builds_duration_clause}
             GROUP BY checkouts.id, builds.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot)
             UNION ALL
@@ -631,13 +591,7 @@ def get_hardware_details_summary(
             LEFT OUTER JOIN incidents ON
                 tests.id = incidents.test_id
             WHERE
-                (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN (VALUES {checkout_values}) {boots_tests_duration_clause}
+                (checkouts.git_commit_hash = ANY(%(commits)s)) {boots_tests_duration_clause}
             GROUP BY checkouts.id, tests.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot);
     """.format(
@@ -645,7 +599,6 @@ def get_hardware_details_summary(
         boots_tests_duration_clause=get_boot_test_duration_clause(
             boots_duration, tests_duration
         ),
-        checkout_values=checkout_clause,
     )
 
     build_duration_min, build_duration_max = builds_duration
@@ -657,7 +610,7 @@ def get_hardware_details_summary(
         "origin": origin,
         "start_date": start_datetime,
         "end_date": end_datetime,
-        **checkout_params,
+        "commits": commit_hashes,
         "build_duration_min": build_duration_min,
         "build_duration_max": build_duration_max,
         "boot_duration_min": boot_duration_min,
@@ -676,21 +629,7 @@ def get_hardware_details_summary(
 def query_records(
     *, hardware_id: str, origin: str, trees: list[Tree], start_date: int, end_date: int
 ) -> list[dict] | None:
-    # tests.origin stays the page origin. Match the tree identity plus the
-    # selected hash so another tree's checkout of the same commit is excluded.
-    checkouts = [
-        (
-            tree.tree_name or "",
-            tree.git_repository_url or "",
-            tree.git_repository_branch or "",
-            tree.head_git_commit_hash,
-            tree.origin or "",
-        )
-        for tree in trees
-        if tree.head_git_commit_hash
-    ]
-    if not checkouts:
-        return []
+    commit_hashes = [tree.head_git_commit_hash for tree in trees]
 
     query = """
             SELECT
@@ -760,16 +699,10 @@ def query_records(
                 AND tests.origin = %s
                 AND tests.start_time >= %s
                 AND tests.start_time <= %s
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN ({0})
+                AND checkouts.git_commit_hash IN ({0})
             ORDER BY
                 issues."_timestamp" DESC
-            """.format(", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)))
+            """.format(",".join(["%s"] * len(commit_hashes)))
 
     params = [
         hardware_id,
@@ -777,8 +710,9 @@ def query_records(
         origin,
         start_date,
         end_date,
-    ] + [value for checkout in checkouts for value in checkout]
+    ] + commit_hashes
 
+    # TODO Treat commit_hash collision (it can happen between repos)
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         query_rows = dict_fetchall(cursor)
@@ -881,8 +815,8 @@ def get_hardware_trees_head_commits(
     origin: str,
     start_datetime: datetime,
     end_datetime: datetime,
-) -> list[tuple[str, str, str, str, str, str]]:
-    cache_key = "hardwareTreesHeadCommitsByCheckout"
+) -> list[tuple[str, str]]:
+    cache_key = "hardwareTreesHeadCommitsFromStatus"
 
     cache_params = {
         "hardware": hardware_id,
@@ -891,9 +825,7 @@ def get_hardware_trees_head_commits(
         "end_date": end_datetime.timestamp(),
     }
 
-    trees: list[tuple[str, str, str, str, str, str]] = get_query_cache(
-        cache_key, cache_params
-    )
+    trees: list[tuple[str, str]] = get_query_cache(cache_key, cache_params)
 
     if trees:
         return trees
@@ -901,9 +833,6 @@ def get_hardware_trees_head_commits(
     query = _get_hardware_trees_from_status_query(
         fields="""
             C.tree_name,
-            C.git_repository_branch,
-            C.git_repository_url,
-            C.origin,
             C.git_commit_hash
         """
     )
@@ -918,20 +847,8 @@ def get_hardware_trees_head_commits(
         cursor.execute(query, params)
         tree_records = dict_fetchall(cursor)
         trees = [
-            (
-                make_tree_key(
-                    tree["tree_name"] or "",
-                    tree["git_repository_branch"] or "",
-                    tree["git_repository_url"] or "",
-                    tree["origin"] or "",
-                ),
-                tree["tree_name"] or "",
-                tree["git_repository_url"] or "",
-                tree["git_repository_branch"] or "",
-                tree["git_commit_hash"],
-                tree["origin"] or "",
-            )
-            for tree in tree_records
+            (str(idx), tree["git_commit_hash"])
+            for (idx, tree) in enumerate(tree_records)
         ]
         set_query_cache(key=cache_key, params=cache_params, rows=trees)
 
@@ -945,7 +862,7 @@ def get_hardware_trees_data(
     start_datetime: datetime,
     end_datetime: datetime,
 ) -> list[Tree]:
-    cache_key = "hardwareDetailsTreeDataByTreeKey"
+    cache_key = "hardwareDetailsTreeDataFromStatus"
 
     params = {
         "hardware": hardware_id,
@@ -973,16 +890,10 @@ def get_hardware_trees_data(
             tree_records = dict_fetchall(cursor)
 
         trees = []
-        for tree in tree_records:
-            tree_index = make_tree_key(
-                tree["tree_name"] or "",
-                tree["git_repository_branch"] or "",
-                tree["git_repository_url"] or "",
-                tree["origin"] or "",
-            )
+        for idx, tree in enumerate(tree_records):
             trees.append(
                 Tree(
-                    index=tree_index,
+                    index=str(idx),
                     tree_name=tree["tree_name"],
                     origin=tree["origin"],
                     git_repository_branch=tree["git_repository_branch"],
@@ -1007,8 +918,6 @@ class CommitHeadsQueryParams(TypedDict):
 
 def _generate_query_params(
     commit_heads: list[CommitHead],
-    *,
-    default_origin: str,
 ) -> CommitHeadsQueryParams:
     tuple_list = []
     params = {}
@@ -1018,12 +927,11 @@ def _generate_query_params(
         git_repository_url_key = f"git_repository_url{index}"
         git_repository_branch_key = f"git_repository_branch{index}"
         git_commit_hash_key = f"git_commit_hash{index}"
-        checkout_origin_key = f"checkout_origin{index}"
 
         tuple_string = (
             f"(%({tree_name_key})s,"
             f"%({git_repository_url_key})s, %({git_repository_branch_key})s,"
-            f"%({git_commit_hash_key})s, %({checkout_origin_key})s)"
+            f"%({git_commit_hash_key})s)"
         )
 
         tuple_list.append(tuple_string)
@@ -1031,7 +939,6 @@ def _generate_query_params(
         params[git_repository_url_key] = commit_head.repositoryUrl
         params[git_repository_branch_key] = commit_head.branch
         params[git_commit_hash_key] = commit_head.commitHash
-        params[checkout_origin_key] = commit_head.origin or default_origin
 
     tuple_str = ", ".join(tuple_list)
     return {"tuple_str": f"({tuple_str})", "query_params": params}
@@ -1046,15 +953,16 @@ def get_hardware_commit_history(
 ):
     """Retrieves the history of commits for the trees that
     composes the hardware through a list of commit_heads.\n
-    Each head is limited to its checkout origin. Heads without one use origin."""
+    The history is limited by the origin, start_date and end dates params."""
 
     if not commit_heads:
         return
 
-    commit_heads_params = _generate_query_params(commit_heads, default_origin=origin)
+    commit_heads_params = _generate_query_params(commit_heads)
 
     params = {
         **commit_heads_params["query_params"],
+        "origin": origin,
         "start_date": start_date,
         "end_date": end_date,
     }
@@ -1072,7 +980,6 @@ def get_hardware_commit_history(
                 tree_name,
                 git_repository_url,
                 git_repository_branch,
-                origin,
                 start_time
             FROM
                 checkouts c
@@ -1081,9 +988,9 @@ def get_hardware_commit_history(
                     c.tree_name,
                     c.git_repository_url,
                     c.git_repository_branch,
-                    c.git_commit_hash,
-                    c.origin
+                    c.git_commit_hash
                 ) IN {commit_heads_params["tuple_str"]}
+                AND c.origin = %(origin)s
             ORDER BY
                 tree_name,
                 git_repository_url,
@@ -1100,8 +1007,7 @@ def get_hardware_commit_history(
             lateralus.git_commit_tags AS git_commit_tags,
             lateralus.git_commit_name AS git_commit_name,
             lateralus.git_commit_hash AS git_commit_hash,
-            lateralus.start_time AS start_time,
-            fc.origin AS origin
+            lateralus.start_time AS start_time
         FROM
             filtered_checkouts fc,
             LATERAL (
@@ -1117,7 +1023,6 @@ def get_hardware_commit_history(
                     c.tree_name = fc.tree_name
                     AND c.git_repository_branch = fc.git_repository_branch
                     AND c.git_repository_url = fc.git_repository_url
-                    AND c.origin = fc.origin
                     AND c.start_time <= fc.start_time
                     AND c.start_time >= %(start_date)s
                     AND c.start_time <= %(end_date)s

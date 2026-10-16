@@ -118,7 +118,6 @@ const prepareTreeItems = ({
       treeName: tree.tree_name ?? '',
       gitRepositoryBranch: tree.git_repository_branch ?? '',
       gitRepositoryUrl: tree.git_repository_url ?? '',
-      origin: tree.origin,
     });
 
     const rows = commitHistoryData?.[treeIdentifier] ?? [];
@@ -217,7 +216,7 @@ function HardwareDetails(): JSX.Element {
     });
   }, [navigate]);
 
-  const [treeKeys, setTreeKeys] = useState<string[]>([]);
+  const [treeIndexesLength, setTreeIndexesLength] = useState(0);
   const { summary: summaryResponse, full: fullResponse } =
     useHardwareDetailsLazyLoadQuery({
       hardwareId: hardwareId,
@@ -227,21 +226,8 @@ function HardwareDetails(): JSX.Element {
       filter: reqFilter,
       selectedIndexes: treeIndexes,
       treeCommits: treeCommits,
-      treeKeys,
+      treeIndexesLength: treeIndexesLength,
     });
-
-  useEffect(() => {
-    const trees = summaryResponse.data?.common.trees;
-    if (!trees?.length) {
-      return;
-    }
-    const next = trees.map(tree => tree.index);
-    setTreeKeys(prev =>
-      prev.length === next.length && prev.every((key, i) => key === next[i])
-        ? prev
-        : next,
-    );
-  }, [summaryResponse.data?.common.trees]);
 
   const hardwareStatusHistoryState = useRouterState({
     select: s => s.location.state.hardwareStatusCount,
@@ -250,7 +236,7 @@ function HardwareDetails(): JSX.Element {
   const numIndexes = summaryResponse?.data?.common?.trees?.length || 0;
   const updateTreeFilters = useCallback(
     (
-      selectedIndexes: string[] | null,
+      selectedIndexes: number[] | null,
       { replace = false }: { replace?: boolean } = {},
     ) => {
       const numSelectedIndexes = selectedIndexes?.length || 0;
@@ -303,7 +289,6 @@ function HardwareDetails(): JSX.Element {
           repositoryUrl: tree.git_repository_url ?? '',
           branch: tree.git_repository_branch ?? '',
           commitHash: tree.head_git_commit_hash ?? '',
-          origin: tree.origin,
         };
 
         result.push(commitHead);
@@ -349,7 +334,6 @@ function HardwareDetails(): JSX.Element {
         treeName: tree.tree_name ?? '',
         gitRepositoryBranch: tree.git_repository_branch ?? '',
         gitRepositoryUrl: tree.git_repository_url ?? '',
-        origin: tree.origin,
       });
       const match = findMatchingCheckout(
         commitHistoryTable[key] ?? [],
@@ -364,6 +348,7 @@ function HardwareDetails(): JSX.Element {
       return;
     }
 
+    setTreeIndexesLength(trees.length);
     navigate({
       search: prev => ({ ...prev, treeCommits: newTreeCommits }),
       state: s => s,
@@ -376,6 +361,7 @@ function HardwareDetails(): JSX.Element {
     commitHistoryTable,
     commitHistoryIsLoading,
     navigate,
+    setTreeIndexesLength,
   ]);
 
   const filterListElement = useMemo(() => {
@@ -602,6 +588,7 @@ function HardwareDetails(): JSX.Element {
                   treeItems={treeData}
                   selectedIndexes={treeIndexes}
                   updateTreeFilters={updateTreeFilters}
+                  setTreeIndexesLength={setTreeIndexesLength}
                   selectionResetKey={`${hardwareId}\0${hardwareSearch ?? ''}`}
                 />
                 {summaryResponse.data &&

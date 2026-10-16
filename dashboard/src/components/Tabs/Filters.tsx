@@ -145,7 +145,7 @@ interface ICheckboxSectionProps extends SectionsProps {
 
 interface ITreeSectionProps {
   items?: Record<string, boolean>;
-  selectedTrees?: string[];
+  selectedTrees?: number[];
   handleSelectTree: (index: string) => void;
   showIcon?: boolean;
 }
@@ -292,9 +292,9 @@ const TreeSelectSection = ({
     const filteredItems: Record<string, boolean> = {};
 
     Object.keys(items).map(key => {
-      const treeKey = key.split('__')[1] ?? '';
+      const idx = Number(key.split('__')[1] ?? NO_VALID_INDEX);
 
-      filteredItems[key] = selectedTrees?.includes(treeKey) || false;
+      filteredItems[key] = selectedTrees?.includes(idx) || false;
     });
 
     return filteredItems;

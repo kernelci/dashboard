@@ -82,7 +82,6 @@ export type CommitHead = {
   repositoryUrl: string;
   branch: string;
   commitHash: string;
-  origin: string;
 };
 
 export type CommitHistory = {

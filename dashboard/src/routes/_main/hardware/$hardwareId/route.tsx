@@ -30,11 +30,7 @@ const defaultValues = {
 const hardwareDetailsSearchSchema = z.object({
   origin: zOrigin,
   currentPageTab: zPossibleTabValidator,
-  treeIndexes: z
-    .array(z.union([z.string(), z.number()]))
-    .transform(values => values.map(String))
-    .nullable()
-    .default(null),
+  treeIndexes: z.array(z.number().int()).nullable().default(null),
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   diffFilter: zDiffFilter,
