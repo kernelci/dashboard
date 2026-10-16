@@ -269,6 +269,42 @@ const LabProvided = ({
   return (
     <div className="flex flex-col gap-2">
       <BaseCard
+        title={<FormattedMessage id="labDetails.distribution" />}
+        content={
+          <div className="flex flex-col gap-4 px-4 pb-4">
+            <p className="text-sm text-gray-600">
+              <FormattedMessage id="labDetails.distributionNote" />
+            </p>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <FrequencyChart
+                titleId="global.platform"
+                labels={sentLabels(runs.map(row => row.platform))}
+              />
+              <FrequencyChart
+                titleId="global.config"
+                labels={sentLabels(runs.map(row => row.config))}
+              />
+              <FrequencyChart
+                titleId="global.compiler"
+                labels={sentLabels(runs.map(row => row.compiler))}
+              />
+              <FrequencyChart
+                titleId="global.architecture"
+                labels={sentLabels(runs.map(row => row.arch))}
+              />
+              {builds.length > 0 ? (
+                <StatusChart
+                  titleId="buildTab.buildStatus"
+                  counts={buildCounts}
+                />
+              ) : null}
+              <StatusChart titleId="bootsTab.bootStatus" counts={bootCounts} />
+              <StatusChart titleId="testsTab.testStatus" counts={testCounts} />
+            </div>
+          </div>
+        }
+      />
+      <BaseCard
         title={<FormattedMessage id="labDetails.submissionFill" />}
         content={
           <div className="grid grid-cols-2 gap-4 px-4 pb-4 sm:grid-cols-4">
@@ -314,42 +350,6 @@ const LabProvided = ({
               filled={excerpt.filled}
               total={excerpt.total}
             />
-          </div>
-        }
-      />
-      <BaseCard
-        title={<FormattedMessage id="labDetails.distribution" />}
-        content={
-          <div className="flex flex-col gap-4 px-4 pb-4">
-            <p className="text-sm text-gray-600">
-              <FormattedMessage id="labDetails.distributionNote" />
-            </p>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <FrequencyChart
-                titleId="global.platform"
-                labels={sentLabels(runs.map(row => row.platform))}
-              />
-              <FrequencyChart
-                titleId="global.config"
-                labels={sentLabels(runs.map(row => row.config))}
-              />
-              <FrequencyChart
-                titleId="global.compiler"
-                labels={sentLabels(runs.map(row => row.compiler))}
-              />
-              <FrequencyChart
-                titleId="global.architecture"
-                labels={sentLabels(runs.map(row => row.arch))}
-              />
-              {builds.length > 0 ? (
-                <StatusChart
-                  titleId="buildTab.buildStatus"
-                  counts={buildCounts}
-                />
-              ) : null}
-              <StatusChart titleId="bootsTab.bootStatus" counts={bootCounts} />
-              <StatusChart titleId="testsTab.testStatus" counts={testCounts} />
-            </div>
           </div>
         }
       />

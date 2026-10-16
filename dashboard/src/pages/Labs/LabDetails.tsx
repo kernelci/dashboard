@@ -313,25 +313,6 @@ const LabDetails = (): JSX.Element => {
           </div>
         ) : (
           <div className="mt-5 flex flex-col">
-            <LabProvided
-              builds={trees.flatMap(tree => tree.buildRows)}
-              boots={trees.flatMap(tree => tree.bootRows)}
-              tests={trees.flatMap(tree => tree.testRows)}
-              buildCounts={sumStatusCounts(trees.map(tree => tree.builds))}
-              bootCounts={sumStatusCounts(trees.map(tree => tree.boots))}
-              testCounts={sumStatusCounts(trees.map(tree => tree.tests))}
-              checkoutTotal={trees.length}
-              checkoutsBuilt={
-                trees.filter(tree => tree.buildRows.length > 0).length
-              }
-              checkoutsBooted={
-                trees.filter(tree => tree.bootRows.length > 0).length
-              }
-              checkoutsTested={
-                trees.filter(tree => tree.testRows.length > 0).length
-              }
-            />
-            <Separator className="bg-dark-gray my-6" />
             <TreeTable
               trees={trees}
               selection={selection}
@@ -468,6 +449,25 @@ const LabDetails = (): JSX.Element => {
                 onValueChange={onTabChange}
               />
             )}
+            <Separator className="bg-dark-gray my-6" />
+            <LabProvided
+              builds={trees.flatMap(tree => tree.buildRows)}
+              boots={trees.flatMap(tree => tree.bootRows)}
+              tests={trees.flatMap(tree => tree.testRows)}
+              buildCounts={sumStatusCounts(trees.map(tree => tree.builds))}
+              bootCounts={sumStatusCounts(trees.map(tree => tree.boots))}
+              testCounts={sumStatusCounts(trees.map(tree => tree.tests))}
+              checkoutTotal={trees.length}
+              checkoutsBuilt={
+                trees.filter(tree => tree.buildRows.length > 0).length
+              }
+              checkoutsBooted={
+                trees.filter(tree => tree.bootRows.length > 0).length
+              }
+              checkoutsTested={
+                trees.filter(tree => tree.testRows.length > 0).length
+              }
+            />
           </div>
         )}
       </div>
