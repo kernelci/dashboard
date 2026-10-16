@@ -1,5 +1,7 @@
 robh:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
   default_recipients:
-    - robh@kernel.org
-    - devicetree@vger.kernel.org
+    - email: robh@kernel.org
+      issues: [build]
+    - email: devicetree@vger.kernel.org
+      issues: [build]

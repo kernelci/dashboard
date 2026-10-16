@@ -1,4 +1,5 @@
 stable-rc:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git
   default_recipients:
-    - stable@vger.kernel.org
+    - email: stable@vger.kernel.org
+      issues: [build]
