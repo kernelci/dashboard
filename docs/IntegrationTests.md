@@ -352,3 +352,19 @@ The integration tests are automatically run in CI/CD using the same Docker Compo
 - Cleans up resources after completion
 
 See `.github/workflows/ci.yaml` for the complete CI configuration.
+
+## kci-dev CLI checks
+
+`backend/kernelCI_app/tests/integrationTests/kci_dev_results_test.py` runs the installed [kci-dev](https://github.com/kernelci/kci-dev) CLI against this stack, as part of `pytest -m integration`. It does not run kci-dev's own tests.
+
+The pin is `kci-dev==0.1.11` in `backend/pyproject.toml`. Bump that pin to move to a newer CLI. The CLI talks to `TEST_BASE_URL` with `/api/` appended, the same variable the other integration clients use. `DASHBOARD_API`, when set, replaces that full URL. Issue listing passes `--origin origin-fake-00000000`, the origin `IssueFactory` writes.
+
+**Run** (after steps 1–4 above, from `backend/`):
+
+```bash
+poetry install
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 \
+DJANGO_SETTINGS_MODULE=kernelCI.test_settings \
+poetry run pytest -m integration --use-local-db \
+  kernelCI_app/tests/integrationTests/kci_dev_results_test.py
+```
