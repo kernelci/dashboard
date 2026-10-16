@@ -12,6 +12,7 @@ import {
   MemoizedCheckboxSection,
   MemoizedTimeRangeSection,
   MemoizedTreeSelectSection,
+  NO_VALID_INDEX,
 } from '@/components/Tabs/Filters';
 import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
@@ -26,11 +27,11 @@ interface IHardwareDetailsFilter {
   paramFilter: TFilter;
   hardwareName: string;
   data: HardwareDetailsSummary | undefined;
-  selectedTrees: string[] | null;
+  selectedTrees: number[] | null;
 }
 
 type TFilterCreate = TFilter & {
-  treeIndexes: string[];
+  treeIndexes: number[];
 };
 
 export const createFilter = (
@@ -54,14 +55,14 @@ export const createFilter = (
   const compilers: TFilterValues = {};
   const trees: TFilterValues = {};
   const compatibles: TFilterValues = {};
-  const treeIndexes: string[] = [];
+  const treeIndexes: number[] = [];
 
   const labs: TFilterValues = {};
 
   if (data) {
     // Global filters
     data.common.trees.forEach(tree => {
-      const treeKey = tree.index;
+      const treeIdx = Number(tree.index);
       const treeName = tree.tree_name ?? 'Unknown';
       const treeBranch = tree.git_repository_branch ?? 'Unknown';
 
@@ -71,8 +72,8 @@ export const createFilter = (
         treeNameBranch = 'Unknown';
       }
 
-      trees[`${treeNameBranch}__${treeKey}`] = true;
-      treeIndexes.push(treeKey);
+      trees[`${treeNameBranch}__${treeIdx}`] = true;
+      treeIndexes.push(treeIdx);
     });
 
     data.common.compatibles.forEach(c => (compatibles[c] = false));
@@ -221,7 +222,7 @@ const HardwareDetailsFilter = ({
   }, [data]);
 
   const [diffFilter, setDiffFilter] = useState<TFilter>(paramFilter);
-  const [treeIndexes, setTreeIndexes] = useState<string[]>([]);
+  const [treeIndexes, setTreeIndexes] = useState<number[]>([]);
 
   useEffect(() => {
     const initialTrees =
@@ -259,12 +260,12 @@ const HardwareDetailsFilter = ({
 
   const handleSelectTree = useCallback(
     (value: string) => {
-      const key = value.split('__')[1] ?? '';
+      const idx = Number(value.split('__')[1] ?? NO_VALID_INDEX);
 
-      if (treeIndexes.includes(key)) {
-        setTreeIndexes(treeIndexes.filter(k => k !== key));
+      if (treeIndexes.includes(idx)) {
+        setTreeIndexes(treeIndexes.filter(i => i !== idx));
       } else {
-        setTreeIndexes([...treeIndexes, key]);
+        setTreeIndexes([...treeIndexes, idx]);
       }
     },
     [treeIndexes],

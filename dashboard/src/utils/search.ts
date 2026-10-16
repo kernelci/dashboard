@@ -50,7 +50,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
     types: {
       i: 'number',
       ls: 'number',
-      x: 'string[]',
+      x: 'number[]',
       st: 'number',
       et: 'number',
       iv: 'number',
