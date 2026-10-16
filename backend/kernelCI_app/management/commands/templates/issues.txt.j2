@@ -32,4 +32,19 @@ Boot regressions:
 ---
 {% endfor %}
 {% endif %}
+{% if test_issues %}
+Test regressions:
+-------------
+{% for issue in test_issues %}
+#kernelci issue {{ issue["id"] }}
+- Comment: {{ issue["comment"] }}
+- Timestamp: {{ issue["_timestamp"].strftime('%Y-%m-%d %H:%M %Z') }}
+- Origin: {{ issue["origin"] }}
+- Tree: {{ issue["tree_name"] }}/{{ issue["git_repository_branch"]}}
+- Commit HEAD: {{ issue["git_commit_hash"] }}
+- Incidents Count: {{issue["incident_count"]}}
+- Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
+---
+{% endfor %}
+{% endif %}
 {%- endblock %}

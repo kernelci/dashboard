@@ -6,6 +6,6 @@ qcs9100-ride: # The hardware platform name
   origin: maestro
   labs:
     lava-kci-qualcomm: https://lava-oss.qualcomm.com
-  default_recipients:
+  default_recipients: # Cc on the weekly hardware summary for this platform
     - Recipient One <Recipient1@example.com>
     - Recipient Two <Recipient2@example.com>
