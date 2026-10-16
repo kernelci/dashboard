@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
-API = os.environ.get("DASHBOARD_API", "http://localhost:8001/api/")
+API = os.environ.get("DASHBOARD_API") or (
+    os.environ.get("TEST_BASE_URL", "http://localhost:8000/").rstrip("/") + "/api/"
+)
 
 ARM64_COMMIT = "a1c24ab822793eb513351686f631bd18952b7870"
 ARM64_GITURL = "https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git"
