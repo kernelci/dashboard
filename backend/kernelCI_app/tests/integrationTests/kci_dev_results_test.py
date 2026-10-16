@@ -89,15 +89,7 @@ def settings_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return path
 
 
-def _parse_stdout(stdout: str):
-    text = stdout.strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return ast.literal_eval(text)
-
-
-def run_kci_dev(settings_file: Path, *args: str):
+def run_kci_dev(settings_file: Path, *args: str, parse=json.loads):
     cmd = [
         _kci_dev_executable(),
         "--settings",
@@ -121,7 +113,7 @@ def run_kci_dev(settings_file: Path, *args: str):
         f"stdout:\n{proc.stdout}\n"
         f"stderr:\n{proc.stderr}"
     )
-    return _parse_stdout(proc.stdout)
+    return parse(proc.stdout.strip())
 
 
 def _assert_fields(rows, fields: set[str]) -> None:
@@ -152,7 +144,10 @@ def test_builds(settings_file: Path) -> None:
 
 
 def test_build(settings_file: Path) -> None:
-    build = run_kci_dev(settings_file, "build", "--id", ARM64_BUILD)
+    # A single build is printed as a Python repr.
+    build = run_kci_dev(
+        settings_file, "build", "--id", ARM64_BUILD, parse=ast.literal_eval
+    )
     _assert_fields([build], BUILD_FIELDS)
     assert build["id"] == ARM64_BUILD
 
@@ -175,6 +170,7 @@ def test_issues(settings_file: Path) -> None:
 def test_test(settings_file: Path) -> None:
     listed = run_kci_dev(settings_file, "tests", *CHECKOUT_ARGS)
     test_id = listed[0]["id"]
-    test = run_kci_dev(settings_file, "test", "--id", test_id)
+    # A single test is printed as a Python repr.
+    test = run_kci_dev(settings_file, "test", "--id", test_id, parse=ast.literal_eval)
     _assert_fields([test], TEST_FIELDS)
     assert test["id"] == test_id
