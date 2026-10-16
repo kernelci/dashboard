@@ -8,15 +8,10 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.management.commands.helpers.aggregation_helpers import (
     aggregate_checkouts_and_pendings,
     simplify_status,
-)
-from kernelCI_app.management.commands.helpers.process_pending_helpers import (
-    accumulate_rollup_entry,
-    extract_path_group,
 )
 from kernelCI_app.models import (
     Builds,
@@ -32,7 +27,6 @@ from kernelCI_app.models import (
     PendingTest,
     ProcessedListingItems,
     SimplifiedStatusChoices,
-    StatusChoices,
     Tests,
     TreeListing,
     TreeTestsRollup,
@@ -95,7 +89,7 @@ class Command(BaseCommand):
             tests = self.create_tests_and_boots(builds=builds)
             issues = self.create_issues(count=options["issues"])
             incidents = self.create_incidents(issues=issues, builds=builds, tests=tests)
-            rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
+            rollup_count = self.create_tests_rollup(tests=tests)
             self.stdout.write("Updating listing aggregates...")
             aggregate_checkouts_and_pendings(checkouts, tests, builds)
             hardware_rows = self.create_hardware_status(tests=tests)
@@ -111,7 +105,7 @@ class Command(BaseCommand):
                 f"- {len(tests)} tests\n"
                 f"- {len(issues)} issues\n"
                 f"- {len(incidents)} incidents\n"
-                f"- {len(rollup_rows)} tree_tests_rollup rows\n"
+                f"- {rollup_count} tree_tests_rollup rows\n"
                 f"- {len(hardware_rows)} hardware_status rows\n"
                 f"- {daily_build_count} hardware_daily_builds rows\n"
                 f"- {daily_test_count} hardware_daily_tests rows\n"
@@ -279,102 +273,13 @@ class Command(BaseCommand):
 
         return incidents
 
-    def create_tests_rollup(
-        self, *, tests: list[Tests], incidents: list[Incidents]
-    ) -> list[TreeTestsRollup]:
-        """Aggregate seeded tests into tree_tests_rollup rows."""
+    def create_tests_rollup(self, *, tests: list[Tests]) -> int:
+        """Fill tree_tests_rollup with the production command for every seeded checkout."""
         self.stdout.write("Creating tree_tests_rollup aggregations...")
-
-        test_issue_map: dict[str, dict] = {}
-        for incident in incidents:
-            if incident.test_id:
-                test_issue_map.setdefault(
-                    incident.test_id,
-                    {
-                        "issue_id": incident.issue_id,
-                        "issue_version": incident.issue_version,
-                    },
-                )
-
-        rollup_data: dict[tuple, dict] = {}
-
-        for test in tests:
-            checkout = test.build.checkout
-            path = test.path or ""
-            path_group = extract_path_group(path)
-
-            compatible = test.environment_compatible
-            try:
-                platform = test.environment_misc.get("platform")
-            except AttributeError:
-                platform = None
-
-            hardware_key = UNKNOWN_STRING
-            if compatible:
-                hardware_key = compatible[0]
-            elif platform:
-                hardware_key = platform
-
-            issue_info = test_issue_map.get(test.id, {})
-            issue_id = issue_info.get("issue_id")
-            issue_version = issue_info.get("issue_version")
-            issue_uncategorized = issue_id is None and test.status == StatusChoices.FAIL
-
-            arch = test.build.architecture or UNKNOWN_STRING
-            compiler = (
-                test.build.compiler[0]
-                if isinstance(test.build.compiler, list) and test.build.compiler
-                else test.build.compiler or UNKNOWN_STRING
-            )
-            config = test.build.config_name or UNKNOWN_STRING
-            is_boot = bool(path) and path.startswith("boot")
-
-            accumulate_rollup_entry(
-                rollup_data,
-                {
-                    "checkout": checkout,
-                    "path_group": path_group,
-                    "config": config,
-                    "arch": arch,
-                    "compiler": compiler,
-                    "hardware_key": hardware_key,
-                    "platform": platform,
-                    "lab": None,
-                    "origin": test.origin,
-                    "issue_id": issue_id,
-                    "issue_version": issue_version,
-                    "issue_uncategorized": issue_uncategorized,
-                    "is_boot": is_boot,
-                    "status": test.status,
-                },
-            )
-
-        rollup_objects = [
-            TreeTestsRollup(
-                origin=key.origin,
-                tree_name=key.tree_name,
-                git_repository_branch=key.git_repository_branch,
-                git_repository_url=key.git_repository_url,
-                git_commit_hash=key.git_commit_hash,
-                path_group=key.path_group,
-                build_config_name=key.config,
-                build_architecture=key.arch,
-                build_compiler=key.compiler,
-                hardware_key=key.hardware_key,
-                test_platform=key.platform,
-                test_lab=key.lab,
-                test_origin=key.test_origin,
-                issue_id=key.issue_id,
-                issue_version=key.issue_version,
-                issue_uncategorized=key.issue_uncategorized,
-                is_boot=key.is_boot,
-                **counts,
-            )
-            for key, counts in rollup_data.items()
-        ]
-
-        created = TreeTestsRollup.objects.bulk_create(rollup_objects)
-        return created
+        checkout_ids = {test.build.checkout_id for test in tests}
+        for checkout_id in sorted(checkout_ids):
+            call_command("populate_tree_tests_rollup", checkout_id=checkout_id)
+        return TreeTestsRollup.objects.count()
 
     def create_hardware_status(self, *, tests: list[Tests]) -> list[HardwareStatus]:
         """Aggregate seeded tests into hardware_status rows."""
