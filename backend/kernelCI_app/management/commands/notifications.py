@@ -3,10 +3,12 @@ import sys
 from collections import defaultdict
 from datetime import datetime, time, timedelta, timezone
 from email.utils import make_msgid
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional
 from urllib.parse import quote_plus
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from kernelCI_app.helpers.email import smtp_setup_connection
@@ -15,6 +17,7 @@ from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
+    KERNELCI_RESULTS,
     is_regzbot_tree,
     send_email_report,
     setup_jinja_template,
@@ -52,6 +55,10 @@ from kernelCI_app.queries.test import get_test_details_data, get_test_status_his
 from kernelCI_app.typeModels.metrics_notifications import (
     LabMetricsData,
     MetricsReportData,
+)
+from kernelCI_app.typeModels.notificationSubscriptions import (
+    issues_for_subscriber,
+    new_issue_subscribers,
 )
 from kernelCI_app.utils import group_status, is_boot
 from kernelCI_cache.queries.issues import (
@@ -100,53 +107,154 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     return new_issues
 
 
-def look_for_new_issues(*, service, signup_folder, email_args):
+def _tag_new_issues(issues: list[dict], *, test_only: bool = False) -> list[dict]:
+    tagged = []
+    for issue in issues:
+        if test_only:
+            issue["type"] = "test"
+        elif issue["build_id"]:
+            issue["type"] = "build"
+        elif issue["test_id"]:
+            issue["type"] = "boot"
+        else:
+            continue
+        tagged.append(issue)
+    return tagged
+
+
+def _summary_report(template, when, *, build_issues, boot_issues, test_issues):
+    return {
+        "content": template.render(
+            build_issues=build_issues,
+            boot_issues=boot_issues,
+            test_issues=test_issues,
+        ),
+        "title": f"new issues summary - {when.strftime('%Y-%m-%d %H:%M %Z')}",
+    }
+
+
+def _community_to(email_args) -> str:
+    if email_args.add_mailing_lists:
+        return KERNELCI_RESULTS
+    return email_args.to or ""
+
+
+def _show_new_issue_delivery(email_args, to: str, issues: list[dict]) -> None:
+    if email_args.send:
+        return
+    ids = ", ".join(issue["id"] for issue in issues)
+    print(f"To: {to}")
+    print(f"issues: {ids}")
+
+
+def _issues_of_type(issues: list[dict], issue_type: str) -> list[dict]:
+    return [issue for issue in issues if issue["type"] == issue_type]
+
+
+def look_for_new_issues(
+    *,
+    service,
+    signup_folder,
+    email_args,
+    issue_report_origins=None,
+    issue_report_types=None,
+):
     if get_running_instance() == "staging":
         print("This command only runs on production or dev environments.")
         return
 
-    issues = kcidb_new_issues()
-    build_issues = []
-    boot_issues = []
-    for issue in issues:
-        if issue["build_id"]:
-            issue["type"] = "build"
-            build_issues.append(issue)
-        elif issue["test_id"]:
-            issue["type"] = "boot"
-            boot_issues.append(issue)
+    if not signup_folder:
+        signup_folder = SIGNUP_FOLDER
+    if issue_report_origins is None:
+        issue_report_origins = ["maestro"]
+    if issue_report_types is None:
+        issue_report_types = ["build"]
 
+    subscribers = []
+    if not email_args.ignore_recipients:
+        signup_dir = Path(settings.BACKEND_DATA_DIR) / signup_folder
+        subscribers = new_issue_subscribers(signup_dir)
+    wants_test = any("test" in subscriber.issue_types for subscriber in subscribers)
+
+    summary_issues = _tag_new_issues(kcidb_new_issues())
+    if wants_test:
+        known = {issue["id"] for issue in summary_issues}
+        for issue in _tag_new_issues(
+            kcidb_new_issues(include_other_tests=True), test_only=True
+        ):
+            if issue["id"] not in known:
+                summary_issues.append(issue)
+
+    build_issues = _issues_of_type(summary_issues, "build")
+    boot_issues = _issues_of_type(summary_issues, "boot")
+    test_issues = _issues_of_type(summary_issues, "test")
     new_build_issues = exclude_already_found_and_store(build_issues)
     new_boot_issues = exclude_already_found_and_store(boot_issues)
-    if not new_build_issues and not new_boot_issues:
+    new_test_issues = (
+        exclude_already_found_and_store(test_issues) if test_issues else []
+    )
+
+    community = new_build_issues + new_boot_issues
+    available = community + new_test_issues
+    deliveries = []
+    for subscriber in subscribers:
+        matched = issues_for_subscriber(subscriber, available)
+        if matched:
+            deliveries.append((subscriber, matched))
+
+    if not community and not deliveries:
         print("No new issues")
         return
 
     template = setup_jinja_template("issues.txt.j2")
-    report = {}
     now = datetime.now(timezone.utc)
-    report["content"] = template.render(
-        build_issues=new_build_issues, boot_issues=new_boot_issues
-    )
-    report["title"] = f"new issues summary - {now.strftime('%Y-%m-%d %H:%M %Z')}"
+    if community:
+        _show_new_issue_delivery(email_args, _community_to(email_args), community)
+        send_email_report(
+            service=service,
+            report=_summary_report(
+                template,
+                now,
+                build_issues=new_build_issues,
+                boot_issues=new_boot_issues,
+                test_issues=[],
+            ),
+            email_args=email_args,
+            signup_folder=signup_folder,
+        )
 
-    send_email_report(
-        service=service,
-        report=report,
-        email_args=email_args,
-        signup_folder=signup_folder,
-    )
+    for subscriber, matched in deliveries:
+        _show_new_issue_delivery(email_args, subscriber.email, matched)
+        copy = SimpleNamespace(**vars(email_args))
+        copy.to = subscriber.email
+        copy.cc = None
+        copy.add_mailing_lists = False
+        copy.ignore_recipients = True
+        send_email_report(
+            service=service,
+            report=_summary_report(
+                template,
+                now,
+                build_issues=_issues_of_type(matched, "build"),
+                boot_issues=_issues_of_type(matched, "boot"),
+                test_issues=_issues_of_type(matched, "test"),
+            ),
+            email_args=copy,
+        )
 
     email_args.add_mailing_lists = True
     email_args.update = True
-    for issue in new_build_issues:
-        if issue["origin"] == "maestro":
-            generate_issue_report(
-                service=service,
-                issue_id=issue["id"],
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
+    for issue in new_build_issues + new_boot_issues + new_test_issues:
+        if issue["origin"] not in issue_report_origins:
+            continue
+        if issue["type"] not in issue_report_types:
+            continue
+        generate_issue_report(
+            service=service,
+            issue_id=issue["id"],
+            email_args=email_args,
+            signup_folder=signup_folder,
+        )
 
 
 def ask_ignore_issue():
@@ -1017,6 +1125,24 @@ class Command(BaseCommand):
             help="Limit checkout summary to specific origins (summary only, comma-separated list)",
         )
         parser.add_argument(
+            "--issue-report-origins",
+            type=lambda s: [origin.strip() for origin in s.split(",")],
+            default=["maestro"],
+            help=(
+                "Origins that get an automatic regression report "
+                "(new_issues only, comma-separated, default: maestro)"
+            ),
+        )
+        parser.add_argument(
+            "--issue-report-types",
+            type=lambda s: [issue_type.strip() for issue_type in s.split(",")],
+            default=["build"],
+            help=(
+                "Issue types that get an automatic regression report "
+                "(new_issues only, comma-separated, default: build)"
+            ),
+        )
+        parser.add_argument(
             "--skip-sent-reports",
             action="store_true",
             help="Skip reports that have already been sent (summary only)",
@@ -1071,6 +1197,8 @@ class Command(BaseCommand):
                     service=service,
                     email_args=email_args,
                     signup_folder=signup_folder,
+                    issue_report_origins=options.get("issue_report_origins"),
+                    issue_report_types=options.get("issue_report_types"),
                 )
 
             case "issue_report":

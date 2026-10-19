@@ -1,5 +1,10 @@
-"""Subscription YAML and metrics rules. Sending behavior is unchanged."""
+"""Subscription YAML and metrics rules.
 
+`issues: [build]` records the regression mail an address already gets.
+`boot` and `test` in that list opt the address into the hourly summary.
+"""
+
+from dataclasses import dataclass
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Annotated, Literal
@@ -14,6 +19,8 @@ from pydantic import (
     ValidationError,
     model_validator,
 )
+
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 IssueKind = Literal["build", "boot", "test"]
 
@@ -34,6 +41,8 @@ def validate_address(value: str) -> str:
 
 
 Address = Annotated[str, AfterValidator(validate_address)]
+
+SUMMARY_ISSUE_KINDS = frozenset({"boot", "test"})
 
 
 class Recipient(BaseModel):
@@ -56,6 +65,80 @@ _RECIPIENTS = TypeAdapter(list[Recipient])
 def cc_addresses(recipients: list) -> list[str]:
     """Addresses passed to current mails."""
     return [item.email for item in _RECIPIENTS.validate_python(recipients)]
+
+
+@dataclass(frozen=True)
+class NewIssueSubscriber:
+    email: str
+    issue_types: frozenset[IssueKind]
+    tree_url: str | None = None
+    hardware: str | None = None
+    origin: str | None = None
+
+
+def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
+    """Recipients whose issues list includes boot or test.
+
+    `build` stays the regression mail and does not opt into the summary.
+    A plain address does not opt in. Tree scope is the git URL. Hardware
+    scope is the platform name and origin.
+    """
+    subscribers: list[NewIssueSubscriber] = []
+    for path in _yaml_files(directory):
+        data = _load_mapping(path)
+        hardware_file = is_hardware_filename(path.name)
+        model = TypeAdapter(
+            dict[str, HardwareSubscription]
+            if hardware_file
+            else dict[str, TreeSubscription]
+        )
+        try:
+            parsed = model.validate_python(data)
+        except ValidationError as exc:
+            raise _validation_error(path, exc) from exc
+        for name, body in parsed.items():
+            for recipient in body.default_recipients:
+                kinds = frozenset(recipient.issues or []) & SUMMARY_ISSUE_KINDS
+                if not kinds:
+                    continue
+                if hardware_file:
+                    subscribers.append(
+                        NewIssueSubscriber(
+                            email=recipient.email,
+                            issue_types=kinds,
+                            hardware=name,
+                            origin=body.origin or DEFAULT_ORIGIN,
+                        )
+                    )
+                else:
+                    subscribers.append(
+                        NewIssueSubscriber(
+                            email=recipient.email,
+                            issue_types=kinds,
+                            tree_url=body.url,
+                        )
+                    )
+    return subscribers
+
+
+def issues_for_subscriber(
+    subscriber: NewIssueSubscriber, issues: list[dict]
+) -> list[dict]:
+    """Issues in this subscriber's scope whose type is in issue_types."""
+    matched = []
+    for issue in issues:
+        if issue.get("type") not in subscriber.issue_types:
+            continue
+        if subscriber.tree_url is not None:
+            if issue.get("git_repository_url") != subscriber.tree_url:
+                continue
+        elif (
+            issue.get("platform") != subscriber.hardware
+            or issue.get("origin") != subscriber.origin
+        ):
+            continue
+        matched.append(issue)
+    return matched
 
 
 class TreeSubscription(BaseModel):

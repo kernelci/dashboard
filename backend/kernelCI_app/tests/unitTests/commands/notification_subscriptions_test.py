@@ -8,10 +8,13 @@ from kernelCI_app.management.commands.helpers.summary import (
     process_submissions_files,
 )
 from kernelCI_app.typeModels.notificationSubscriptions import (
+    NewIssueSubscriber,
     NotificationConfigError,
     cc_addresses,
+    issues_for_subscriber,
     load_metrics_rules,
     load_subscriptions,
+    new_issue_subscribers,
 )
 
 NOTIFICATIONS = Path(__file__).resolve().parents[4] / "data" / "notifications"
@@ -57,6 +60,124 @@ def test_invalid_plain_address_names_the_address(tmp_path):
     assert error.file == "qcs6490_hardware.yaml"
     assert error.field == "qcs6490-rb3gen2.default_recipients.0.email"
     assert "invalid email address: Trilok Soni <not-an-email>" in str(error)
+
+
+def test_boot_and_test_in_issues_list_subscribers(tmp_path):
+    _write(
+        tmp_path,
+        "sound.yaml",
+        {
+            "broonie-sound": {
+                "url": "https://example.com/sound.git",
+                "default_recipients": [
+                    "plain@example.com",
+                    {"email": "build-only@example.com", "issues": ["build"]},
+                    {
+                        "email": "broonie@kernel.org",
+                        "issues": ["build", "boot", "test"],
+                    },
+                ],
+            }
+        },
+    )
+    _write(
+        tmp_path,
+        "board_hardware.yaml",
+        {
+            "qcs6490-rb3gen2": {
+                "default_recipients": [
+                    {
+                        "email": "tsoni@quicinc.com",
+                        "issues": ["boot"],
+                    }
+                ],
+            }
+        },
+    )
+
+    subscribers = new_issue_subscribers(tmp_path)
+    listed = [
+        (item.email, item.issue_types, item.tree_url, item.hardware, item.origin)
+        for item in subscribers
+    ]
+    assert listed == [
+        (
+            "tsoni@quicinc.com",
+            frozenset({"boot"}),
+            None,
+            "qcs6490-rb3gen2",
+            "maestro",
+        ),
+        (
+            "broonie@kernel.org",
+            frozenset({"boot", "test"}),
+            "https://example.com/sound.git",
+            None,
+            None,
+        ),
+    ]
+    assert cc_addresses(
+        [
+            {
+                "email": "broonie@kernel.org",
+                "issues": ["build", "boot"],
+            }
+        ]
+    ) == ["broonie@kernel.org"]
+
+
+def test_issues_for_subscriber_filters_type_and_scope():
+    tree = NewIssueSubscriber(
+        email="a@example.com",
+        issue_types=frozenset({"boot"}),
+        tree_url="https://example.com/sound.git",
+    )
+    hardware = NewIssueSubscriber(
+        email="b@example.com",
+        issue_types=frozenset({"boot", "build"}),
+        hardware="board",
+        origin="maestro",
+    )
+    issues = [
+        {
+            "id": "boot-on-tree",
+            "type": "boot",
+            "git_repository_url": "https://example.com/sound.git",
+            "platform": "other",
+            "origin": "maestro",
+        },
+        {
+            "id": "build-on-tree",
+            "type": "build",
+            "git_repository_url": "https://example.com/sound.git",
+            "platform": None,
+            "origin": "maestro",
+        },
+        {
+            "id": "boot-on-board",
+            "type": "boot",
+            "git_repository_url": "https://example.com/other.git",
+            "platform": "board",
+            "origin": "maestro",
+        },
+        {
+            "id": "boot-on-board-other-origin",
+            "type": "boot",
+            "git_repository_url": "https://example.com/other.git",
+            "platform": "board",
+            "origin": "microsoft",
+        },
+    ]
+    assert [issue["id"] for issue in issues_for_subscriber(tree, issues)] == [
+        "boot-on-tree"
+    ]
+    assert [issue["id"] for issue in issues_for_subscriber(hardware, issues)] == [
+        "boot-on-board"
+    ]
+
+
+def test_current_subscription_files_have_no_new_issues_subscribers():
+    assert new_issue_subscribers(SUBSCRIPTIONS) == []
 
 
 def test_invalid_issue_kind_names_file_and_field(tmp_path):

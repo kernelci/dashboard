@@ -4,7 +4,7 @@ tree: # The filename and the name of the tree may follow the tree-names.yaml fil
     - email: broonie@kernel.org
       issues: [build] # the issue kinds this address is notified about
     - email: someone@example.com
-      issues: [build, boot, test]
+      issues: [build, boot, test] # boot and test also request the hourly summary
  
   reports:
     - default:
