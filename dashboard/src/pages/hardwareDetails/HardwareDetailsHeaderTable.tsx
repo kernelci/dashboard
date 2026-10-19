@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import type { SetStateAction, Dispatch, JSX } from 'react';
+import type { JSX } from 'react';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -55,12 +55,11 @@ const DEBOUNCE_INTERVAL = 2000;
 
 interface IHardwareHeader {
   treeItems: PreparedTrees[];
-  selectedIndexes: number[] | null;
+  selectedIndexes: string[] | null;
   updateTreeFilters: (
-    selectedIndexes: number[] | null,
+    selectedIndexes: string[] | null,
     options?: { replace?: boolean },
   ) => void;
-  setTreeIndexesLength: Dispatch<SetStateAction<number>>;
   selectionResetKey: string;
 }
 
@@ -71,9 +70,7 @@ const CommitSelector = ({
   selectableCommits,
   isCommitsLoading,
   treeIndex,
-  rowLength,
   isMainPageLoading,
-  setTreeIndexesLength,
 }: {
   headCommitName?: string;
   headCommitHash?: string;
@@ -82,19 +79,12 @@ const CommitSelector = ({
   isCommitsLoading: boolean;
   isMainPageLoading: boolean;
   treeIndex: string;
-  rowLength: number;
-  setTreeIndexesLength: IHardwareHeader['setTreeIndexesLength'];
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
   const { treeCommits } = useSearch({ from: '/_main/hardware/$hardwareId' });
 
   const navigateToThePast = useCallback(
     (commitHash: string) => {
-      if (treeIndex === null) {
-        return;
-      }
-      setTreeIndexesLength(rowLength);
-
       const newTreeCommits = { ...treeCommits, [treeIndex]: commitHash };
       if (commitHash === headCommitHash) {
         delete newTreeCommits[treeIndex];
@@ -110,14 +100,7 @@ const CommitSelector = ({
         state: s => s,
       });
     },
-    [
-      navigate,
-      setTreeIndexesLength,
-      headCommitHash,
-      rowLength,
-      treeIndex,
-      treeCommits,
-    ],
+    [navigate, headCommitHash, treeIndex, treeCommits],
   );
 
   const gitValues = useMemo(() => {
@@ -208,9 +191,7 @@ const CommitSelector = ({
   );
 };
 
-const getColumns = (
-  setTreeIndexesLength: IHardwareHeader['setTreeIndexesLength'],
-): ColumnDef<PreparedTrees>[] => {
+const getColumns = (): ColumnDef<PreparedTrees>[] => {
   return [
     {
       id: 'select',
@@ -255,7 +236,7 @@ const getColumns = (
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="globalTable.commitTag" />
       ),
-      cell: ({ row, table }): JSX.Element => {
+      cell: ({ row }): JSX.Element => {
         return (
           <CommitSelector
             headCommitName={row.original.head_git_commit_name}
@@ -264,9 +245,7 @@ const getColumns = (
             selectableCommits={row.original.selectableCommits}
             isCommitsLoading={row.original.isCommitHistoryDataLoading}
             treeIndex={row.original.index}
-            rowLength={table.getCoreRowModel().rows.length}
             isMainPageLoading={row.original.isMainPageLoading}
-            setTreeIndexesLength={setTreeIndexesLength}
           />
         );
       },
@@ -333,7 +312,7 @@ const getColumns = (
 };
 
 const getInitialRowSelection = (
-  selectedIndexes: number[] | null,
+  selectedIndexes: string[] | null,
   treeItems: PreparedTrees[],
   isInitialLoad = false,
 ): Record<string, boolean> => {
@@ -352,34 +331,26 @@ const getInitialRowSelection = (
     );
   }
 
+  const selectedSet = new Set(selectedIndexes);
   return Object.fromEntries(
-    selectedIndexes
-      .map(idx => treeItems.find(t => t.index === String(idx)))
-      .filter((t): t is PreparedTrees => !!t)
-      .map(t => [t.index, true]),
+    treeItems.map(item => [item.index, selectedSet.has(item.index)]),
   );
 };
 
 const indexesFromRowSelection = (
   rowSelection: RowSelectionState,
-): number[] | null => {
-  const rowSelectionValues = Object.values(rowSelection);
-  if (rowSelectionValues.length === 0) {
-    return [];
-  }
+): string[] | null => {
+  const selected = Object.entries(rowSelection)
+    .filter(([, isSelected]) => isSelected)
+    .map(([key]) => key);
 
-  const selectedIndexes = Object.keys(rowSelection).map(rowId =>
-    parseInt(rowId),
-  );
-
-  return selectedIndexes;
+  return selected;
 };
 
 export function HardwareHeader({
   treeItems,
   selectedIndexes = null,
   updateTreeFilters,
-  setTreeIndexesLength,
   selectionResetKey,
 }: IHardwareHeader): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([
@@ -448,10 +419,7 @@ export function HardwareHeader({
     [],
   );
 
-  const columns = useMemo(
-    () => getColumns(setTreeIndexesLength),
-    [setTreeIndexesLength],
-  );
+  const columns = useMemo(() => getColumns(), []);
 
   const table = useReactTable({
     data: treeItems,

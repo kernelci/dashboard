@@ -2660,6 +2660,12 @@ components:
         commitHash:
           title: Commithash
           type: string
+        origin:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Origin
       required:
       - treeName
       - repositoryUrl
@@ -2725,6 +2731,9 @@ components:
           format: date-time
           title: Start Time
           type: string
+        origin:
+          title: Origin
+          type: string
       required:
       - git_commit_hash
       - tree_name
@@ -2732,6 +2741,7 @@ components:
       - git_repository_url
       - git_commit_name
       - start_time
+      - origin
       title: CommitHistoryValidCheckout
       type: object
     CommonDetailsBootsResponse:
@@ -3206,7 +3216,11 @@ components:
         selectedCommits:
           additionalProperties:
             type: string
-          description: Dictionary mapping tree names to selected commit hashes
+          description: Dictionary mapping stable tree keys to selected commit hashes.
+            Keys are the first 14 hexadecimal characters of SHA-256 over 'tree_name|git_repository_branch|git_repository_url|origin',
+            matching Tree.index values returned by the hardware details endpoints.
+            Values are a git commit hash or 'head' to use the tree head commit. An
+            empty object selects all trees with their head commits.
           title: Selectedcommits
           type: object
         filter:
@@ -4776,6 +4790,8 @@ components:
     Tree:
       properties:
         index:
+          description: Stable identifier for a tree, derived as the first 14 hexadecimal
+            characters of SHA-256 over 'tree_name|git_repository_branch|git_repository_url|origin'
           title: Index
           type: string
         origin:

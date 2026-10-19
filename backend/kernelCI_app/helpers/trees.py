@@ -12,9 +12,16 @@ from kernelCI_app.typeModels.treeListing import Checkout
 
 
 def make_tree_identifier_key(
-    *, tree_name: str, git_repository_url: str, git_repository_branch: str
+    *,
+    tree_name: str,
+    git_repository_url: str,
+    git_repository_branch: str,
+    origin: str | None = None,
 ) -> str:
-    return f"{tree_name}-{git_repository_url}-{git_repository_branch}"
+    parts = [tree_name, git_repository_url, git_repository_branch]
+    if origin:
+        parts.append(origin)
+    return "-".join(parts)
 
 
 def get_tree_file_data() -> dict[str, dict[str, str]]:

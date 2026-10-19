@@ -34,9 +34,13 @@ const HardwareCommitNavigationGraph = ({
     [diffFilter, hardwareId],
   );
 
-  const treeIdx =
-    trees.length === 1 ? 0 : treeIndexes?.length === 1 ? treeIndexes[0] : null;
-  const tree = treeIdx !== null && trees[treeIdx];
+  const treeKey =
+    trees.length === 1
+      ? trees[0].index
+      : treeIndexes?.length === 1
+        ? treeIndexes[0]
+        : null;
+  const tree = treeKey !== null && trees.find(t => t.index === treeKey);
 
   const commitHeads = useMemo(
     (): CommitHead[] =>
@@ -45,6 +49,7 @@ const HardwareCommitNavigationGraph = ({
         repositoryUrl: treeItem.git_repository_url ?? '',
         branch: treeItem.git_repository_branch ?? '',
         commitHash: treeItem.head_git_commit_hash ?? '',
+        origin: treeItem.origin,
       })),
     [trees],
   );
@@ -61,40 +66,41 @@ const HardwareCommitNavigationGraph = ({
   );
 
   const commitsList = useMemo(() => {
-    const treeForIdentifier = treeIdx !== null ? trees[treeIdx] : undefined;
+    const treeForIdentifier = tree || undefined;
     const key = treeForIdentifier
       ? makeTreeIdentifierKey({
           treeName: treeForIdentifier.tree_name ?? '',
           gitRepositoryBranch: treeForIdentifier.git_repository_branch ?? '',
           gitRepositoryUrl: treeForIdentifier.git_repository_url ?? '',
+          origin: treeForIdentifier.origin,
         })
       : '';
     const entries = commitHistoryData?.commit_history_table?.[key] ?? [];
     return entries.map(c => c.git_commit_hash);
-  }, [commitHistoryData?.commit_history_table, treeIdx, trees]);
+  }, [commitHistoryData?.commit_history_table, tree]);
 
   const markClickHandle = useCallback(
     (commitHash: string) => {
-      if (treeIdx === null) {
+      if (treeKey === null) {
         return;
       }
 
       navigate({
         search: current => ({
           ...current,
-          treeCommits: { ...treeCommits, [treeIdx]: commitHash },
+          treeCommits: { ...treeCommits, [treeKey]: commitHash },
         }),
         state: s => s,
       });
     },
-    [navigate, treeIdx, treeCommits],
+    [navigate, treeKey, treeCommits],
   );
 
   if (!tree) {
     return <></>;
   }
 
-  const treeId = treeCommits?.[treeIdx] ?? tree['head_git_commit_hash'];
+  const treeId = treeCommits?.[treeKey] ?? tree['head_git_commit_hash'];
 
   return (
     <CommitNavigationGraph
