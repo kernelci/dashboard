@@ -73,6 +73,7 @@ import { LoadingCircle } from '@/components/ui/loading-circle';
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
+import MissingRegistryNotice from './MissingRegistryNotice';
 
 function matchesCommitToken(
   hash: string,
@@ -595,6 +596,9 @@ function HardwareDetails(): JSX.Element {
               />
             </p>
           </div>
+          {summaryResponse.data?.common.in_registry === false && (
+            <MissingRegistryNotice />
+          )}
           <div className="mt-5">
             {!!treeData && (
               <>

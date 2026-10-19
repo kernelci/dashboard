@@ -231,6 +231,13 @@ export const messages = {
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder':
       'Search by hardware name or platform with a regex',
+    'hardwareDetails.missingRegistryItemFields':
+      'Fields: id, type, url, vendor_id, processor_id. Add a missing vendor or processor in the same change.',
+    'hardwareDetails.missingRegistryItemFile':
+      'Add the platform to its vendor file in the {registryLink}. A new vendor needs a file and a line in index.yaml.',
+    'hardwareDetails.missingRegistryLink': 'hardware registry',
+    'hardwareDetails.missingRegistryTitle':
+      'This board is not in the hardware registry',
     'hardwareDetails.notFound': 'Hardware not found',
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.selectTreeMessage':

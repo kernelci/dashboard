@@ -30,6 +30,7 @@ from kernelCI_app.helpers.issueExtras import parse_issue
 from kernelCI_app.queries.hardware import (
     get_hardware_details_summary,
     get_hardware_trees_head_commits,
+    is_hardware_in_registry,
 )
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonDetails import (
@@ -621,7 +622,11 @@ class HardwareDetailsSummary(APIView):
             summary = Summary(
                 builds=builds_summary, boots=boots_summary, tests=tests_summary
             )
-            commons = HardwareCommon(trees=all_trees, compatibles=all_compatibles)
+            commons = HardwareCommon(
+                trees=all_trees,
+                compatibles=all_compatibles,
+                in_registry=is_hardware_in_registry(hardware_id),
+            )
             filters = HardwareDetailsFilters(
                 all=all_filters,
                 builds=builds_filters,

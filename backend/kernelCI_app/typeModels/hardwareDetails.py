@@ -96,6 +96,7 @@ class Tree(BaseModel):
 class HardwareCommon(BaseModel):
     trees: List[Tree]
     compatibles: List[str]
+    in_registry: bool
 
 
 class HardwareTestLocalFilters(LocalFilters):

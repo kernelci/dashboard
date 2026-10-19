@@ -6,6 +6,7 @@ from django.db import connection, connections
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.models import HardwareRegistryPlatform
 from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
     get_build_duration_clause,
@@ -1130,3 +1131,7 @@ def get_hardware_commit_history(
         rows = cursor.fetchall()
 
     return rows
+
+
+def is_hardware_in_registry(hardware_id: str) -> bool:
+    return HardwareRegistryPlatform.objects.filter(pk=hardware_id).exists()
