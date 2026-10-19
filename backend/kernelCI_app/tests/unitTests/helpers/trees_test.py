@@ -31,6 +31,14 @@ class TestMakeTreeIdentifierKey:
         expected = "mainline-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git-master"
         assert result == expected
 
+        with_origin = make_tree_identifier_key(
+            tree_name="mainline",
+            git_repository_url="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+            git_repository_branch="master",
+            origin="broonie",
+        )
+        assert with_origin == expected + "-broonie"
+
     def test_make_tree_identifier_key_with_special_chars(self):
         """Test make_tree_identifier_key with special characters."""
         result = make_tree_identifier_key(

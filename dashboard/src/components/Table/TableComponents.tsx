@@ -1,7 +1,13 @@
 import type { LinkProps } from '@tanstack/react-router';
 import type { Cell, Row } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
-import { memo, useCallback, useMemo, type JSX } from 'react';
+import {
+  memo,
+  useCallback,
+  useMemo,
+  type CSSProperties,
+  type JSX,
+} from 'react';
 
 import { TableCellWithLink, TableRow } from '@/components/ui/table';
 
@@ -58,6 +64,7 @@ interface ITableRowComponent<T extends BaseComponentType> {
   currentLog?: number;
   openLogSheet: (index: number) => void;
   getRowLink: (detailsId: string) => LinkProps;
+  style?: CSSProperties;
 }
 
 const TableRowComponent = <T extends BaseComponentType>({
@@ -66,6 +73,7 @@ const TableRowComponent = <T extends BaseComponentType>({
   currentLog,
   openLogSheet,
   getRowLink,
+  style,
 }: ITableRowComponent<T>): JSX.Element => {
   const className = index === currentLog ? 'bg-sky-200' : undefined;
 
@@ -75,6 +83,7 @@ const TableRowComponent = <T extends BaseComponentType>({
 
   return (
     <TableRow
+      style={style}
       className={cn('hover:bg-light-blue cursor-pointer', className)}
       key={row.id}
     >

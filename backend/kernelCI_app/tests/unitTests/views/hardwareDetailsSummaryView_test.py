@@ -48,7 +48,10 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.hardware_id = "test_hardware"
-        self.heads = [("0", "abc123"), ("1", "def456")]
+        self.heads = [
+            ("0", "mainline", "https://git.kernel.org", "master", "abc123", "maestro"),
+            ("1", "next", "https://git.kernel.org", "master", "def456", "maestro"),
+        ]
 
     def _post(self, body):
         request = self.factory.post(
@@ -84,6 +87,30 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         for name, body in cases.items():
             with self.subTest(name):
                 self._assert_query_count(body, 1)
+
+    def test_same_commit_on_two_origins_stays_two_trees(self):
+        other_origin = {**SUMMARY_ROW, "origin": "broonie"}
+
+        trees, _ = HardwareDetailsSummary().aggregate_common(
+            [SUMMARY_ROW, other_origin], self.hardware_id
+        )
+
+        self.assertEqual(len(trees), 2)
+        self.assertEqual(len({tree.index for tree in trees}), 2)
+        for tree in trees:
+            self.assertEqual(tree.selected_commit_status["builds"].PASS, 1)
+
+    def test_empty_selected_summary_keeps_head_trees(self):
+        with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
+            mock_heads.return_value = self.heads
+            mock_query.side_effect = [[], [SUMMARY_ROW]]
+            response = self._post(self._body(selectedCommits={"0": "deadbeef"}))
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertNotIn("error", response.data)
+        self.assertEqual(mock_query.call_count, 2)
+        self.assertEqual(response.data["summary"]["builds"]["status"]["PASS"], 0)
+        self.assertEqual(len(response.data["common"]["trees"]), 1)
 
     def test_second_query_when_sql_differs(self):
         cases = {
