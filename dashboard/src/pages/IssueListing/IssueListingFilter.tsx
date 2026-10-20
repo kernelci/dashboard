@@ -65,23 +65,19 @@ export const createFilter = (
 const sectionTrees: ISectionItem[] = [
   {
     title: 'filter.origins',
-    subtitle: 'filter.originsSubtitle',
     sectionKey: 'origins',
   },
   {
     title: 'filter.issueCategories',
-    subtitle: 'filter.issueCategoriesSubtitle',
     sectionKey: 'issueCategories',
   },
   //// These sections will be available to the user once the data is stable in kcidb
   // {
   //   title: 'filter.issueCulprit',
-  //   subtitle: 'filter.issueCulpritSubtitle',
   //   sectionKey: 'issueCulprits',
   // },
   // {
   //   title: 'filter.options',
-  //   subtitle: 'filter.optionsSubtitle',
   //   sectionKey: 'issueOptions',
   // },
 ];

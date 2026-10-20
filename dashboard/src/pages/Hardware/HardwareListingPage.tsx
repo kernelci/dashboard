@@ -328,14 +328,15 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          {kcidevComponent}
+          <div className="flex items-center gap-4">
+            <HardwareRegistryFilters
+              endTimestampInSeconds={endTimestampInSeconds}
+              startTimestampInSeconds={startTimestampInSeconds}
+              urlFromMap={urlFromMap}
+            />
+            {kcidevComponent}
+          </div>
         </div>
-
-        <HardwareRegistryFilters
-          endTimestampInSeconds={endTimestampInSeconds}
-          startTimestampInSeconds={startTimestampInSeconds}
-          urlFromMap={urlFromMap}
-        />
 
         <HardwareTable
           treeTableRows={listItems}
