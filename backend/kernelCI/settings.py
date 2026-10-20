@@ -253,6 +253,16 @@ else:
                 f"--index={HARDWARE_REGISTRY_INDEX_URL}",
             ],
         ),
+        (
+            "0 4 * * *",
+            "django.core.management.call_command",
+            ["sync_commit_mirror"],
+        ),
+        (
+            "0 10 * * *",
+            "django.core.management.call_command",
+            ["sync_commit_ingest"],
+        ),
     ]
 
 # Email settings for SMTP backend
@@ -276,6 +286,8 @@ GIT_FETCH_TIMEOUT_SECONDS = int(os.environ.get("GIT_FETCH_TIMEOUT_SECONDS", "60"
 GIT_FETCH_MAX_PACK_BYTES = int(
     os.environ.get("GIT_FETCH_MAX_PACK_BYTES", str(2 * 1024 * 1024))
 )
+# Persistent treeless mirror for commit metadata sync (#2109). Not BACKEND_VOLUME_DIR.
+GIT_MIRROR_DIR = os.environ.get("GIT_MIRROR_DIR", "/var/lib/kernelci/git-mirror")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
