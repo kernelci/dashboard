@@ -185,7 +185,6 @@ const CheckboxSection = ({
     () =>
       sections.map(section => ({
         title: intl.formatMessage({ id: section.title }),
-        subtitle: intl.formatMessage({ id: section.subtitle }),
         items: parsedFilter[section.sectionKey],
         isGlobal: section.isGlobal,
         showIcon: showAllIcons,
@@ -243,7 +242,6 @@ const TimeRangeSection = ({
     () => [
       {
         title: intl.formatMessage({ id: 'filter.buildDuration' }),
-        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.buildDurationMin,
         max: diffFilter.buildDurationMax,
         onMaxChange: e => timeChangeHandler(e, 'buildDurationMax'),
@@ -251,7 +249,6 @@ const TimeRangeSection = ({
       },
       {
         title: intl.formatMessage({ id: 'filter.bootDuration' }),
-        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.bootDurationMin,
         max: diffFilter.bootDurationMax,
         onMaxChange: e => timeChangeHandler(e, 'bootDurationMax'),
@@ -259,7 +256,6 @@ const TimeRangeSection = ({
       },
       {
         title: intl.formatMessage({ id: 'filter.testDuration' }),
-        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.testDurationMin,
         max: diffFilter.testDurationMax,
         onMaxChange: e => timeChangeHandler(e, 'testDurationMax'),
@@ -321,7 +317,6 @@ const TreeSelectSection = ({
         title={intl.formatMessage({ id: 'global.trees' })}
         items={filterItems}
         isGlobal
-        subtitle={intl.formatMessage({ id: 'filter.treeSubtitle' })}
         onClickItem={handleSelectTree}
         showIcon={showIcon}
       />

@@ -344,15 +344,14 @@ const HardwareListingPage = ({
               navigateFrom={urlFromMap.navigate}
               paramFilter={diffFilter}
             />
+            <HardwareRegistryFilters
+              endTimestampInSeconds={endTimestampInSeconds}
+              startTimestampInSeconds={startTimestampInSeconds}
+              urlFromMap={urlFromMap}
+            />
             {kcidevComponent}
           </div>
         </div>
-
-        <HardwareRegistryFilters
-          endTimestampInSeconds={endTimestampInSeconds}
-          startTimestampInSeconds={startTimestampInSeconds}
-          urlFromMap={urlFromMap}
-        />
 
         <HardwareTable
           treeTableRows={listItems}
