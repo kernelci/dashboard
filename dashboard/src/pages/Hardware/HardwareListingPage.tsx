@@ -338,18 +338,25 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
+<<<<<<< HEAD
           <HardwareListingFilter
             data={filterOptions}
             navigateFrom={urlFromMap.navigate}
             paramFilter={diffFilter}
           />
+||||||| parent of 99e3d272e (feat(filters): tighten the shared filters drawer)
+          {kcidevComponent}
+=======
+          <div className="flex items-center gap-4">
+            <HardwareRegistryFilters
+              endTimestampInSeconds={endTimestampInSeconds}
+              startTimestampInSeconds={startTimestampInSeconds}
+              urlFromMap={urlFromMap}
+            />
+            {kcidevComponent}
+          </div>
+>>>>>>> 99e3d272e (feat(filters): tighten the shared filters drawer)
         </div>
-
-        <HardwareRegistryFilters
-          endTimestampInSeconds={endTimestampInSeconds}
-          startTimestampInSeconds={startTimestampInSeconds}
-          urlFromMap={urlFromMap}
-        />
 
         <HardwareTable
           treeTableRows={listItems}

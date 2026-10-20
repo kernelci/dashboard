@@ -85,7 +85,7 @@ export const DrawerSection = ({
   return (
     <>
       {!hideSeparator && <Separator />}
-      <div className="not-first:pt-10 not-last:pb-10">{children}</div>
+      <div className="not-first:pt-4 not-last:pb-4">{children}</div>
     </>
   );
 };
@@ -122,7 +122,7 @@ export const FilterTypeIcon = ({ type }: FilterTypeIconProps): JSX.Element => {
 
 const Legend = (): JSX.Element => {
   return (
-    <div className="flex items-center gap-1 pb-10">
+    <div className="flex items-center gap-1 pb-4">
       <span className="mr-1 font-semibold">
         <FormattedMessage id="global.legend" />
       </span>

@@ -19,7 +19,7 @@ interface ICheckbox {
 }
 
 const containerClass =
-  'min-w-[300px] p-4 border-[2px] border-dark-gray rounded-sm cursor-pointer text-dim-gray';
+  'px-2 py-1 border border-dark-gray rounded-sm cursor-pointer text-dim-gray text-sm';
 
 const maxCheckboxLength = 29;
 
@@ -46,7 +46,7 @@ const Checkbox = ({
       })}
     >
       <input
-        className="mr-4"
+        className="mr-1.5 size-3.5"
         type="checkbox"
         checked={isChecked}
         onChange={onToggle}
