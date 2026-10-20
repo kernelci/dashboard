@@ -5,9 +5,14 @@ import { useSearch } from '@tanstack/react-router';
 
 import type {
   HardwareListingResponse,
+  HardwareRegistryFilterOptions,
   HardwareRevisionSelection,
   HardwareSelectorsResponse,
 } from '@/types/hardware';
+import {
+  registryFilterToParams,
+  type TRegistryFilter,
+} from '@/pages/Hardware/registryFilters';
 import type { StatusCount } from '@/types/general';
 import { statusCountToShortStatusCount } from '@/utils/status';
 
@@ -32,6 +37,7 @@ const fetchHardwareListing = async (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   commitsList?: string[],
+  registryFilter?: TRegistryFilter,
 ): Promise<HardwareListingResponse> => {
   const data = await RequestData.get<HardwareListingResponse>(
     '/api/hardware/',
@@ -41,6 +47,7 @@ const fetchHardwareListing = async (
         endTimestampInSeconds,
         origin,
         ...(commitsList?.length ? { commitsList: commitsList.join(',') } : {}),
+        ...registryFilterToParams(registryFilter ?? {}),
       },
     },
   );
@@ -55,7 +62,7 @@ export const useHardwareListing = (
   commitsList?: string[],
   enabled = true,
 ): UseQueryResult<HardwareListingResponse> => {
-  const { origin } = useSearch({ from: searchFrom });
+  const { origin, registryFilter } = useSearch({ from: searchFrom });
 
   const queryKey = [
     'hardwareListing',
@@ -63,6 +70,7 @@ export const useHardwareListing = (
     endTimestampInSeconds,
     origin,
     commitsList ?? null,
+    registryFilter,
   ];
 
   return useQuery({
@@ -73,6 +81,7 @@ export const useHardwareListing = (
         startTimestampInSeconds,
         endTimestampInSeconds,
         commitsList,
+        registryFilter,
       ),
     enabled,
     refetchOnWindowFocus: false,
@@ -94,6 +103,62 @@ const fetchHardwareSelectors = async (
   return data;
 };
 
+const fetchHardwareRegistryFilterOptions = async (
+  origin: string,
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+  selection: HardwareRevisionSelection | null,
+): Promise<HardwareRegistryFilterOptions> =>
+  RequestData.get<HardwareRegistryFilterOptions>(
+    '/api/hardware/registry-filters/',
+    {
+      params: {
+        origin,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+        ...(selection
+          ? {
+              tree_name: selection.treeName,
+              git_repository_url: selection.gitRepositoryUrl,
+              git_repository_branch: selection.gitBranch,
+              git_commit_hash: selection.gitCommitHash,
+            }
+          : {}),
+      },
+    },
+  );
+
+export const useHardwareRegistryFilterOptions = (
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+  searchFrom: HardwareListingRoutesMap['search'],
+): UseQueryResult<HardwareRegistryFilterOptions> => {
+  const { origin, treeName, gitRepositoryUrl, gitBranch, gitCommitHash } =
+    useSearch({ from: searchFrom });
+  const selection: HardwareRevisionSelection | null =
+    treeName && gitRepositoryUrl && gitBranch && gitCommitHash
+      ? { treeName, gitRepositoryUrl, gitBranch, gitCommitHash }
+      : null;
+
+  return useQuery({
+    queryKey: [
+      'hardwareRegistryFilterOptions',
+      origin,
+      startTimestampInSeconds,
+      endTimestampInSeconds,
+      selection,
+    ],
+    queryFn: () =>
+      fetchHardwareRegistryFilterOptions(
+        origin,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+        selection,
+      ),
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const useHardwareSelectors = (
   searchFrom: HardwareListingRoutesMap['search'],
 ): UseQueryResult<HardwareSelectorsResponse> => {
@@ -109,6 +174,7 @@ export const useHardwareSelectors = (
 const fetchHardwareListingByRevision = async (
   selection: HardwareRevisionSelection,
   origin: string,
+  registryFilter: TRegistryFilter,
 ): Promise<HardwareListingResponse> => {
   const data = await RequestData.get<HardwareListingByRevisionApiResponse>(
     '/api/hardware-by-revision/',
@@ -119,6 +185,7 @@ const fetchHardwareListingByRevision = async (
         git_repository_url: selection.gitRepositoryUrl,
         git_repository_branch: selection.gitBranch,
         git_commit_hash: selection.gitCommitHash,
+        ...registryFilterToParams(registryFilter),
       },
     },
   );
@@ -144,7 +211,7 @@ export const useHardwareListingByRevision = (
   selection: HardwareRevisionSelection | null,
   searchFrom: HardwareListingRoutesMap['search'],
 ): UseQueryResult<HardwareListingResponse> => {
-  const { origin } = useSearch({ from: searchFrom });
+  const { origin, registryFilter } = useSearch({ from: searchFrom });
 
   const queryKey = [
     'hardwareListingByRevision',
@@ -154,6 +221,7 @@ export const useHardwareListingByRevision = (
     selection?.gitBranch,
     selection?.gitCommitHash,
     selection,
+    registryFilter,
   ];
 
   return useQuery({
@@ -162,7 +230,7 @@ export const useHardwareListingByRevision = (
       if (selection === null) {
         return { hardware: [] };
       }
-      return fetchHardwareListingByRevision(selection, origin);
+      return fetchHardwareListingByRevision(selection, origin, registryFilter);
     },
     enabled: Boolean(
       selection?.treeName &&

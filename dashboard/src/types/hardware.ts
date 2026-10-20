@@ -20,6 +20,17 @@ export interface HardwareListingResponse {
   hardware: HardwareListingApiItem[];
 }
 
+export type HardwareRegistryFilterOptions = {
+  architecture: string[];
+  processor: string[];
+  platform_vendor: string[];
+  silicon_vendor: string[];
+  platform: string[];
+  system_module: string[];
+  form_factor: string[];
+  board_type: string[];
+};
+
 export type HardwareSelectorRevision = {
   git_commit_hash: string;
   git_commit_name?: string | null;

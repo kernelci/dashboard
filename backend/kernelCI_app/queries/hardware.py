@@ -10,6 +10,10 @@ from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
     get_build_duration_clause,
 )
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    HardwareRegistryFilter,
+    get_hardware_daily_revision_listing,
+)
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
@@ -177,54 +181,56 @@ def get_hardware_listing_data_by_revision(
     git_repository_url: str,
     git_repository_branch: str,
     git_commit_hash: str,
+    registry_filter: Optional[HardwareRegistryFilter] = None,
 ) -> list[dict]:
-    count_clauses = _get_hardware_listing_count_clauses()
-    params = {
-        "origin": origin,
-        "tree_name": tree_name,
-        "git_repository_url": git_repository_url,
-        "git_repository_branch": git_repository_branch,
-        "git_commit_hash": git_commit_hash,
-    }
-
-    query = f"""
-        WITH relevant_tests AS (
-            SELECT
-                tests.environment_compatible AS hardware,
-                tests.environment_misc ->> 'platform' AS platform,
-                tests.status,
-                tests.path,
-                tests.id,
-                b.id AS build_id,
-                b.status AS build_status
-            FROM
-                checkouts c
-                INNER JOIN builds b ON b.checkout_id = c.id
-                INNER JOIN tests ON tests.build_id = b.id
-            WHERE
-                c.tree_name = %(tree_name)s
-                AND c.git_repository_url = %(git_repository_url)s
-                AND c.git_repository_branch = %(git_repository_branch)s
-                AND c.git_commit_hash = %(git_commit_hash)s
-                AND tests.origin = %(origin)s
-                AND tests.environment_misc ->> 'platform' IS NOT NULL
-        )
-        SELECT
-            relevant_tests.platform,
-            relevant_tests.hardware,
-            {count_clauses}
-        FROM
-            relevant_tests
-        GROUP BY
-            relevant_tests.platform,
-            relevant_tests.hardware
-        ORDER BY
-            relevant_tests.platform ASC
-    """
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return dict_fetchall(cursor)
+    rows = get_hardware_daily_revision_listing(
+        origin=origin,
+        tree_name=tree_name,
+        git_repository_url=git_repository_url,
+        git_repository_branch=git_repository_branch,
+        git_commit_hash=git_commit_hash,
+        registry_filter=registry_filter,
+    )
+    return [
+        {
+            "platform": platform,
+            "hardware": hardware,
+            "pass_builds": build_pass,
+            "fail_builds": build_fail,
+            "null_builds": build_inc,
+            "error_builds": 0,
+            "miss_builds": 0,
+            "done_builds": 0,
+            "skip_builds": 0,
+            "pass_boots": boot_pass,
+            "fail_boots": boot_fail,
+            "null_boots": boot_inc,
+            "error_boots": 0,
+            "miss_boots": 0,
+            "done_boots": 0,
+            "skip_boots": 0,
+            "pass_tests": test_pass,
+            "fail_tests": test_fail,
+            "null_tests": test_inc,
+            "error_tests": 0,
+            "miss_tests": 0,
+            "done_tests": 0,
+            "skip_tests": 0,
+        }
+        for (
+            platform,
+            hardware,
+            build_pass,
+            build_fail,
+            build_inc,
+            boot_pass,
+            boot_fail,
+            boot_inc,
+            test_pass,
+            test_fail,
+            test_inc,
+        ) in rows
+    ]
 
 
 def get_hardware_listing_data_bulk(
