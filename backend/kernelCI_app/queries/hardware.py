@@ -17,6 +17,10 @@ from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
     get_build_duration_clause,
 )
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    HardwareRegistryFilter,
+    registry_filter_predicate,
+)
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
@@ -224,6 +228,7 @@ def get_hardware_listing_data_by_revision(
     git_repository_url: str,
     git_repository_branch: str,
     git_commit_hash: str,
+    registry_filter: Optional[HardwareRegistryFilter] = None,
 ) -> list[tuple]:
     checkouts = """
         SELECT id AS checkout_id
@@ -248,6 +253,7 @@ def get_hardware_listing_data_by_revision(
         test_origin=test_origin,
         build_lab=build_lab,
         test_lab=test_lab,
+        registry_filter=registry_filter,
     )
 
 
@@ -394,6 +400,7 @@ def _hardware_daily_counts(
     test_origin: Optional[list[str]],
     build_lab: Optional[list[str]],
     test_lab: Optional[list[str]],
+    registry_filter: Optional[HardwareRegistryFilter] = None,
 ) -> list[tuple]:
     """Counts from daily aggregates. Build/test filtered independently; narrowed side picks platforms.
     Optional checkouts narrows checkout_id; else checkout_day window only."""
@@ -425,6 +432,12 @@ def _hardware_daily_counts(
         (False, True): "RIGHT JOIN",
         (False, False): "FULL OUTER JOIN",
     }[bool(build_origin or build_lab), bool(test_origin or test_lab)]
+
+    predicate, filter_params = registry_filter_predicate(
+        registry_filter or HardwareRegistryFilter(),
+        "COALESCE(builds.platform, tests.platform)",
+    )
+    registry_where = f"WHERE {predicate}" if predicate else ""
 
     scope_cte = f"selected_checkouts AS ({checkouts}),\n        " if checkouts else ""
 
@@ -472,6 +485,7 @@ def _hardware_daily_counts(
             COALESCE(tests.test_inc, 0)
         FROM build_counts builds
         {sides_join} test_counts tests ON tests.platform = builds.platform
+        {registry_where}
         ORDER BY platform
     """
 
@@ -485,6 +499,7 @@ def _hardware_daily_counts(
                 "test_origin": test_origin,
                 "build_lab": build_lab,
                 "test_lab": test_lab,
+                **filter_params,
             },
         )
         return cursor.fetchall()
@@ -500,6 +515,7 @@ def get_hardware_listing_data(
     build_lab: Optional[list[str]],
     test_lab: Optional[list[str]],
     commits_list: Optional[list[str]] = None,
+    registry_filter: Optional[HardwareRegistryFilter] = None,
 ) -> list[tuple]:
     params = {
         "start_date": start_date,
@@ -532,6 +548,7 @@ def get_hardware_listing_data(
         test_origin=test_origin,
         build_lab=build_lab,
         test_lab=test_lab,
+        registry_filter=registry_filter,
     )
 
 
