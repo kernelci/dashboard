@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import signal
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -332,22 +333,44 @@ def _git_executable() -> str:
     return git
 
 
-def _git(repo_dir: Path, *args: str, timeout: int = 30) -> bytes:
+def run_git(
+    repo_dir: Path,
+    *args: str,
+    timeout: int = 30,
+    stdin: bytes | None = None,
+    stream: bool = False,
+    extra_env: dict[str, str] | None = None,
+) -> bytes:
+    """Run git in repo_dir. With stream=True git writes straight to our console,
+    so long fetches show their own progress; stdout is then not captured."""
     env = os.environ.copy()
     env.update(_GIT_ENV)
+    if extra_env:
+        env.update(extra_env)
     command = [_git_executable(), "-C", str(repo_dir), *args]
+    pipe = None if stream else subprocess.PIPE
+    # Own session so the timeout kills git *and* the curl/remote-https children it
+    # spawned. subprocess.run only signals git itself, and a child still holding the
+    # pipes blocks the read forever - a stalled fetch then hangs the whole job.
+    process = subprocess.Popen(  # noqa: S603
+        command,
+        stdin=subprocess.PIPE if stdin is not None else None,
+        stdout=pipe,
+        stderr=pipe,
+        env=env,
+        start_new_session=True,
+    )
     try:
-        result = subprocess.run(  # noqa: S603
-            command,
-            check=False,
-            capture_output=True,
-            timeout=timeout,
-            env=env,
-        )
+        stdout, stderr_bytes = process.communicate(input=stdin, timeout=timeout)
     except subprocess.TimeoutExpired as exc:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.communicate()
         raise FetchFailedError(f"git {' '.join(args)} timed out") from exc
 
-    if result.returncode != 0:
-        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+    if process.returncode != 0:
+        stderr = (stderr_bytes or b"").decode("utf-8", errors="replace").strip()
         raise FetchFailedError(f"git {' '.join(args)} failed: {stderr}")
-    return result.stdout
+    return stdout or b""
+
+
+_git = run_git
