@@ -111,7 +111,7 @@ that file on each scrape:
 
 Both series exist only when `PROMETHEUS_METRICS_ENABLED=true` and a fetch has
 completed. `GitMirrorSizeHigh` in `monitoring/django.rules` fires when the
-size stays above 10 GB for 30 minutes. Steady state is about 6–8 GB.
+size stays above 10 GiB for 30 minutes. Steady state is about 6–8 GiB.
 
 ### Cronjob Healthchecks
 
