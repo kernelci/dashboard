@@ -1,5 +1,4 @@
 ardb:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/ardb/linux.git
   default_recipients:
-    - email: ardb@kernel.org
-      issues: [build]
+    - ardb@kernel.org

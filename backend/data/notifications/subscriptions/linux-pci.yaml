@@ -1,5 +1,4 @@
 linux-pci:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
   default_recipients:
-    - email: linux-pci@vger.kernel.org
-      issues: [build]
+    - linux-pci@vger.kernel.org

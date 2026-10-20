@@ -1,14 +1,10 @@
 chromiumos:
   url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
   default_recipients:
-    - email: laura.nao@collabora.com
-      issues: [build]
-    - email: vignesh.raman@collabora.com
-      issues: [build]
-    - email: arnaud.ferraris@collabora.com
-      issues: [build]
-    - email: mhiramat@google.com
-      issues: [build]
+    - laura.nao@collabora.com
+    - vignesh.raman@collabora.com
+    - arnaud.ferraris@collabora.com
+    - mhiramat@google.com
 
   reports:
     - chromeos-5.10:

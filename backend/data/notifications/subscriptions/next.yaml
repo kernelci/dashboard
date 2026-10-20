@@ -1,8 +1,7 @@
 next:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
   default_recipients:
-    - email: linux-next@vger.kernel.org
-      issues: [build]
+    - linux-next@vger.kernel.org
 
   reports:
     - default:

@@ -1,5 +1,4 @@
 lee-mfd:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/lee/mfd.git
   default_recipients:
-    - email: lee@kernel.org
-      issues: [build]
+    - lee@kernel.org

@@ -1,5 +1,4 @@
 media:
   url: https://git.linuxtv.org/media.git
   default_recipients:
-    - email: media@linuxtv.org
-      issues: [build]
+    - media@linuxtv.org

@@ -1,7 +1,5 @@
 chrome-platform:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/chrome-platform/linux.git
   default_recipients:
-    - email: chrome-platform@lists.linux.dev
-      issues: [build]
-    - email: tzungbi@kernel.org
-      issues: [build]
+    - chrome-platform@lists.linux.dev
+    - tzungbi@kernel.org

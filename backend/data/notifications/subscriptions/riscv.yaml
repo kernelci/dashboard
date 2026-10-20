@@ -1,5 +1,4 @@
 riscv:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git
   default_recipients:
-    - email: linux-riscv@lists.infradead.org
-      issues: [build]
+    - linux-riscv@lists.infradead.org

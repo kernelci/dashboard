@@ -2,8 +2,7 @@
 stable-rt:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-stable-rt.git
   default_recipients:
-    - email: linux-rt-devel@lists.linux.dev
-      issues: [build]
+    - linux-rt-devel@lists.linux.dev
 
   reports:
     - v5.4-rt:

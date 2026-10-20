@@ -1,5 +1,4 @@
 tip:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git
   default_recipients:
-    - email: tip@kernel.org
-      issues: [build]
+    - tip@kernel.org

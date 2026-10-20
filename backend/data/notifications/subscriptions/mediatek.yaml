@@ -1,8 +1,7 @@
 mediatek:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/mediatek/linux.git
   default_recipients:
-    - email: angelogioacchino.delregno@collabora.com
-      issues: [build]
+    - angelogioacchino.delregno@collabora.com
 
   reports:
     - default:

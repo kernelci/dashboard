@@ -1,5 +1,4 @@
 padovan:
   url: https://github.com/padovan/linux.git
   default_recipients:
-    - email: padovan@kernel.org
-      issues: [build]
+    - padovan@kernel.org

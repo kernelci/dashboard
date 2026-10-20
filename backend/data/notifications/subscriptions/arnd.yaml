@@ -1,5 +1,4 @@
 arnd:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git
   default_recipients:
-    - email: arnd@arndb.de
-      issues: [build]
+    - arnd@arndb.de

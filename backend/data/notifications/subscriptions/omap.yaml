@@ -1,8 +1,7 @@
 omap:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap.git
   default_recipients:
-    - email: khilman@baylibre.com
-      issues: [build]
+    - khilman@baylibre.com
 
   reports:
     - default:
