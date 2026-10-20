@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.queries.hardware import get_hardware_listing_data_by_revision
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    hardware_registry_filter_from_request,
+)
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareItem,
     HardwareListingByRevisionResponse,
@@ -79,6 +82,7 @@ class HardwareByRevisionView(APIView):
             git_repository_url=query_params.git_repository_url,
             git_repository_branch=query_params.git_repository_branch,
             git_commit_hash=query_params.git_commit_hash,
+            registry_filter=hardware_registry_filter_from_request(request.GET),
         )
 
         try:

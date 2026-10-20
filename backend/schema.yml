@@ -78,6 +78,28 @@ paths:
       operationId: hardware_retrieve
       parameters:
       - in: query
+        name: architecture
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: boardType
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Boardtype
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
         name: commitsList
         schema:
           anyOf:
@@ -95,6 +117,17 @@ paths:
         description: Interval end timestamp in seconds for the results
         required: true
       - in: query
+        name: formFactor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Formfactor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
         name: origin
         schema:
           default: maestro
@@ -102,12 +135,67 @@ paths:
           type: string
         description: Origin of the hardware
       - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: platformVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platformvendor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: processor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Processor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: siliconVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Siliconvendor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
         name: startTimestampInSeconds
         schema:
           title: Starttimestampinseconds
           type: string
         description: Interval start timestamp in seconds for the results
         required: true
+      - in: query
+        name: systemModule
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Systemmodule
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
       tags:
       - hardware
       security:
@@ -125,6 +213,39 @@ paths:
     get:
       operationId: hardware_by_revision_retrieve
       parameters:
+      - in: query
+        name: architecture
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: boardType
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Boardtype
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: formFactor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Formfactor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
       - in: query
         name: git_commit_hash
         schema:
@@ -153,6 +274,61 @@ paths:
           title: Origin
           type: string
         description: Origin of the hardware
+      - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: platformVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platformvendor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: processor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Processor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: siliconVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Siliconvendor
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
+      - in: query
+        name: systemModule
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Systemmodule
+        description: Comma-separated registry values. Values in one field are OR;
+          different fields are AND. A platform that is not in the registry matches
+          only the platform filter, and only when no other registry field is set.
       - in: query
         name: tree_name
         schema:
@@ -414,6 +590,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareRegistrySyncResponse'
+  /api/hardware/registry-filters/:
+    get:
+      operationId: hardware_registry_filters_retrieve
+      parameters:
+      - in: query
+        name: endTimestampInSeconds
+        schema:
+          title: Endtimestampinseconds
+          type: string
+        description: Interval end timestamp in seconds for the results
+        required: true
+      - in: query
+        name: git_commit_hash
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Commit Hash
+        description: Commit hash of the tree
+      - in: query
+        name: git_repository_branch
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Repository Branch
+        description: Git branch name of the tree
+      - in: query
+        name: git_repository_url
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Repository Url
+        description: Git repository URL of the tree
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the hardware
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          title: Starttimestampinseconds
+          type: string
+        description: Interval start timestamp in seconds for the results
+        required: true
+      - in: query
+        name: tree_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Tree Name
+        description: Name of the tree
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareRegistryFilterOptions'
           description: ''
   /api/hardware/selectors/:
     get:
@@ -3399,6 +3648,59 @@ components:
           title: Files
           type: array
       title: HardwareRegistrySyncResponse
+      type: object
+    HardwareRegistryFilterOptions:
+      properties:
+        architecture:
+          items:
+            type: string
+          title: Architecture
+          type: array
+        processor:
+          items:
+            type: string
+          title: Processor
+          type: array
+        platform_vendor:
+          items:
+            type: string
+          title: Platform Vendor
+          type: array
+        silicon_vendor:
+          items:
+            type: string
+          title: Silicon Vendor
+          type: array
+        platform:
+          items:
+            type: string
+          title: Platform
+          type: array
+        system_module:
+          items:
+            type: string
+          title: System Module
+          type: array
+        form_factor:
+          items:
+            type: string
+          title: Form Factor
+          type: array
+        board_type:
+          items:
+            type: string
+          title: Board Type
+          type: array
+      required:
+      - architecture
+      - processor
+      - platform_vendor
+      - silicon_vendor
+      - platform
+      - system_module
+      - form_factor
+      - board_type
+      title: HardwareRegistryFilterOptions
       type: object
     HardwareSelectorBranch:
       properties:

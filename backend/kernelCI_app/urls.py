@@ -145,6 +145,11 @@ urlpatterns = [
         name="hardwareRegistrySync",
     ),
     path(
+        "hardware/registry-filters/",
+        view_cache(views.HardwareRegistryFiltersView),
+        name="hardwareRegistryFilters",
+    ),
+    path(
         "hardware/<str:hardware_id>",
         view_cache(views.HardwareDetails),
         name="hardwareDetails",
