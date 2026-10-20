@@ -10,6 +10,7 @@ volumes:
     backend-data:
     static-data:
     dashboard-db-data:
+    git-mirror:
 
 networks:
     public:
@@ -65,6 +66,7 @@ services:
             - SKIP_CRONJOBS=true
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - git-mirror:${GIT_MIRROR_DIR:-/var/lib/kernelci/git-mirror}
         restart: always
         mem_limit: 3g
         networks:
