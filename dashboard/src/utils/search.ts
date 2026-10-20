@@ -55,6 +55,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
       et: 'number',
       iv: 'number',
       ...diffFilterDurationQueryNumberTypes,
+      ...registryFilterQueryArrayTypes,
     },
   });
 
@@ -156,7 +157,26 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   gitRepositoryUrl: 'gu',
   gitBranch: 'gb',
   gitCommitHash: 'ch',
+  registryFilter: 'rf',
 } as const;
+
+const registryFilterMinifiedParams = {
+  architecture: 'a',
+  processor: 'p',
+  platformVendor: 'pv',
+  siliconVendor: 'sv',
+  platform: 'pl',
+  systemModule: 'sm',
+  formFactor: 'ff',
+  boardType: 'bt',
+} as const;
+
+const registryFilterQueryArrayTypes = Object.fromEntries(
+  Object.values(registryFilterMinifiedParams).map(key => [
+    `rf${KEY_FLAT_CHAR}${key}`,
+    'string[]',
+  ]),
+) as Record<string, 'string[]'>;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
   gitBranch: 'gb',
@@ -213,7 +233,11 @@ const diffFilterDurationQueryNumberTypes = Object.fromEntries(
 ) as Record<string, 'number'>;
 
 type MinifiedParams = Record<
-  SearchParamsKeys | TFilterKeys | keyof TableFilter | keyof TTreeInformation,
+  | SearchParamsKeys
+  | TFilterKeys
+  | keyof TableFilter
+  | keyof TTreeInformation
+  | keyof typeof registryFilterMinifiedParams,
   string
 >;
 type MinifiedParamsKeys = keyof MinifiedParams;
@@ -222,6 +246,7 @@ const minifiedParams: MinifiedParams = {
   ...treeInfoMinifiedParams,
   ...tableFilterMinifiedParams,
   ...diffFilterMinifiedParams,
+  ...registryFilterMinifiedParams,
 } as const;
 
 type MinifiedValues = Record<
@@ -283,6 +308,9 @@ const tableFilterMinifiedParamsArray = Object.entries(
 const diffFilterMinifiedParamsArray = Object.entries(
   diffFilterMinifiedParams,
 ).map(([key, value]) => [value, key]);
+const registryFilterMinifiedParamsArray = Object.entries(
+  registryFilterMinifiedParams,
+).map(([key, value]) => [value, key]);
 const minifiedValuesArray = Object.entries(minifiedValues).map(
   ([key, value]) => [value, key],
 );
@@ -294,6 +322,7 @@ const groupedMinifiedParams = {
   // Multi-table sort keys reuse the tableFilter abbreviations (b, bt, t).
   s: Object.fromEntries(tableFilterMinifiedParamsArray),
   df: Object.fromEntries(diffFilterMinifiedParamsArray),
+  rf: Object.fromEntries(registryFilterMinifiedParamsArray),
   value: Object.fromEntries(minifiedValuesArray),
 } as const;
 type GroupedMinifiedKeys = keyof typeof groupedMinifiedParams;

@@ -36,6 +36,8 @@ import type { SearchIntent } from '@/lib/intent';
 
 import { HardwareListingFilter } from './HardwareListingFilter';
 import { HardwareRegistrySync } from './HardwareRegistrySync';
+import HardwareRegistryFilters from './HardwareRegistryFilters';
+import { hasRegistryFilter, registryFilterToParams } from './registryFilters';
 import { HardwareTable } from './HardwareTable';
 import {
   decodeBranchValue,
@@ -66,6 +68,7 @@ const HardwareListingPage = ({
     gitBranch,
     gitCommitHash,
     diffFilter,
+    registryFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -167,8 +170,11 @@ const HardwareListingPage = ({
   }, [selectedTree, gitRepositoryUrl, gitBranch]);
 
   const filters = useMemo(
-    () => hardwareListingParams(diffFilter),
-    [diffFilter],
+    () => ({
+      ...hardwareListingParams(diffFilter),
+      ...registryFilterToParams(registryFilter),
+    }),
+    [diffFilter, registryFilter],
   );
 
   const { data: filterOptions } = useHardwareFilters(
@@ -314,7 +320,10 @@ const HardwareListingPage = ({
       activeListing.data.hardware.length > 0,
   );
   const tableEmptyMessageId =
-    hasSelection && !hasListingRows && inputFilter.length === 0
+    hasSelection &&
+    !hasListingRows &&
+    inputFilter.length === 0 &&
+    !hasRegistryFilter(registryFilter)
       ? 'hardwareListing.revisionEmpty'
       : 'hardwareListing.notFound';
 
@@ -338,6 +347,12 @@ const HardwareListingPage = ({
             {kcidevComponent}
           </div>
         </div>
+
+        <HardwareRegistryFilters
+          endTimestampInSeconds={endTimestampInSeconds}
+          startTimestampInSeconds={startTimestampInSeconds}
+          urlFromMap={urlFromMap}
+        />
 
         <HardwareTable
           treeTableRows={listItems}
