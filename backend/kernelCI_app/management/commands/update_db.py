@@ -633,6 +633,8 @@ class Command(BaseCommand):
             self.stdout.write("Commits migration completed")
 
     def restore_commits(self) -> None:
+        if "commits.csv" not in self.snapshot_archive.getnames():
+            return
         with TextIOWrapper(self.snapshot_archive.extractfile("commits.csv")) as file:
             self.stdout.write("\nMigrating Commits...")
             reader = csv.reader(file)
@@ -731,6 +733,8 @@ class Command(BaseCommand):
             self.stdout.write("CommitParents migration completed")
 
     def restore_commit_parents(self) -> None:
+        if "commit_parents.csv" not in self.snapshot_archive.getnames():
+            return
         with TextIOWrapper(
             self.snapshot_archive.extractfile("commit_parents.csv")
         ) as file:
