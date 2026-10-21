@@ -7,7 +7,25 @@ alwaysApply: true
 
 - Canonical repo: `kernelci/dashboard`. `origin` is often the fork. Branch from `upstream/main`; rebase onto `upstream/main`, not `origin/main`.
 - Do not push, open issues, or comment on GitHub (`gh pr comment`, review threads) unless asked. PR reviews stay in chat by default.
-- Conventional Commits with a scope: `fix(tree-compare): …`, `feat(backend): …`. One concern per commit/PR. Do not mix mechanical churn with logic.
-- Always add Signed-off-by to commits (`git commit -s`)
+- Use conventional commits with a scope: `fix(tree-compare): …`, `feat(backend): …`. One concern per commit/PR. Do not mix mechanical churn with logic.
+- Branch names should follow the pattern: `<type>/<issue-number>/<short-description>`, e.g. `fix/1234/restore-drawer-navigation`. Use `type` from Conventional Commits: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. When working on stacked PRs, use `<type>/<parent-issue-number>/<current-issue-number>/<short-description>`. Example: `fix/1234/5678/restore-drawer-navigation`.
+- Be concise and clear in commit messages. Use the `unslop` skill to write. Avoid long commit messages. Use imperative mood in the subject line. If the commit can not be explianed in a short body message, it is probably too big and you should consider splitting it into smaller commits.
+- Use GPG signing for commits (usually requires unsandboxed execution). `git config commit.gpgsign true` and `git config user.signingkey <key-id>`. Warn the user if a key is not available, but do not block the commit.
+- Always add 'Signed-off-by' to commits (`git commit -s`) and 'Assisted-by: <agent/model>'. Add references to related issues in commit footers, e.g. `Part of #issue-number` and `Closes #issue-number`.
 - Leave unstaged unless they are the task: `.cursor/`, `.pnpm-store/`, local `docker-compose.dev.yml`, compiled e2e output, `dashboard/src/routeTree.gen.ts` when it is only import reorder.
+
+## Pull request destination
+
+- All project pull requests must be opened in `kernelci/dashboard`, never in a fork.
+- A fork may host the head branch; it is not the PR destination.
+- Before creating a PR, inspect `git remote -v` and identify:
+  - base repository: `kernelci/dashboard`
+  - head repository and branch: the remote where the current branch was pushed
+- Never rely on repository inference from bare `gh pr create`.
+- Create fork-based PRs explicitly:
+  `gh pr create --repo kernelci/dashboard --base main --head <fork-owner>:<branch>`
+- After creation, verify that the returned URL starts with:
+  `https://github.com/kernelci/dashboard/pull/`
+- If the correct head owner or target repository cannot be determined, stop and ask instead of creating the PR.
+
 ---

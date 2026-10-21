@@ -101,6 +101,8 @@ Refer to related issues in commit footers, e.g. `Part of #issue-number` and `Clo
 
 Keep credentials, DB passwords, and webhook URLs out of commits. Use the supplied `.env.example` files.
 
+PRs must be created in `kernelci/dashboard`; use an explicit `--repo kernelci/dashboard` and never rely on `gh pr create` repository inference.
+
 ## Pull requests quality
 
 For any changes that affects the frontend, attach visual evidence to the pull requests via `gh pr comment --attach`. NEVER commit evidence files to the repository. 
