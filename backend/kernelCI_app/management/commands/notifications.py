@@ -16,8 +16,10 @@ from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
     is_regzbot_tree,
+    resolve_regression_recipients,
     send_email_report,
     setup_jinja_template,
+    unscoped_regression_recipients,
 )
 from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
@@ -100,7 +102,7 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     return new_issues
 
 
-def look_for_new_issues(*, service, signup_folder, email_args):
+def look_for_new_issues(*, service, email_args):
     if get_running_instance() == "staging":
         print("This command only runs on production or dev environments.")
         return
@@ -134,7 +136,6 @@ def look_for_new_issues(*, service, signup_folder, email_args):
         service=service,
         report=report,
         email_args=email_args,
-        signup_folder=signup_folder,
     )
 
     email_args.add_mailing_lists = True
@@ -145,7 +146,6 @@ def look_for_new_issues(*, service, signup_folder, email_args):
                 service=service,
                 issue_id=issue["id"],
                 email_args=email_args,
-                signup_folder=signup_folder,
             )
 
 
@@ -208,7 +208,6 @@ def generate_issue_report(
     issue_id,
     email_args,
     ask_ignore=False,
-    signup_folder,
 ):
     result = kcidb_issue_details(issue_id)
     if not result:
@@ -249,6 +248,7 @@ def generate_issue_report(
             if last_build:
                 incident["last_pass_commit"] = last_build[0]["git_commit_hash"]
         report = generate_build_issue_report(issue, incidents, message_id)
+        recipients = resolve_regression_recipients(issue, incidents)
     elif issue["test_id"]:
         incidents = kcidb_test_incidents(issue_id)
         issue_type = "boot" if is_boot(path=incidents[0]["path"]) else "test"
@@ -258,6 +258,7 @@ def generate_issue_report(
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
             incident["last_pass_id"] = last_test[0]["id"]
         report = generate_boot_issue_report(issue, incidents, message_id)
+        recipients = resolve_regression_recipients(issue, [])
     else:
         print(f"unable to generate issue report for {issue_id}", file=sys.stderr)
         sys.exit(-1)
@@ -268,8 +269,7 @@ def generate_issue_report(
         service=service,
         report=report,
         email_args=email_args,
-        signup_folder=signup_folder,
-        git_url=issue["git_repository_url"],
+        recipients=recipients,
         message_id=message_id,
     )
 
@@ -549,7 +549,7 @@ def run_checkout_summary(
                 )
 
 
-def create_and_send_issue_reports(*, service, email_args, signup_folder):
+def create_and_send_issue_reports(*, service, email_args):
     unsent_issues = get_unsent_issues()
     for issue in unsent_issues:
         if issue.issue_type != "build":
@@ -560,11 +560,10 @@ def create_and_send_issue_reports(*, service, email_args, signup_folder):
             issue_id=issue.issue_id,
             email_args=email_args,
             ask_ignore=True,
-            signup_folder=signup_folder,
         )
 
 
-def generate_test_report(*, service, test_id, email_args, signup_folder):
+def generate_test_report(*, service, test_id, email_args):
     """Generate a test regression report for a specific test ID."""
 
     test_data = get_test_details_data(test_id=test_id)
@@ -660,8 +659,7 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
         service=service,
         report=report,
         email_args=email_args,
-        git_url=test["git_repository_url"],
-        signup_folder=signup_folder,
+        recipients=unscoped_regression_recipients(test["git_repository_url"]),
         message_id=message_id,
     )
 
@@ -785,7 +783,6 @@ def generate_hardware_summary_report(
             service=service,
             report=report,
             email_args=email_args,
-            signup_folder=signup_folder,
             recipients=recipients,
         )
 
@@ -1070,7 +1067,6 @@ class Command(BaseCommand):
                 look_for_new_issues(
                     service=service,
                     email_args=email_args,
-                    signup_folder=signup_folder,
                 )
 
             case "issue_report":
@@ -1079,7 +1075,6 @@ class Command(BaseCommand):
                     create_and_send_issue_reports(
                         service=service,
                         email_args=email_args,
-                        signup_folder=signup_folder,
                     )
                 else:
                     issue_id = options.get("id")
@@ -1094,7 +1089,6 @@ class Command(BaseCommand):
                         service=service,
                         issue_id=issue_id,
                         email_args=email_args,
-                        signup_folder=signup_folder,
                     )
                     self.stdout.write(
                         self.style.SUCCESS(
@@ -1131,7 +1125,6 @@ class Command(BaseCommand):
                     service=service,
                     test_id=test_id,
                     email_args=email_args,
-                    signup_folder=signup_folder,
                 )
                 self.stdout.write(
                     self.style.SUCCESS(f"Test report generated for test {test_id}")
