@@ -4,7 +4,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("kernelCI_app", "0021_hardware_registry_sync"),
+        ("kernelCI_app", "0023_hardware_registry_sync"),
     ]
 
     operations = [

@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("kernelCI_app", "0020_add_labs_fk_indexes"),
+        ("kernelCI_app", "0022_lab_daily"),
     ]
 
     operations = [
