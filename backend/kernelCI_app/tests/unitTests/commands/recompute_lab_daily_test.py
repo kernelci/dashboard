@@ -38,3 +38,24 @@ def test_single_day_replaces_the_window(monkeypatch):
 def test_days_must_be_positive():
     with pytest.raises(CommandError):
         _run(days=0)
+
+
+def test_listing_cache_clears_only_after_a_rewrite(monkeypatch):
+    monkeypatch.setattr(
+        "kernelCI_app.management.commands.recompute_lab_daily.timezone.now",
+        lambda: datetime(2026, 10, 14, 12, tzinfo=timezone.utc),
+    )
+    cleared = []
+    monkeypatch.setattr(
+        "kernelCI_app.management.commands.recompute_lab_daily.clear_cache",
+        cleared.append,
+    )
+    cmd = Command()
+
+    cmd._recompute_day = lambda day: False
+    cmd.handle(days=1, day=None)
+    assert cleared == []
+
+    cmd._recompute_day = lambda day: True
+    cmd.handle(days=1, day=None)
+    assert cleared == ["labListing"]

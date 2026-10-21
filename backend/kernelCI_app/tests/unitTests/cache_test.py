@@ -1,10 +1,13 @@
 from unittest.mock import patch
 
+from django.core.cache import cache
+
 from kernelCI_app.cache import (
     DISCORD_NOTIFICATION_COOLDOWN,
     DISCORD_NOTIFICATION_KEY,
     _add_to_lookup,
     _create_cache_params_hash,
+    clear_cache,
     get_notification_cache,
     get_query_cache,
     set_notification_cache,
@@ -219,3 +222,79 @@ class TestAddToLookup:
         assert "key1" in lookup[property_key]
         assert "key2" in lookup[property_key]
         assert "key3" in lookup[property_key]
+
+
+class TestClearCache:
+    def setup_method(self):
+        cache.clear()
+
+    def test_clear_one_parameter_set(self):
+        five_days = {"origin": "maestro", "interval_in_days": 5}
+        seven_days = {"origin": "maestro", "interval_in_days": 7}
+        set_query_cache(key="labListing", params=five_days, rows=[1])
+        set_query_cache(key="labListing", params=seven_days, rows=[2])
+
+        clear_cache("labListing", five_days)
+
+        assert get_query_cache("labListing", five_days) is None
+        assert get_query_cache("labListing", seven_days) == [2]
+
+    def test_clear_every_parameter_set(self):
+        set_query_cache(key="labListing", params={"origin": "maestro"}, rows=[1])
+        set_query_cache(key="labListing", params={"origin": "broonie"}, rows=[2])
+        set_query_cache(key="labListingOther", params={"origin": "maestro"}, rows=[3])
+        set_query_cache(key="lab_origins_query_5", rows=["maestro"])
+
+        clear_cache("labListing")
+
+        assert get_query_cache("labListing", {"origin": "maestro"}) is None
+        assert get_query_cache("labListing", {"origin": "broonie"}) is None
+        assert get_query_cache("labListingOther", {"origin": "maestro"}) == [3]
+        assert get_query_cache("lab_origins_query_5") == ["maestro"]
+
+    def test_clear_key_without_parameters(self):
+        set_query_cache(key="lab_origins_query_5", rows=["maestro"])
+
+        clear_cache("lab_origins_query_5")
+
+        assert get_query_cache("lab_origins_query_5") is None
+
+    def test_clear_many_lab_listing_parameter_sets(self):
+        origins = [
+            "maestro",
+            "broonie",
+            "microsoft",
+            "linaro_pull_labs",
+            "ti",
+            "syzbot",
+        ]
+        intervals = [1, 5, 7, 14, 30]
+        for origin in origins:
+            for interval in intervals:
+                params = {"origin": origin, "interval_in_days": interval}
+                set_query_cache(
+                    key="labListing", params=params, rows=[origin, interval]
+                )
+
+        set_query_cache(key="treeListing", params={"origin": "maestro"}, rows=["keep"])
+        set_query_cache(key="lab_origins_query_5", rows=["maestro"])
+
+        one = {"origin": "maestro", "interval_in_days": 5}
+        clear_cache("labListing", one)
+        assert get_query_cache("labListing", one) is None
+        assert get_query_cache(
+            "labListing", {"origin": "broonie", "interval_in_days": 5}
+        ) == ["broonie", 5]
+
+        clear_cache("labListing")
+        for origin in origins:
+            for interval in intervals:
+                assert (
+                    get_query_cache(
+                        "labListing",
+                        {"origin": origin, "interval_in_days": interval},
+                    )
+                    is None
+                )
+        assert get_query_cache("treeListing", {"origin": "maestro"}) == ["keep"]
+        assert get_query_cache("lab_origins_query_5") == ["maestro"]

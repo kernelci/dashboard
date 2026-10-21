@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 from django.utils import timezone
 
+from kernelCI_app.cache import clear_cache
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import out
 
@@ -118,10 +119,13 @@ class Command(BaseCommand):
                 for offset in reversed(range(options["days"]))
             ]
         )
+        wrote = False
         for day in days:
-            self._recompute_day(day)
+            wrote = self._recompute_day(day) or wrote
+        if wrote:
+            clear_cache("labListing")
 
-    def _recompute_day(self, day: date) -> None:
+    def _recompute_day(self, day: date) -> bool:
         with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute(
                 "SELECT pg_try_advisory_xact_lock(%s, %s)",
@@ -130,7 +134,7 @@ class Command(BaseCommand):
             if not cursor.fetchone()[0]:
                 transaction.set_rollback(True)
                 out(f"{day}: lab_daily already being recomputed, skipped")
-                return
+                return False
 
             cursor.execute("DELETE FROM lab_daily WHERE day = %s", [day])
             deleted = cursor.rowcount
@@ -140,6 +144,7 @@ class Command(BaseCommand):
             if inserted == 0 and deleted > 0:
                 transaction.set_rollback(True)
                 out(f"{day}: raw data pruned, kept the {deleted} existing rows")
-                return
+                return False
 
         out(f"{day}: {inserted} rows written, {deleted} replaced")
+        return True
