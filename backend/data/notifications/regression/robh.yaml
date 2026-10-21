@@ -1,0 +1,4 @@
+robh:
+  - recipients:
+      - robh@kernel.org
+      - devicetree@vger.kernel.org

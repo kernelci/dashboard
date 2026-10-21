@@ -1,0 +1,3 @@
+stable-rt:
+  - recipients:
+      - linux-rt-devel@lists.linux.dev
