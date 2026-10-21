@@ -1,3 +1,4 @@
+import copy
 import json
 import sys
 from collections import defaultdict
@@ -53,6 +54,7 @@ from kernelCI_app.typeModels.metrics_notifications import (
     LabMetricsData,
     MetricsReportData,
 )
+from kernelCI_app.typeModels.metricsRules import load_metrics_rules, scope_metrics_data
 from kernelCI_app.utils import group_status, is_boot
 from kernelCI_cache.queries.issues import (
     get_all_issue_keys,
@@ -853,6 +855,37 @@ def compute_metrics_deltas(data: MetricsReportData) -> dict:
     }
 
 
+def _send_metrics_mail(
+    *,
+    data: MetricsReportData,
+    email_service,
+    email_args,
+    start_days_ago: int,
+    end_days_ago: int,
+    now: datetime,
+) -> None:
+    bounds = interval_params(start_days_ago, end_days_ago)
+    start_datetime = datetime.fromisoformat(bounds["start_date"])
+    exclusive_end = datetime.fromisoformat(bounds["end_date"])
+    end_datetime = datetime.combine(
+        exclusive_end.date() - timedelta(days=1),
+        time.max,
+        tzinfo=timezone.utc,
+    )
+    deltas = compute_metrics_deltas(data)
+    template = setup_jinja_template("metrics_report.txt.j2")
+    report = {
+        "content": template.render(
+            **data.model_dump(),
+            start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+            end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+            deltas=deltas,
+        ),
+        "title": "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z"),
+    }
+    send_email_report(service=email_service, report=report, email_args=email_args)
+
+
 def generate_metrics_report(
     *,
     email_service,
@@ -866,37 +899,42 @@ def generate_metrics_report(
         print("This command only runs on production or dev environments.")
         return
 
+    rules = load_metrics_rules()
     now = datetime.now(timezone.utc)
-    bounds = interval_params(start_days_ago, end_days_ago)
-    start_datetime = datetime.fromisoformat(bounds["start_date"])
-    exclusive_end = datetime.fromisoformat(bounds["end_date"])
-    end_datetime = datetime.combine(
-        exclusive_end.date() - timedelta(days=1),
-        time.max,
-        tzinfo=timezone.utc,
+    community_key = (start_days_ago, end_days_ago)
+    period_keys = [community_key]
+    for rule in rules:
+        key = (rule.period_days, 0)
+        if key not in period_keys:
+            period_keys.append(key)
+
+    fetched: dict[tuple[int, int], MetricsReportData] = {}
+    for key in period_keys:
+        fetched[key] = get_metrics_data(start_days_ago=key[0], end_days_ago=key[1])
+
+    _send_metrics_mail(
+        data=fetched[community_key],
+        email_service=email_service,
+        email_args=email_args,
+        start_days_ago=community_key[0],
+        end_days_ago=community_key[1],
+        now=now,
     )
-
-    data: MetricsReportData = get_metrics_data(
-        start_days_ago=start_days_ago,
-        end_days_ago=end_days_ago,
-    )
-
-    deltas = compute_metrics_deltas(data)
-
-    report = {}
-    template = setup_jinja_template("metrics_report.txt.j2")
-    report["content"] = template.render(
-        **data.model_dump(),
-        start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
-        end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
-        deltas=deltas,
-    )
-
-    report["title"] = "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z")
-
-    send_email_report(service=email_service, report=report, email_args=email_args)
-
-    return
+    for rule in rules:
+        key = (rule.period_days, 0)
+        args = copy.copy(email_args)
+        args.to = ", ".join(rule.to)
+        args.cc = None
+        args.add_mailing_lists = False
+        args.ignore_recipients = True
+        _send_metrics_mail(
+            data=scope_metrics_data(fetched[key], rule),
+            email_service=email_service,
+            email_args=args,
+            start_days_ago=key[0],
+            end_days_ago=key[1],
+            now=now,
+        )
 
 
 def run_fake_report(*, service, email_args):

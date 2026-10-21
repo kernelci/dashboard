@@ -1,6 +1,7 @@
 KernelCI Metrics Summary
 ========================
 
+  Trees monitored, Checkouts, Builds, and Tests are project-wide.
 
   COVERAGE
   --------

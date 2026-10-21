@@ -16,7 +16,7 @@ If you are running the project in a docker container, you should add a `docker c
 
 ## Actions
 
-The command supports four primary actions:
+The command supports these actions:
 
 1. `new_issues`
     * Generates a summary of new issues.
@@ -30,6 +30,32 @@ The command supports four primary actions:
     * Generate weekly hardware reports for hardware listed in the [subscriptions folder](../backend/data/notifications/subscriptions/).
 1.  `fake_report`
     * Generates a fake report (for  testing email send).
+1. `metrics_summary`
+    * Sends the weekly metrics report. Scoped copies are described in [Weekly metrics mail](#weekly-metrics-mail).
+
+
+## Weekly metrics mail
+
+Saturday's `metrics_summary` cron sends one project-wide report. A lab or an origin can receive its own copy from YAML files in [backend/data/notifications/metrics/](../backend/data/notifications/metrics/). Each file holds one or more rules. The top-level key is the rule name. A name can appear only once across the directory. After the community mail, each rule sends one mail from the same template.
+
+```yaml
+collabora-labs:
+  origins: [maestro]
+  labs: [lava-collabora]
+  period_days: 7
+  to: ["Collabora team <team@example.com>"]
+```
+
+| Key | Required | What it does |
+| --- | --- | --- |
+| `to` | yes | One or more RFC 5322 addresses. They are the To header of this mail, sent unchanged. |
+| `period_days` | yes | Whole days, greater than 0. The window is `start_days_ago=period_days` and `end_days_ago=0`, the same shape as the community mail. |
+| `origins` | no | Keeps these origins in the build regressions table and the per-origin issue lists. |
+| `labs` | no | Keeps these labs in the lab table. A lab active last week and silent this week stays, marked extinct. A name in neither week is left out. |
+
+Lab rows count every origin. The lab query groups by lab and status, so `labs` does not split a lab by origin.
+
+`period_days: 7` reuses the cache entries the community mail fills in the same run. Any other value runs the metrics queries again. The headline counts stay project-wide in every mail, including a scoped one. A rule mail does not copy the cron `--cc` or the community lists.
 
 
 ### Email Management Options

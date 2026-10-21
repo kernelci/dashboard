@@ -1,6 +1,7 @@
 import re
+from types import SimpleNamespace
 from unittest import TestCase, mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from kernelCI_app.management.commands.notifications import (
     _fmt_change,
@@ -17,6 +18,7 @@ from kernelCI_app.typeModels.metrics_notifications import (
     MetricsReportData,
     TopIssue,
 )
+from kernelCI_app.typeModels.metricsRules import MetricsRule, MetricsRuleError
 
 
 def _lab(*, covered_builds=0, builds=0, boots=0, tests=0) -> LabMetricsData:
@@ -357,3 +359,108 @@ class TestMetricsReportTemplate(TestCase):
             content,
             re.MULTILINE,
         )
+
+
+def _rule(**fields) -> MetricsRule:
+    return MetricsRule(**fields)
+
+
+class TestScopedMetricsMail(TestCase):
+    @patch("kernelCI_app.management.commands.helpers.common.smtp_send_email")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_rules_render_scoped_mails(self, _instance, mock_get, mock_load, mock_smtp):
+        week = make_metrics_data(
+            lab_maps={
+                "lava-collabora": _lab(boots=50000, tests=450000),
+                "lava-broonie": _lab(boots=25000, tests=475000),
+            },
+            prev_lab_maps={
+                "lava-collabora": _lab(boots=50000, tests=700000),
+                "lava-broonie": _lab(boots=100000, tests=650000),
+                "gone-lab": _lab(tests=1000),
+            },
+        )
+        fortnight = make_metrics_data(n_trees=3, prev_n_trees=1)
+        mock_get.side_effect = lambda *, start_days_ago, end_days_ago: (
+            fortnight if start_days_ago == 14 else week
+        )
+        mock_load.return_value = [
+            _rule(
+                to=["Collabora team <team@example.com>", "other@example.com"],
+                period_days=7,
+                origins=["maestro"],
+                labs=["lava-collabora"],
+            ),
+            _rule(to=["a@example.com"], period_days=7, labs=["no-such-lab"]),
+            _rule(to=["gone@example.com"], period_days=7, labs=["gone-lab"]),
+            _rule(
+                to=["fortnight@example.com"],
+                period_days=14,
+                origins=["maestro"],
+            ),
+        ]
+        email_args = SimpleNamespace(
+            send=True,
+            yes=True,
+            to="kernelci@lists.linux.dev",
+            cc="kernelci-results@groups.io",
+            add_mailing_lists=False,
+            ignore_recipients=False,
+            in_reply_to=None,
+            regression_report=False,
+            tree_name=None,
+        )
+
+        generate_metrics_report(email_service=MagicMock(), email_args=email_args)
+
+        assert mock_get.call_args_list == [
+            call(start_days_ago=7, end_days_ago=0),
+            call(start_days_ago=14, end_days_ago=0),
+        ]
+        bodies = [sent.args[4] for sent in mock_smtp.call_args_list]
+        recipients = [(sent.args[2], sent.args[5]) for sent in mock_smtp.call_args_list]
+        community, scoped, missing, gone, longer = bodies
+        assert recipients == [
+            ("kernelci@lists.linux.dev", "kernelci-results@groups.io"),
+            ("Collabora team <team@example.com>, other@example.com", ""),
+            ("a@example.com", ""),
+            ("gone@example.com", ""),
+            ("fortnight@example.com", ""),
+        ]
+        assert email_args.cc == "kernelci-results@groups.io"
+        assert (
+            "redhat" in community
+            and "lava-broonie" in community
+            and "gone-lab" in community
+        )
+        assert (
+            "redhat" not in scoped
+            and "lava-broonie" not in scoped
+            and "gone-lab" not in scoped
+        )
+        assert "maestro" in scoped and "lava-collabora" in scoped
+        assert "105" in scoped and "project-wide" in scoped
+        assert "no-such-lab" not in missing
+        assert "0 labs reported results this week" in missing and "105" in missing
+        assert "redhat" in missing
+        assert "gone-lab" in gone and "lava-collabora" not in gone
+        assert "-1,000 (-100%)" in gone
+        assert re.search(r"Trees monitored\s+3\s+1\s", longer)
+        assert "redhat" not in longer
+
+    @patch(f"{MOCK_MODULE}.send_email_report")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_invalid_rules_send_nothing(
+        self, _instance, mock_get, mock_load, mock_send
+    ):
+        mock_load.side_effect = MetricsRuleError(
+            file="a.yaml", rule="rule", key="to", message="bad"
+        )
+        with self.assertRaises(MetricsRuleError):
+            generate_metrics_report(email_service=MagicMock(), email_args=MagicMock())
+        mock_get.assert_not_called()
+        mock_send.assert_not_called()
