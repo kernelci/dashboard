@@ -8,6 +8,7 @@ import {
   fillCount,
   fillTone,
   frequencySlices,
+  labAttentionItems,
   labDetailsMock,
   sumStatusCounts,
   toTestHistory,
@@ -56,5 +57,13 @@ describe('labDetailsMock', () => {
     expect(fillTone(FILL_GREEN_AT)).toBe('good');
     expect(fillTone(FILL_YELLOW_AT)).toBe('mid');
     expect(fillTone(FILL_YELLOW_AT - 1)).toBe('bad');
+  });
+
+  it('shows the boot and kselftest failures on the same lab page', () => {
+    const items = labAttentionItems('lava-broonie');
+
+    expect(items.map(item => item.test)).toEqual(['boot', 'kselftest']);
+    expect(labAttentionItems('pull-labs-demo')).toBe(items);
+    expect(labAttentionItems('lab-baylibre')).toEqual([]);
   });
 });

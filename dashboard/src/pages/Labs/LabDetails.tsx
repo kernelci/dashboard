@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { format, subDays } from 'date-fns';
+import { MdWarningAmber } from 'react-icons/md';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import {
@@ -18,6 +19,7 @@ import {
   type LinkProps,
 } from '@tanstack/react-router';
 
+import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 import { BaseCard } from '@/components/Cards/BaseCard';
 import { LineChart } from '@/components/LineChart';
 import { Colors } from '@/components/StatusChart/StatusCharts';
@@ -39,7 +41,13 @@ import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 import Tabs from '@/components/Tabs/Tabs';
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
@@ -57,6 +65,7 @@ import LabProvided from './LabProvided';
 import {
   aggregateLabTrees,
   dailyStatus,
+  labAttentionItems,
   labDetailsMock,
   sumStatusCounts,
   toTestHistory,
@@ -313,6 +322,7 @@ const LabDetails = (): JSX.Element => {
           </div>
         ) : (
           <div className="mt-5 flex flex-col">
+            <LabAttention labName={labName} />
             <TreeTable
               trees={trees}
               selection={selection}
@@ -472,6 +482,87 @@ const LabDetails = (): JSX.Element => {
         )}
       </div>
     </PageWithTitle>
+  );
+};
+
+const LabAttention = ({ labName }: { labName: string }): JSX.Element | null => {
+  const items = labAttentionItems(labName);
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <Collapsible
+      className="group border-dark-gray mb-6 overflow-hidden rounded-xl border bg-white text-sm text-black"
+      data-test-id="lab-attention"
+    >
+      <CollapsibleTrigger className="flex w-full items-center gap-2 bg-amber-50 px-3 py-2 text-left text-amber-950">
+        <MdWarningAmber className="size-5 shrink-0" aria-hidden />
+        <span className="font-medium">
+          {items.map((item, index) => (
+            <span key={item.test}>
+              {index > 0 && ' / '}
+              <FormattedMessage
+                id="labDetails.attentionProblem"
+                values={{ test: item.test, platform: item.platform }}
+              />
+            </span>
+          ))}
+        </span>
+        <ChevronRightAnimate className="ml-auto size-5 shrink-0" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        {items.map(item => (
+          <div
+            key={`${item.test}-${item.commitHash}`}
+            className="border-dark-gray border-t px-4 py-3"
+          >
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(
+                [
+                  ['global.platform', item.platform],
+                  ['global.treeBranch', `${item.tree} / ${item.branch}`],
+                  [
+                    'globalTable.commitTag',
+                    <CommitTagTooltip
+                      key={item.commitHash}
+                      commitName={item.commitName}
+                      commitHash={item.commitHash}
+                      commitTags={[item.commitName]}
+                    />,
+                  ],
+                  ['global.config', item.config],
+                  ['global.architecture', item.arch],
+                  ['global.compiler', item.compiler],
+                  ['global.date', item.date],
+                ] as [MessagesKey, ReactNode][]
+              ).map(([labelId, value]) => (
+                <div key={labelId}>
+                  <div className="text-xs text-gray-500">
+                    <FormattedMessage id={labelId} />
+                  </div>
+                  <div className="break-all">{value}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-gray-500">
+                <FormattedMessage id="labDetails.passedIn" />
+              </span>
+              {item.passedLabs.map(lab => (
+                <Badge
+                  key={lab}
+                  variant="greenTag"
+                  className="text-sm font-normal text-nowrap normal-case"
+                >
+                  {lab}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 

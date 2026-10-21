@@ -547,6 +547,42 @@ export const labDetailsMock = (labName: string): LabTreeMock[] => {
   ];
 };
 
+const labAttention = [
+  {
+    test: 'boot',
+    platform: 'cd8180-orion-o6',
+    tree: 'next',
+    branch: 'pending-fixes',
+    commitName: 'v7.3-rc6-241-gdcb935319e0eb',
+    commitHash: 'dcb935319e0ebfac02fcaec00ce465055bc61b4e',
+    config: 'defconfig',
+    arch: 'arm64',
+    compiler: 'gcc-15',
+    date: '5 Oct 2026',
+    passedLabs: ['lava-broonie', 'lava-cip'],
+  },
+  {
+    test: 'kselftest',
+    platform: 'bcm2711-rpi-4-b',
+    tree: 'mainline',
+    branch: 'master',
+    commitName: 'v7.3-1138-g14c8977403882',
+    commitHash: '14c897740388216acd59477a382de327d5e27ba4',
+    config: 'defconfig+lab-setup+kselftest',
+    arch: 'arm64',
+    compiler: 'gcc-14',
+    date: '21 Oct 2026',
+    passedLabs: ['lava-collabora', 'lava-cip', 'lava-renesas'],
+  },
+];
+
+export const labAttentionItems = (labName: string): typeof labAttention => {
+  const name = labName.toLowerCase();
+  return name.includes('pull-labs-demo') || name.includes('broonie')
+    ? labAttention
+    : [];
+};
+
 export const aggregateLabTrees = (
   trees: LabTreeMock[],
 ): {

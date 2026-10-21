@@ -305,6 +305,7 @@ export const messages = {
     'issueListing.treeBranchTooltip':
       'The tree name and git repository branch of the first incident\nClick a cell to see details of that checkout',
     'jsonSheet.title': 'JSON Viewer',
+    'labDetails.attentionProblem': '{test} failed on {platform}.',
     'labDetails.back': 'Back to labs',
     'labDetails.bootsPerDay': 'Boots per day',
     'labDetails.buildDuration': 'Build duration',
@@ -320,6 +321,7 @@ export const messages = {
     'labDetails.fullLog': 'Full log',
     'labDetails.logExcerpt': 'Log excerpt',
     'labDetails.other': 'Other',
+    'labDetails.passedIn': 'Passed in',
     'labDetails.selectTreeMessage':
       'Please select one or more trees from the table above to view detailed information about builds, boots, and tests for this lab.',
     'labDetails.started': 'Started',
