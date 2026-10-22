@@ -1,0 +1,4 @@
+# Replaces --to on the new_issues cron. `issues` lists the kinds included
+# in the community mail.
+to: kernelci-results@groups.io
+issues: [build, boot]
