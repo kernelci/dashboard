@@ -5,10 +5,6 @@ from kernelCI_app.queries.checkout import ORIGINS_CACHE_TIMEOUT
 
 
 def get_lab_origins(*, interval_in_days: int) -> list[str]:
-    # ponytail: lab_id only (no JSONB COALESCE). Origins that still only have
-    # misc lab/runtime names stay out of the dropdown until backfill. If a
-    # cache miss is slow, add partial indexes on (start_time, origin)
-    # WHERE lab_id IS NOT NULL for tests and builds.
     cache_key = f"lab_origins_query_{interval_in_days}"
     cached = get_query_cache(key=cache_key)
     if cached is not None:
@@ -49,7 +45,7 @@ def get_lab_listing_data(
     query = """
         WITH status_counts AS (
             SELECT
-                COALESCE(bl.name, b.misc->>'lab') AS lab_name,
+                bl.name AS lab_name,
                 'build' AS item_type,
                 CASE
                     WHEN b.status IN ('PASS', 'FAIL') THEN b.status
@@ -57,18 +53,17 @@ def get_lab_listing_data(
                 END AS item_status,
                 COUNT(*) AS item_count
             FROM builds b
-            LEFT JOIN labs bl ON b.lab_id = bl.id
+            INNER JOIN labs bl ON b.lab_id = bl.id
             WHERE
                 b.origin = %(origin)s
                 AND b.start_time >= NOW() - INTERVAL %(interval)s
                 AND b.id NOT LIKE 'maestro:dummy_%%'
-                AND COALESCE(bl.name, b.misc->>'lab') IS NOT NULL
             GROUP BY 1, 2, 3
 
             UNION ALL
 
             SELECT
-                COALESCE(tl.name, t.misc->>'runtime') AS lab_name,
+                tl.name AS lab_name,
                 CASE
                     WHEN t.path = 'boot' OR t.path LIKE 'boot.%%' THEN 'boot'
                     ELSE 'test'
@@ -79,12 +74,11 @@ def get_lab_listing_data(
                 END AS item_status,
                 COUNT(*) AS item_count
             FROM tests t
-            LEFT JOIN labs tl ON t.lab_id = tl.id
+            INNER JOIN labs tl ON t.lab_id = tl.id
             WHERE
                 t.origin = %(origin)s
                 AND t.start_time >= NOW() - INTERVAL %(interval)s
                 AND t.path IS NOT NULL
-                AND COALESCE(tl.name, t.misc->>'runtime') IS NOT NULL
             GROUP BY 1, 2, 3
         )
         SELECT
