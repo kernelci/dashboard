@@ -178,7 +178,6 @@ else:
                 "notifications",
                 "--monitoring-id=notifications_new_issues",
                 "--action=new_issues",
-                "--to=kernelci-results@groups.io",
                 "--send",
                 "--yes",
             ],
