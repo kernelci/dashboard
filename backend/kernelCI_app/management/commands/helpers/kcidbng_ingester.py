@@ -546,8 +546,11 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multipro
     total_bytes = 0
     total_files_count = len(json_files)
 
+    # Python 3.14 defaults to forkserver, which reimports this module before
+    # Django is ready and the workers exit with AppRegistryNotReady.
+    mp_context = multiprocessing.get_context("fork")
     process_queue: multiprocessing.Queue[Optional[list[SubmissionFileMetadata]]] = (
-        multiprocessing.Queue(maxsize=INGEST_QUEUE_MAXSIZE)
+        mp_context.Queue(maxsize=INGEST_QUEUE_MAXSIZE)
     )
 
     batch = []
@@ -579,17 +582,17 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multipro
         )
     )
 
-    stat_ok = multiprocessing.Value("i", 0)
-    stat_fail = multiprocessing.Value("i", 0)
-    counter_lock = multiprocessing.Lock()
-    processed = multiprocessing.Value("i", 0)
+    stat_ok = mp_context.Value("i", 0)
+    stat_fail = mp_context.Value("i", 0)
+    counter_lock = mp_context.Lock()
+    processed = mp_context.Value("i", 0)
     last_progress = cycle_start
     progress_every_sec = 2.0
 
     writers = []
     try:
         for _ in range(max_workers):
-            writer = multiprocessing.Process(
+            writer = mp_context.Process(
                 target=process_batch,
                 args=(
                     process_queue,
