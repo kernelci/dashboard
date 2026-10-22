@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Create server docker image (all non-code dependencies)
-FROM alpine:3.20 as backend-base
+FROM alpine:3.24 as backend-base
 
 WORKDIR /
 
@@ -11,6 +11,7 @@ ENV PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
 
 RUN apk update \
     && apk add --no-cache \
+        ca-certificates \
         python3 \
         python3-dev \
         gcc \
