@@ -1,26 +1,10 @@
 from datetime import date, datetime
-from typing import Annotated, Literal, Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from kernelCI_app.typeModels.common import StatusCount
-from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.typeModels.issues import Issue
-
-
-class LabDetailsQueryParameters(ListingQueryParameters):
-    """Origin and interval match the labs listing."""
-
-    tree: Annotated[
-        list[str],
-        Field(
-            default_factory=list,
-            description=(
-                "Optional tree/branch filter as `tree_name/git_branch` "
-                "(repeat for multiple trees)."
-            ),
-        ),
-    ]
 
 
 class LabDailyPoint(BaseModel):

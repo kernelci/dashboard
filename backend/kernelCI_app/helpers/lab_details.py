@@ -70,39 +70,26 @@ def _day_range(interval_in_days: int) -> list[date]:
 
 
 def _increment_daily(
-    daily: dict[date, dict[str, int]],
+    daily: dict[date, LabDailyPoint],
     *,
     when: Optional[datetime],
     status: Optional[str],
 ) -> None:
     if when is None:
         return
-    day = when.date()
-    if day not in daily:
+    point = daily.get(when.date())
+    if point is None:
         return
-    bucket = "pass_count" if status == "PASS" else "fail_count"
-    if status not in ("PASS", "FAIL"):
-        bucket = "inconclusive_count"
-    daily[day][bucket] += 1
+    if status == "PASS":
+        point.pass_count += 1
+    elif status == "FAIL":
+        point.fail_count += 1
+    else:
+        point.inconclusive_count += 1
 
 
-def _new_daily_tracker(interval_in_days: int) -> dict[date, dict[str, int]]:
-    return {
-        day: {"pass_count": 0, "fail_count": 0, "inconclusive_count": 0}
-        for day in _day_range(interval_in_days)
-    }
-
-
-def _daily_to_points(daily: dict[date, dict[str, int]]) -> list[LabDailyPoint]:
-    return [
-        LabDailyPoint(
-            day=day,
-            pass_count=values["pass_count"],
-            fail_count=values["fail_count"],
-            inconclusive_count=values["inconclusive_count"],
-        )
-        for day, values in sorted(daily.items())
-    ]
+def _new_daily_tracker(interval_in_days: int) -> dict[date, LabDailyPoint]:
+    return {day: LabDailyPoint(day=day) for day in _day_range(interval_in_days)}
 
 
 @dataclass
@@ -120,9 +107,9 @@ class _TreeBucket:
     test_issues: IssueDict = field(default_factory=dict)
     seen_builds: set[str] = field(default_factory=set)
     seen_tests: set[str] = field(default_factory=set)
-    build_daily: dict[date, dict[str, int]] = field(default_factory=dict)
-    boot_daily: dict[date, dict[str, int]] = field(default_factory=dict)
-    test_daily: dict[date, dict[str, int]] = field(default_factory=dict)
+    build_daily: dict[date, LabDailyPoint] = field(default_factory=dict)
+    boot_daily: dict[date, LabDailyPoint] = field(default_factory=dict)
+    test_daily: dict[date, LabDailyPoint] = field(default_factory=dict)
     has_build: bool = False
     has_boot: bool = False
     has_test: bool = False
@@ -139,57 +126,61 @@ def _touch_commit(bucket: _TreeBucket, row: dict, when: Optional[datetime]) -> N
         bucket.commit_name = commit_name
 
 
-def _process_build_issue(bucket: _TreeBucket, row: dict) -> None:
-    issue_id = row.get("issue_id")
-    issue_version = row.get("issue_version")
-    build_status = row.get("build_status")
-    incident_test_id = row.get("incident_test_id")
-    issue_id, issue_version, can_insert = should_increment_build_issue(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        incident_test_id=incident_test_id,
-        build_status=build_status,
-    )
+def _record_issue(
+    table: IssueDict,
+    row: dict,
+    *,
+    status: Optional[str],
+    issue_id,
+    issue_version,
+    can_insert: bool,
+) -> None:
     if not issue_id or issue_version is None or not can_insert:
         return
-    key = (issue_id, issue_version)
-    current = bucket.build_issues.get(key)
-    if current:
-        current.incidents_info.increment(build_status)
-        return
-    bucket.build_issues[key] = create_issue_typed(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        issue_comment=row.get("issue_comment"),
-        issue_report_url=row.get("issue_report_url"),
-        starting_count_status=build_status,
-    )
-
-
-def _process_test_issue(bucket: _TreeBucket, row: dict, *, boot: bool) -> None:
-    issue_id = row.get("issue_id")
-    issue_version = row.get("issue_version")
-    test_status = row.get("test_status")
-    incident_test_id = row.get("incident_test_id")
-    issue_id, issue_version, can_insert = should_increment_test_issue(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        incident_test_id=incident_test_id,
-    )
-    if not issue_id or issue_version is None or not can_insert:
-        return
-    table = bucket.boot_issues if boot else bucket.test_issues
     key = (issue_id, issue_version)
     current = table.get(key)
     if current:
-        current.incidents_info.increment(test_status)
+        current.incidents_info.increment(status)
         return
     table[key] = create_issue_typed(
         issue_id=issue_id,
         issue_version=issue_version,
         issue_comment=row.get("issue_comment"),
         issue_report_url=row.get("issue_report_url"),
-        starting_count_status=test_status,
+        starting_count_status=status,
+    )
+
+
+def _process_build_issue(bucket: _TreeBucket, row: dict) -> None:
+    issue_id, issue_version, can_insert = should_increment_build_issue(
+        issue_id=row.get("issue_id"),
+        issue_version=row.get("issue_version"),
+        incident_test_id=row.get("incident_test_id"),
+        build_status=row.get("build_status"),
+    )
+    _record_issue(
+        bucket.build_issues,
+        row,
+        status=row.get("build_status"),
+        issue_id=issue_id,
+        issue_version=issue_version,
+        can_insert=can_insert,
+    )
+
+
+def _process_test_issue(bucket: _TreeBucket, row: dict, *, boot: bool) -> None:
+    issue_id, issue_version, can_insert = should_increment_test_issue(
+        issue_id=row.get("issue_id"),
+        issue_version=row.get("issue_version"),
+        incident_test_id=row.get("incident_test_id"),
+    )
+    _record_issue(
+        bucket.boot_issues if boot else bucket.test_issues,
+        row,
+        status=row.get("test_status"),
+        issue_id=issue_id,
+        issue_version=issue_version,
+        can_insert=can_insert,
     )
 
 
@@ -201,7 +192,7 @@ def _frequency_list(counter: Counter[str]) -> list[LabFrequencyCounts]:
     ]
 
 
-def build_lab_details_response(  # noqa: C901 - one pass over build and test rows
+def build_lab_details_response(
     *,
     lab_name: str,
     interval_in_days: int,
@@ -223,8 +214,6 @@ def build_lab_details_response(  # noqa: C901 - one pass over build and test row
     runs_with_platform = 0
     runs_with_log_url = 0
     runs_with_log_excerpt = 0
-    seen_build_ids: set[str] = set()
-    seen_test_ids: set[str] = set()
 
     def bucket_for(row: dict) -> _TreeBucket:
         key = tree_key(row["tree_name"], row["git_branch"])
@@ -250,13 +239,10 @@ def build_lab_details_response(  # noqa: C901 - one pass over build and test row
         bucket.has_build = True
         status = row.get("build_status")
         bucket.builds.increment(status)
+        lab_build_status.increment(status)
         _increment_daily(bucket.build_daily, when=when, status=status)
-        if build_id not in seen_build_ids:
-            seen_build_ids.add(build_id)
-            builds_total += 1
-            lab_build_status.increment(status)
-            if row.get("build_duration") is not None:
-                builds_with_duration += 1
+        builds_total += 1
+        builds_with_duration += int(row.get("build_duration") is not None)
 
     for row in test_rows:
         bucket = bucket_for(row)
@@ -273,35 +259,27 @@ def build_lab_details_response(  # noqa: C901 - one pass over build and test row
         if boot:
             bucket.has_boot = True
             bucket.boots.increment(status)
+            lab_boot_status.increment(status)
             _increment_daily(bucket.boot_daily, when=when, status=status)
         else:
             bucket.has_test = True
             bucket.tests.increment(status)
+            lab_test_status.increment(status)
             _increment_daily(bucket.test_daily, when=when, status=status)
 
         platform = platform_from_row(row)
         config_name = row.get("build_config_name") or ""
         arch = row.get("build_architecture") or ""
         compiler = row.get("build_compiler") or ""
-        if test_id not in seen_test_ids:
-            seen_test_ids.add(test_id)
-            runs_total += 1
-            if boot:
-                lab_boot_status.increment(status)
-            else:
-                lab_test_status.increment(status)
-            if row.get("test_duration") is not None:
-                runs_with_duration += 1
-            if platform and platform.strip():
-                runs_with_platform += 1
-            if row.get("test_log_url"):
-                runs_with_log_url += 1
-            if row.get("test_log_excerpt"):
-                runs_with_log_excerpt += 1
-            platform_counter[platform.strip()] += 1
-            config_counter[config_name.strip()] += 1
-            arch_counter[arch.strip()] += 1
-            compiler_counter[compiler.strip()] += 1
+        runs_total += 1
+        runs_with_duration += int(row.get("test_duration") is not None)
+        runs_with_platform += int(bool(platform.strip()))
+        runs_with_log_url += int(bool(row.get("test_log_url")))
+        runs_with_log_excerpt += int(bool(row.get("test_log_excerpt")))
+        platform_counter[platform.strip()] += 1
+        config_counter[config_name.strip()] += 1
+        arch_counter[arch.strip()] += 1
+        compiler_counter[compiler.strip()] += 1
 
     tree_items: list[LabDetailsTreeItem] = []
     for key, bucket in sorted(trees.items()):
@@ -325,9 +303,9 @@ def build_lab_details_response(  # noqa: C901 - one pass over build and test row
                     issues_dict=bucket.test_issues
                 ),
                 daily=LabTreeDailySeries(
-                    builds=_daily_to_points(bucket.build_daily),
-                    boots=_daily_to_points(bucket.boot_daily),
-                    tests=_daily_to_points(bucket.test_daily),
+                    builds=list(bucket.build_daily.values()),
+                    boots=list(bucket.boot_daily.values()),
+                    tests=list(bucket.test_daily.values()),
                 ),
             )
         )
@@ -347,9 +325,9 @@ def build_lab_details_response(  # noqa: C901 - one pass over build and test row
         ),
         fill=LabFillStats(
             checkout_total=checkout_total,
-            checkouts_built=sum(1 for bucket in trees.values() if bucket.has_build),
-            checkouts_booted=sum(1 for bucket in trees.values() if bucket.has_boot),
-            checkouts_tested=sum(1 for bucket in trees.values() if bucket.has_test),
+            checkouts_built=sum(bucket.has_build for bucket in trees.values()),
+            checkouts_booted=sum(bucket.has_boot for bucket in trees.values()),
+            checkouts_tested=sum(bucket.has_test for bucket in trees.values()),
             builds_total=builds_total,
             builds_with_duration=builds_with_duration,
             runs_total=runs_total,
