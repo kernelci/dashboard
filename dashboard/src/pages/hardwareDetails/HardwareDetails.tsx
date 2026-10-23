@@ -597,7 +597,10 @@ function HardwareDetails(): JSX.Element {
             </p>
           </div>
           {summaryResponse.data?.common.in_registry === false && (
-            <MissingRegistryNotice />
+            <MissingRegistryNotice
+              platformId={hardwareId}
+              compatibles={summaryResponse.data.common.compatibles}
+            />
           )}
           <div className="mt-5">
             {!!treeData && (
