@@ -51,7 +51,12 @@ const HardwareRegistryFilters = ({
   const sections = useMemo(
     () =>
       REGISTRY_FILTER_FIELDS.flatMap(field => {
-        const choices = optionsQuery.data?.[field.optionKey] ?? [];
+        const choices = [
+          ...new Set([
+            ...(optionsQuery.data?.[field.optionKey] ?? []),
+            ...(draft[field.key] ?? []),
+          ]),
+        ];
         if (choices.length === 0) {
           return [];
         }
