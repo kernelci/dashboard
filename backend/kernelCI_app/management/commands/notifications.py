@@ -248,7 +248,6 @@ def generate_issue_report(
             if last_build:
                 incident["last_pass_commit"] = last_build[0]["git_commit_hash"]
         report = generate_build_issue_report(issue, incidents, message_id)
-        recipients = resolve_regression_recipients(issue, incidents)
     elif issue["test_id"]:
         incidents = kcidb_test_incidents(issue_id)
         issue_type = "boot" if is_boot(path=incidents[0]["path"]) else "test"
@@ -258,13 +257,19 @@ def generate_issue_report(
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
             incident["last_pass_id"] = last_test[0]["id"]
         report = generate_boot_issue_report(issue, incidents, message_id)
-        recipients = resolve_regression_recipients(issue, [])
     else:
         print(f"unable to generate issue report for {issue_id}", file=sys.stderr)
         sys.exit(-1)
 
     email_args.tree_name = issue_tree_name
     email_args.regression_report = True
+    recipients = (
+        []
+        if email_args.ignore_recipients
+        else resolve_regression_recipients(
+            issue, incidents if issue_type == "build" else []
+        )
+    )
     msg_id = send_email_report(
         service=service,
         report=report,
@@ -659,7 +664,11 @@ def generate_test_report(*, service, test_id, email_args):
         service=service,
         report=report,
         email_args=email_args,
-        recipients=unscoped_regression_recipients(test["git_repository_url"]),
+        recipients=(
+            []
+            if email_args.ignore_recipients
+            else unscoped_regression_recipients(test["git_repository_url"])
+        ),
         message_id=message_id,
     )
 

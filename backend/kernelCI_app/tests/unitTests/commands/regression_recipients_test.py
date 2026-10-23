@@ -1,4 +1,7 @@
 import os
+from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 from django.conf import settings
@@ -9,12 +12,22 @@ from kernelCI_app.management.commands.helpers.common import (
     resolve_regression_recipients,
     unscoped_regression_recipients,
 )
+from kernelCI_app.management.commands.notifications import (
+    generate_issue_report,
+    generate_test_report,
+)
+from kernelCI_app.tests.unitTests.commands.fixtures.report_notifications_data import (
+    make_boot_issue,
+    make_build_issue,
+    make_test,
+)
 from kernelCI_app.typeModels.notificationRecipients import (
     RecipientFileError,
     load_recipient_default,
 )
 
 STABLE_URL = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+MODULE = "kernelCI_app.management.commands.notifications"
 
 
 def write_tree(tmp_path, *, regression: str, subscriptions: dict[str, str] = None):
@@ -189,3 +202,71 @@ def test_test_report_uses_only_unscoped_entries(entries_by_url):
     )
 
     assert recipients == ["list@example.org"]
+
+
+@pytest.fixture
+def invalid_regression_files(tmp_path, monkeypatch):
+    directory = tmp_path / "notifications"
+    directory.mkdir()
+    write_tree(directory, regression="stable:\n  - recipients: []\n")
+    monkeypatch.setattr(settings, "BACKEND_DATA_DIR", str(tmp_path))
+
+
+@pytest.mark.parametrize("ignore_recipients", [False, True])
+@pytest.mark.parametrize("kind", ["build", "boot"])
+def test_issue_report_can_ignore_invalid_recipients(
+    invalid_regression_files, ignore_recipients, kind, capsys
+):
+    issue, incidents = make_build_issue() if kind == "build" else make_boot_issue()
+    issue.update(
+        version=1,
+        _timestamp=datetime(2026, 10, 22, tzinfo=timezone.utc),
+        build_id="build-1" if kind == "build" else None,
+        test_id="test-1" if kind == "boot" else None,
+    )
+    email_args = SimpleNamespace(send=False, ignore_recipients=ignore_recipients)
+    last_test = {
+        "id": "last-pass",
+        "start_time": issue["_timestamp"],
+        "git_commit_hash": "abc",
+    }
+    with (
+        patch(f"{MODULE}.kcidb_issue_details", return_value=[issue]),
+        patch(f"{MODULE}.kcidb_build_incidents", return_value=incidents),
+        patch(f"{MODULE}.kcidb_test_incidents", return_value=incidents),
+        patch(f"{MODULE}.kcidb_last_build_without_issue", return_value=[]),
+        patch(f"{MODULE}.kcidb_last_test_without_issue", return_value=[last_test]),
+    ):
+        if ignore_recipients:
+            generate_issue_report(
+                service=None, issue_id=issue["id"], email_args=email_args
+            )
+            assert "DRY RUN" in capsys.readouterr().out
+        else:
+            with pytest.raises(RecipientFileError, match="recipients"):
+                generate_issue_report(
+                    service=None, issue_id=issue["id"], email_args=email_args
+                )
+
+
+@pytest.mark.parametrize("ignore_recipients", [False, True])
+def test_test_report_can_ignore_invalid_recipients(
+    invalid_regression_files, ignore_recipients, capsys
+):
+    test = make_test()
+    test.update(origin="maestro", _timestamp=test["start_time"])
+    email_args = SimpleNamespace(send=False, ignore_recipients=ignore_recipients)
+    with (
+        patch(f"{MODULE}.get_test_details_data", return_value=[test]),
+        patch(f"{MODULE}.get_test_status_history", return_value=[]),
+    ):
+        if ignore_recipients:
+            generate_test_report(
+                service=None, test_id=test["id"], email_args=email_args
+            )
+            assert "DRY RUN" in capsys.readouterr().out
+        else:
+            with pytest.raises(RecipientFileError, match="recipients"):
+                generate_test_report(
+                    service=None, test_id=test["id"], email_args=email_args
+                )
