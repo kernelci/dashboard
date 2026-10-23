@@ -72,10 +72,36 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         query, params = cursor.execute.call_args[0]
         self.assertIn("hardware_daily_builds", query)
         self.assertIn("hardware_daily_tests", query)
+        self.assertIn("tested.test_origin = %(origin)s", query)
+        self.assertIn("tested.checkout_id = daily.checkout_id", query)
+        self.assertNotIn("build_origin", query)
+        self.assertIn("daily.test_origin = %(origin)s", query)
+        self.assertIn("picked.checkout_id = daily.checkout_id", query)
+        self.assertIn("checkouts.start_time DESC", query)
         self.assertIn("proc.architecture = ANY(%(architecture)s)", query)
         self.assertNotIn("NOT EXISTS", query)
         self.assertEqual(params["architecture"], ["arm64"])
         self.assertEqual(params["origin"], "maestro")
+
+        cursor.fetchone.return_value = ([], [], [], [], [], [], [], [])
+        get_hardware_registry_filter_options(
+            origin="maestro",
+            start_date=datetime(2026, 1, 1),
+            end_date=datetime(2026, 1, 2),
+        )
+        options_query = cursor.execute.call_args[0][0]
+        self.assertIn("SELECT DISTINCT platform FROM picked", options_query)
+        self.assertIn("checkouts.start_time DESC", options_query)
+
+        get_hardware_daily_listing(
+            origin="maestro",
+            start_date=datetime(2026, 1, 1),
+            end_date=datetime(2026, 1, 2),
+            commits_list=["abc"],
+        )
+        commits_query = cursor.execute.call_args[0][0]
+        self.assertNotIn("picked", commits_query)
+        self.assertIn("commits_list", commits_query)
 
     @patch("kernelCI_app.queries.hardwareRegistryFilters.connection")
     def test_revision_listing_and_options_use_the_same_daily_checkout(
@@ -99,7 +125,10 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         listing_query = cursor.execute.call_args[0][0]
         self.assertIn("hardware_daily_builds", listing_query)
         self.assertIn("hardware_daily_tests", listing_query)
+        self.assertIn("tested.checkout_id = daily.checkout_id", listing_query)
+        self.assertNotIn("build_origin", listing_query)
         self.assertIn("revision.git_commit_hash = %(git_commit_hash)s", listing_query)
+        self.assertNotIn("picked", listing_query)
         self.assertNotIn("environment_misc", listing_query)
 
         get_hardware_registry_filter_options(
@@ -108,8 +137,11 @@ class TestRegistryFilterPredicate(SimpleTestCase):
             **revision,
         )
         options_query = cursor.execute.call_args[0][0]
-        self.assertIn("hardware_daily_builds", options_query)
+        self.assertIn("hardware_daily_tests", options_query)
+        self.assertNotIn("hardware_daily_builds", options_query)
+        self.assertNotIn("build_origin", options_query)
         self.assertIn("revision.git_commit_hash = %(git_commit_hash)s", options_query)
+        self.assertNotIn("picked", options_query)
         self.assertNotIn("checkout_day", options_query)
 
     def test_normalize_csv_drops_blanks(self):
