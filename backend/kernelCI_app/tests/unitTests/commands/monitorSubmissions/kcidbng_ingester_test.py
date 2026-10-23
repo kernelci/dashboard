@@ -871,9 +871,7 @@ class TestIngestSubmissionsParallel:
     FILE2_SIZE = 2000
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch("multiprocessing.Process")
-    @patch("multiprocessing.Queue")
-    @patch("multiprocessing.Value")
+    @patch("multiprocessing.get_context")
     @patch("time.sleep")
     @patch("time.time", side_effect=TIME_MOCK)
     @patch("os.path.getsize")
@@ -882,9 +880,7 @@ class TestIngestSubmissionsParallel:
         mock_getsize,
         mock_time,
         mock_sleep,
-        mock_value,
-        mock_queue_cls,
-        mock_process,
+        mock_get_context,
         mock_out,
     ):
         """Test successful parallel ingestion."""
@@ -895,8 +891,6 @@ class TestIngestSubmissionsParallel:
         mock_getsize.side_effect = lambda p: file_sizes[p]
 
         mock_queue = MagicMock()
-        mock_queue_cls.return_value = mock_queue
-
         mock_queue.empty.return_value = True
         mock_queue.qsize.return_value = 0
 
@@ -909,11 +903,12 @@ class TestIngestSubmissionsParallel:
         mock_processed = MagicMock()
         mock_processed.value = len(json_files)
 
-        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
-
-        # Mock the process
         mock_process_instance = MagicMock(exitcode=0)
-        mock_process.return_value = mock_process_instance
+        mock_context = MagicMock()
+        mock_context.Queue.return_value = mock_queue
+        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
+        mock_context.Process.return_value = mock_process_instance
+        mock_get_context.return_value = mock_context
 
         ingest_submissions_parallel(
             json_files=json_files,
@@ -922,7 +917,7 @@ class TestIngestSubmissionsParallel:
             max_workers=2,
         )
 
-        # Verify process was started and joined
+        mock_get_context.assert_called_once_with("fork")
         assert mock_process_instance.start.call_count == 2
         assert mock_process_instance.join.call_count == 2
 
@@ -953,18 +948,14 @@ class TestIngestSubmissionsParallel:
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
-    @patch("multiprocessing.Process")
-    @patch("multiprocessing.Queue")
-    @patch("multiprocessing.Value")
+    @patch("multiprocessing.get_context")
     @patch("time.sleep", MagicMock())
     @patch("time.time", MagicMock(side_effect=TIME_MOCK))
     @patch("os.path.getsize")
     def test_ingest_submissions_parallel_worker_failure(
         self,
         mock_getsize,
-        mock_value,
-        mock_queue_cls,
-        mock_process,
+        mock_get_context,
         mock_logger,
         mock_failures_counter,
     ):
@@ -974,7 +965,6 @@ class TestIngestSubmissionsParallel:
         mock_getsize.return_value = self.FILE1_SIZE
 
         mock_queue = MagicMock()
-        mock_queue_cls.return_value = mock_queue
 
         # Queue not empty on first check, triggers the is_alive guard
         mock_queue.empty.return_value = False
@@ -983,7 +973,6 @@ class TestIngestSubmissionsParallel:
         mock_ok = MagicMock(value=0)
         mock_fail = MagicMock(value=1)
         mock_processed = MagicMock(value=0)
-        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
 
         # Two workers: one crashed (exitcode=1), one killed (exitcode=-9)
         crashed_worker = MagicMock(exitcode=1, pid=1001)
@@ -992,7 +981,11 @@ class TestIngestSubmissionsParallel:
         killed_worker = MagicMock(exitcode=-9, pid=1002)
         killed_worker.is_alive.return_value = False
 
-        mock_process.side_effect = [crashed_worker, killed_worker]
+        mock_context = MagicMock()
+        mock_context.Queue.return_value = mock_queue
+        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
+        mock_context.Process.side_effect = [crashed_worker, killed_worker]
+        mock_get_context.return_value = mock_context
 
         ingest_submissions_parallel(
             json_files=[file1_path],
@@ -1031,18 +1024,14 @@ class TestIngestSubmissionsParallel:
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
-    @patch("multiprocessing.Process")
-    @patch("multiprocessing.Queue")
-    @patch("multiprocessing.Value")
+    @patch("multiprocessing.get_context")
     @patch("time.sleep", MagicMock())
     @patch("time.time", MagicMock(side_effect=TIME_MOCK))
     @patch("os.path.getsize")
     def test_ingest_submissions_parallel_partial_worker_failure(
         self,
         mock_getsize,
-        mock_value,
-        mock_queue_cls,
-        mock_process,
+        mock_get_context,
         mock_logger,
         mock_failures_counter,
     ):
@@ -1052,7 +1041,6 @@ class TestIngestSubmissionsParallel:
         mock_getsize.return_value = self.FILE1_SIZE
 
         mock_queue = MagicMock()
-        mock_queue_cls.return_value = mock_queue
 
         # Queue non-empty on first iteration, then empty (surviving worker drained it)
         mock_queue.empty.side_effect = [False, True]
@@ -1061,7 +1049,6 @@ class TestIngestSubmissionsParallel:
         mock_ok = MagicMock(value=0)
         mock_fail = MagicMock(value=0)
         mock_processed = MagicMock(value=0)
-        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
 
         # One worker crashed, one is still alive and draining the queue
         crashed_worker = MagicMock(exitcode=1, pid=1001)
@@ -1070,7 +1057,11 @@ class TestIngestSubmissionsParallel:
         alive_worker = MagicMock(exitcode=0, pid=1002)
         alive_worker.is_alive.return_value = True
 
-        mock_process.side_effect = [crashed_worker, alive_worker]
+        mock_context = MagicMock()
+        mock_context.Queue.return_value = mock_queue
+        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
+        mock_context.Process.side_effect = [crashed_worker, alive_worker]
+        mock_get_context.return_value = mock_context
 
         ingest_submissions_parallel(
             json_files=[file1_path],
