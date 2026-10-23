@@ -46,10 +46,40 @@ def kcidb_execute_query(query, params=None):
         sys.exit()
 
 
-def kcidb_new_issues():
-    """Fetch issues from the last few days, including related checkouts."""
+def kcidb_new_issues(*, include_other_tests: bool = False):
+    """Fetch issues from the last hour and the first incident's checkout.
+
+    Build rows have a NULL platform. `include_other_tests` drops that branch
+    and keeps tests whose path is not boot or boot.nfs.
+    """
 
     params = {"interval": "1 hour"}
+    if include_other_tests:
+        path_predicate = "AND NOT (t.path = 'boot' OR t.path = 'boot.nfs')"
+        build_union = ""
+    else:
+        path_predicate = "AND (t.path = 'boot' OR t.path = 'boot.nfs')"
+        build_union = """
+           SELECT
+               inc._timestamp,
+               inc.issue_id,
+               inc.issue_version,
+               inc.test_id,
+               inc.build_id,
+               c.git_repository_url,
+               c.tree_name,
+               c.git_repository_branch,
+               c.git_commit_hash,
+               c.git_commit_name,
+               NULL::text AS platform,
+               ROW_NUMBER() OVER (PARTITION BY inc.issue_id ORDER BY inc._timestamp ASC) as incident_rn
+           FROM incidents inc
+           JOIN builds b ON inc.build_id = b.id
+           JOIN checkouts c ON b.checkout_id = c.id
+           WHERE inc._timestamp >= NOW() - INTERVAL %(interval)s
+
+           UNION
+"""
 
     query = """
         WITH ranked_issues AS (
@@ -101,6 +131,7 @@ def kcidb_new_issues():
         ),
 
         first_incidents AS (
+__BUILD_UNION__
            SELECT
                inc._timestamp,
                inc.issue_id,
@@ -112,32 +143,14 @@ def kcidb_new_issues():
                c.git_repository_branch,
                c.git_commit_hash,
                c.git_commit_name,
-               ROW_NUMBER() OVER (PARTITION BY inc.issue_id ORDER BY inc._timestamp ASC) as incident_rn
-           FROM incidents inc
-           JOIN builds b ON inc.build_id = b.id
-           JOIN checkouts c ON b.checkout_id = c.id
-           WHERE inc._timestamp >= NOW() - INTERVAL %(interval)s
-
-           UNION
-
-           SELECT
-               inc._timestamp,
-               inc.issue_id,
-               inc.issue_version,
-               inc.test_id,
-               inc.build_id,
-               c.git_repository_url,
-               c.tree_name,
-               c.git_repository_branch,
-               c.git_commit_hash,
-               c.git_commit_name,
+               t.environment_misc->>'platform' AS platform,
                ROW_NUMBER() OVER (PARTITION BY inc.issue_id ORDER BY inc._timestamp ASC) as incident_rn
            FROM incidents inc
            JOIN tests t ON inc.test_id = t.id
            JOIN builds b ON t.build_id = b.id
            JOIN checkouts c ON b.checkout_id = c.id
            WHERE inc._timestamp >= NOW() - INTERVAL %(interval)s
-            AND (t.path = 'boot' OR t.path = 'boot.nfs')
+            __PATH_PREDICATE__
        )
 
         SELECT
@@ -154,6 +167,7 @@ def kcidb_new_issues():
             fi.git_repository_branch,
             fi.git_commit_hash,
             fi.git_commit_name,
+            fi.platform,
             COUNT(inc.id) AS incident_count
         FROM new_issues n
         LEFT JOIN first_incidents fi ON n.id = fi.issue_id AND fi.incident_rn = 1
@@ -171,11 +185,17 @@ def kcidb_new_issues():
             fi.tree_name,
             fi.git_repository_branch,
             fi.git_commit_hash,
-            fi.git_commit_name
+            fi.git_commit_name,
+            fi.platform
         ORDER BY fi._timestamp DESC;
         """
 
-    return kcidb_execute_query(query, params)
+    return kcidb_execute_query(
+        query.replace("__BUILD_UNION__", build_union).replace(
+            "__PATH_PREDICATE__", path_predicate
+        ),
+        params,
+    )
 
 
 # TODO: include issue version as an optional parameter

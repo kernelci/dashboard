@@ -1,3 +1,5 @@
+Cc from: regression/mainline.yaml
+
 New build issue found on mainline/master:
 
 ---

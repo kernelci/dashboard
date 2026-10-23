@@ -60,7 +60,25 @@ class TestKcidbNewIssues:
         result = kcidb_new_issues()
 
         assert result == expected_result
+        query = mock_execute_query.call_args[0][0]
+        assert "NULL::text AS platform" in query
+        assert "t.environment_misc->>'platform' AS platform" in query
+        assert "AND (t.path = 'boot' OR t.path = 'boot.nfs')" in query
+        assert "JOIN builds b ON inc.build_id = b.id" in query
         mock_execute_query.assert_called_once()
+
+    @patch("kernelCI_app.queries.notifications.kcidb_execute_query")
+    def test_kcidb_new_issues_other_tests_drop_the_build_branch(
+        self, mock_execute_query
+    ):
+        mock_execute_query.return_value = []
+
+        kcidb_new_issues(include_other_tests=True)
+
+        query = mock_execute_query.call_args[0][0]
+        assert "JOIN builds b ON inc.build_id = b.id" not in query
+        assert "AND NOT (t.path = 'boot' OR t.path = 'boot.nfs')" in query
+        assert "t.environment_misc->>'platform' AS platform" in query
 
 
 class TestKcidbIssueDetails:

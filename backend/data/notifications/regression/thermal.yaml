@@ -1,0 +1,3 @@
+thermal:
+  - recipients:
+      - linux-pm@vger.kernel.org

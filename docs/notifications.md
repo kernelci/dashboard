@@ -39,9 +39,9 @@ These options are available for all actions and are always optional:
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
 | `--add-mailing-lists` | Include community mailing lists in recipients | Flag | False |
-| `--ignore-recipients` | Bypass the recipients in the subscription file | Flag | False |
+| `--ignore-recipients` | Bypass the recipients in the subscription, `regression/`, and `new_issues/` files | Flag | False |
 | `--send` | Send email after generating report | Flag | False |
-| `--to` | Specify direct recipient email | String | None |
+| `--to` | Specify direct recipient email. Overrides `new_issues/default.yaml` on the community summary | String | None |
 | `--cc` | Specify CC recipient emails as "email1, email2" list | String | None |
 | `--yes` | Send email without confirmation | Flag | False |
 | `--in-reply-to` | Message-ID to reply to (sets In-Reply-To header) | String | None |
@@ -102,10 +102,91 @@ poetry run python manage.py notifications \
 
 ## Adding yourself to recipients
 
-Edit the corresponding tree file in the [subscriptions folder](../backend/data/notifications/subscriptions) and send a PR to the dashboard.
+Edit the file for your tree and send a PR to the dashboard. Use the git tree
+name reported by the Web Dashboard.
 
-Use the git tree name reported by the
-Web Dashboard.
+- `[STATUS]` checkout summaries: `default_recipients` in the
+  [subscriptions folder](../backend/data/notifications/subscriptions).
+- `[REGRESSION]` issue reports: the
+  [regression folder](../backend/data/notifications/regression). The report
+  body names the file it took the Cc from.
+- New-issues summary copies: the
+  [new issues folder](../backend/data/notifications/new_issues). The community
+  mail still goes to the `to` address in `default.yaml`. A copy names the
+  files its rows came from.
+
+### Regression recipients
+
+Each `regression/<tree>.yaml` has a top-level key that must be a tree key
+from `subscriptions/`. The tree's `url` decides which issues the file applies
+to. Each entry Cc's its `recipients` when every scope key it sets matches:
+
+```yaml
+stable:
+  - recipients: [list@example.org]          # no scope keys: every build issue on this tree's URL
+  - branch: [linux-6.12.y, linux-6.6.y]
+    architecture: [arm64]
+    recipients: [maintainer@example.com]
+```
+
+| Key | Values | Matched against |
+|---|---|---|
+| `recipients` | addresses, at least one, sent as written | |
+| `issues` | `build` only | the issue kind |
+| `branch` | string or list | the branch printed in the report |
+| `architecture`, `config_name`, `compiler` | string or list | any build where the issue occurred |
+
+The Cc is the union of the matching entries, with repeated addresses dropped.
+Any other key, including `platform` and `origin`, fails `pytest -m unit` with
+the file, entry index, and key.
+
+`test_report` only uses entries without scope keys.
+
+With `--add-mailing-lists`, regression reports are sent to the `to` address in
+[`regression/default.yaml`](../backend/data/notifications/regression/default.yaml).
+`[STATUS]` summaries keep the address in `common.py`.
+
+### New-issues recipients
+
+[`new_issues/default.yaml`](../backend/data/notifications/new_issues/default.yaml)
+replaces `--to` on the hourly summary. `--to` still overrides it. `issues`
+lists the kinds in that community mail.
+
+Other files are optional. A tree file's key must be a tree key in
+`subscriptions/`, and the entry matches that tree's `url`. A
+`*_hardware.yaml` key must be a platform in `subscriptions/`, and the entry
+matches that platform. Each address with at least one matching issue gets one
+mail for the run, combining every matching entry and file. No match sends
+nothing. The community mail is still sent, including to an address that also
+gets a copy.
+
+```yaml
+broonie-sound:
+  - issues: [boot, test]
+    recipients: [maintainer@example.com]
+```
+
+```yaml
+qcs6490-rb3gen2:
+  - issues: [boot]
+    recipients: [board-owner@example.com]  # origin comes from that platform's *_hardware.yaml
+```
+
+| Key | Values | Matched against |
+|---|---|---|
+| `recipients` | addresses, at least one, sent as written | |
+| `issues` | `build`, `boot`, `test` | the row kind |
+| `branch`, `origin` | string or list | the first incident's row |
+| `platform` | string or list | that row's platform. Build rows have none and never match |
+
+An omitted `origin` on a hardware entry uses the platform's `origin` in
+`subscriptions/*_hardware.yaml`, or `maestro` when that file omits it.
+`architecture`, `config_name`, and `compiler` fail `pytest -m unit` with the
+file, entry index, and key.
+
+A copy goes to that address alone. Its body starts with `Copy from:
+new_issues/<file>` for each file that contributed a row. The community mail
+has no such line.
 
 
 ## Signup tree for checkout summary

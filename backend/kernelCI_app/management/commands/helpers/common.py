@@ -1,19 +1,28 @@
 import os
+from collections.abc import Iterable
+from email.utils import parseaddr
 from typing import Optional
 
 from django.conf import settings
 from jinja2 import Environment, FileSystemLoader, Template
 
 from kernelCI_app.helpers.email import smtp_send_email
-from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.management.commands.helpers.summary import SIGNUP_FOLDER
-from kernelCI_app.utils import read_yaml_file
+from kernelCI_app.typeModels.notificationRecipients import (
+    RecipientEntry,
+    load_recipient_default,
+    load_recipient_files,
+)
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
 REGRESSIONS_LIST = "regressions@lists.linux.dev"
 
 REGZBOT_TREES = {"mainline", "next", "stable"}
+
+REGRESSION_FOLDER = "notifications/regression/"
+BUILD_INCIDENT_KEYS = {"architecture", "config_name", "compiler"}
+REGRESSION_KEYS = {"issues", "branch", *BUILD_INCIDENT_KEYS}
+REGRESSION_ISSUES = {"build"}
 
 
 def is_regzbot_tree(tree_name) -> bool:
@@ -38,50 +47,69 @@ def setup_jinja_template(template_name: str) -> Template:
     return jinja_env.get_template(template_name)
 
 
-def _get_default_tree_recipients(
+def _regression_directory() -> str:
+    return os.path.join(settings.BACKEND_DATA_DIR, REGRESSION_FOLDER)
+
+
+def load_regression_files(
+    directory: Optional[str] = None,
+) -> dict[str, list[RecipientEntry]]:
+    return load_recipient_files(
+        directory or _regression_directory(),
+        allowed_keys=REGRESSION_KEYS,
+        allowed_issues=REGRESSION_ISSUES,
+    )
+
+
+def _union_recipients(entries: Iterable[RecipientEntry]) -> list[str]:
+    """Recipients of every entry in order, dropping repeated addresses
+    even when they are written with different display names."""
+    seen: dict[str, str] = {}
+    for entry in entries:
+        for recipient in entry.recipients:
+            seen.setdefault(parseaddr(recipient)[1].lower() or recipient, recipient)
+    return list(seen.values())
+
+
+def _entry_matches(entry: RecipientEntry, issue: dict, build_incidents) -> bool:
+    issue_kind = "build" if issue.get("build_id") else "test"
+    if entry.issues and issue_kind not in entry.issues:
+        return False
+    if entry.branch and issue.get("git_repository_branch") not in entry.branch:
+        return False
+    return all(
+        any(incident.get(key) in values for incident in build_incidents)
+        for key, values in entry.scope.items()
+        if key in BUILD_INCIDENT_KEYS
+    )
+
+
+def resolve_regression_recipients(
+    issue: dict,
+    build_incidents: list[dict],
     *,
-    base_dir: Optional[str] = None,
-    signup_folder: Optional[str] = None,
-    search_url: Optional[str] = None,
+    entries_by_url: Optional[dict[str, list[RecipientEntry]]] = None,
 ) -> list[str]:
-    """
-    Searches in every subscription file to find the matching git_url from a tree,
-    and returns the default recipients of that tree
+    """Cc for a [REGRESSION] report: every regression/ entry on the issue's
+    tree url whose scope matches the issue and its build incidents."""
+    if entries_by_url is None:
+        entries_by_url = load_regression_files()
+    entries = entries_by_url.get(issue.get("git_repository_url"), [])
+    return _union_recipients(
+        entry for entry in entries if _entry_matches(entry, issue, build_incidents)
+    )
 
-    Params:
-        base_dir: the base path for the signup folder;
-        signup_folder: the relative path of the folder where all the subscription files are;
-        search_url: the url of the tree that is being searched;
 
-    Returns:
-        A list of str with recipient emails.
-        The list will be empty if there was an error or the tree was not found.
-    """
-
-    if not search_url:
-        return []
-
-    if not base_dir:
-        base_dir = settings.BACKEND_DATA_DIR
-    if not signup_folder:
-        signup_folder = SIGNUP_FOLDER
-
-    full_path = os.path.join(base_dir, signup_folder)
-    for filename in os.listdir(full_path):
-        if filename.endswith(".yaml") or filename.endswith(".yml"):
-            file_path = os.path.join(signup_folder, filename)
-            file_data = read_yaml_file(base_dir=base_dir, file=file_path)
-
-            # Although there is a for loop here, there should only be a single tree per file
-            for tree_values in file_data.values():
-                tree_url = tree_values.get("url")
-                default_recipients = tree_values.get("default_recipients", [])
-                if search_url == tree_url:
-                    return default_recipients
-        else:
-            log_message(
-                f"Skipping file {filename} on loading summary files. Not a yaml file."
-            )
+def unscoped_regression_recipients(
+    git_url: Optional[str],
+    *,
+    entries_by_url: Optional[dict[str, list[RecipientEntry]]] = None,
+) -> list[str]:
+    """Cc for a test report: only the regression/ entries without scope keys."""
+    if entries_by_url is None:
+        entries_by_url = load_regression_files()
+    entries = entries_by_url.get(git_url, [])
+    return _union_recipients(entry for entry in entries if not entry.scope)
 
 
 def _ask_confirmation():
@@ -100,8 +128,6 @@ def send_email_report(
     service,
     report,
     email_args,
-    git_url: Optional[str] = None,
-    signup_folder: Optional[str] = None,
     recipients: Optional[list[str]] = None,
     message_id: Optional[str] = None,
 ):
@@ -111,13 +137,7 @@ def send_email_report(
         service: the email service used to send the email itself
         report: the dict with information about the report, usually set up with jinja
         email_args: the SimpleNamespace with options for the email sending
-        git_url: the git_repository_url of a tree that is used to retrieve the recipients for the email.\n
-          Requires signup_folder to be set in order to take effect.
-        signup_folder: the folder with the tree submissions files that is used
-          to retrieve the recipients for the email.\n
-          Is only used if git_url is set and default recipients are not ignored.
-        recipients: a direct list of email recipients to use,
-          this parameter overrides the use of git_url + signup_folder.
+        recipients: the Cc list, skipped when email_args.ignore_recipients is set
         message_id: the Message-ID to send the email with, generated by the
           smtp helper when not given. Pass one when the report body references
           its own Message-ID (e.g. a lore.kernel.org link).
@@ -137,19 +157,17 @@ def send_email_report(
     cc = ""
     reply_to = None
     if email_args.add_mailing_lists:
-        to = KERNELCI_RESULTS
+        to = (
+            load_recipient_default(_regression_directory()).to
+            if email_args.regression_report
+            else KERNELCI_RESULTS
+        )
         reply_to = KERNELCI_REPLYTO
     else:
         to = email_args.to
 
-    if not email_args.ignore_recipients:
-        if not recipients:
-            recipients = _get_default_tree_recipients(
-                signup_folder=signup_folder,
-                search_url=git_url,
-            )
-        formatted_recipients = ", ".join(recipients) if recipients else ""
-        cc = ", ".join([formatted_recipients, cc]) if cc else formatted_recipients
+    if not email_args.ignore_recipients and recipients:
+        cc = ", ".join(recipients)
 
     if email_args.cc:
         cc = ", ".join([email_args.cc, cc]) if cc else email_args.cc
