@@ -43,6 +43,7 @@ from kernelCI_app.helpers.hardwareDetails import (
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
+    is_hardware_in_registry,
 )
 from kernelCI_app.typeModels.commonDetails import (
     BaseBuildSummary,
@@ -405,6 +406,7 @@ class HardwareDetails(APIView):
                 common=HardwareCommon(
                     trees=trees,
                     compatibles=list(self.processed_compatibles - {hardware_id}),
+                    in_registry=is_hardware_in_registry(hardware_id),
                 ),
             )
         except ValidationError as e:

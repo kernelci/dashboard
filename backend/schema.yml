@@ -3118,9 +3118,13 @@ components:
             type: string
           title: Compatibles
           type: array
+        in_registry:
+          title: In Registry
+          type: boolean
       required:
       - trees
       - compatibles
+      - in_registry
       title: HardwareCommon
       type: object
     HardwareDetailsBootsResponse:

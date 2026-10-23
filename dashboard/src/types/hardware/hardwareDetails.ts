@@ -36,6 +36,7 @@ export type PreparedTrees = HardwareTrees & {
 export type HardwareCommon = {
   trees: HardwareTrees[];
   compatibles: string[];
+  in_registry: boolean;
 };
 
 interface HardwareTestLocalFilters extends LocalFilters {

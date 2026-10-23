@@ -42,6 +42,7 @@ QUERY_PATCH = (
 HEADS_PATCH = (
     "kernelCI_app.views.hardwareDetailsSummaryView.get_hardware_trees_head_commits"
 )
+REGISTRY_PATCH = "kernelCI_app.views.hardwareDetailsSummaryView.is_hardware_in_registry"
 
 
 class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
@@ -53,13 +54,14 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
             ("1", "next", "https://git.kernel.org", "master", "def456", "maestro"),
         ]
 
-    def _post(self, body):
+    def _post(self, body, *, in_registry=False):
         request = self.factory.post(
             "/hardware/test_hardware/summary",
             data=json.dumps(body),
             content_type="application/json",
         )
-        return HardwareDetailsSummary().post(request, hardware_id=self.hardware_id)
+        with patch(REGISTRY_PATCH, return_value=in_registry):
+            return HardwareDetailsSummary().post(request, hardware_id=self.hardware_id)
 
     def _body(self, **overrides):
         body = dict(BODY)
@@ -111,6 +113,16 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         self.assertEqual(mock_query.call_count, 2)
         self.assertEqual(response.data["summary"]["builds"]["status"]["PASS"], 0)
         self.assertEqual(len(response.data["common"]["trees"]), 1)
+        self.assertFalse(response.data["common"]["in_registry"])
+
+    def test_reports_registry_membership(self):
+        with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
+            mock_heads.return_value = self.heads
+            mock_query.return_value = [SUMMARY_ROW]
+            response = self._post(self._body(), in_registry=True)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.data["common"]["in_registry"])
 
     def test_second_query_when_sql_differs(self):
         cases = {
