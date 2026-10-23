@@ -1,7 +1,8 @@
 cip:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
   default_recipients:
-    - cip-dev@lists.cip-project.org
+    - email: cip-dev@lists.cip-project.org
+      issues: [build]
 
   reports:
     - linux-4.4.y-cip:

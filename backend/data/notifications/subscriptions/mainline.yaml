@@ -1,7 +1,8 @@
 mainline:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
   default_recipients:
-    - broonie@kernel.org
+    - email: broonie@kernel.org
+      issues: [build]
 
   reports:
     - default:

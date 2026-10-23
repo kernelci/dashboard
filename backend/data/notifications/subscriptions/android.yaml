@@ -1,9 +1,12 @@
 android:
   url: https://android.googlesource.com/kernel/common
   default_recipients:
-    - tkjos@google.com
-    - joneslee@google.com
-    - ynaffit@google.com
+    - email: tkjos@google.com
+      issues: [build]
+    - email: joneslee@google.com
+      issues: [build]
+    - email: ynaffit@google.com
+      issues: [build]
 
   reports:
     - mainline:

@@ -107,6 +107,49 @@ Edit the corresponding tree file in the [subscriptions folder](../backend/data/n
 Use the git tree name reported by the
 Web Dashboard.
 
+Every address in `default_recipients` is Cc on the mail that file already sends. A tree file sends the `[STATUS]` checkout summary, one per entry under `reports`, and the `[REGRESSION]` mail, one message per new build issue on that git URL. A `*_hardware.yaml` file sends the Monday `hardware <board> summary`. The hourly `new issues summary` is addressed to `kernelci-results@groups.io` and does not read these files.
+
+An entry is either an address string, including `Name <email>`, or a mapping with `email` and an `issues` list. `issues` names the issue kinds that address is notified about: `build`, `boot`, or `test`.
+
+```yaml
+broonie-sound:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git
+  default_recipients:
+    - email: someone-else@kernel.org
+      issues: [build]
+    - email: broonie@kernel.org
+      issues: [build, boot, test]
+```
+
+`build` is the only kind with a sender today, and it is the `[REGRESSION]` mail above. Every tree file lists `[build]` on each address, which states the mail those addresses already receive. Adding `boot` or `test` records a request that no scheduled mail covers yet, so that address keeps receiving exactly the `[REGRESSION]` build mail until the sender exists. Full regression reports prefer `build` when a checkout has both build and test incidents.
+
+Hardware files keep plain address strings. Those addresses receive the Monday board summary and no issue mail, so there is no kind to list:
+
+```yaml
+qcs6490-rb3gen2:
+  origin: maestro
+  labs:
+    lava-kci-qualcomm: https://lava-oss.qualcomm.com
+  default_recipients:
+    - Trilok Soni <tsoni@quicinc.com>
+    - Shiraz Hashim <shashim@qti.qualcomm.com>
+```
+
+Editing a file in that folder runs these checks in CI. A malformed file, an unknown issue kind, or an address without a single `@` fails with the file name and the field.
+
+## Metrics rules
+
+`backend/data/notifications/metrics/` holds one YAML file per rule group. A rule name is the top-level key. `hardware` and `trees` name keys in the subscriptions folder. `period_days` is a positive integer. Two rules that share a recipient and a hardware or tree name are rejected. These files are validated only; they do not send mail.
+
+```yaml
+qualcomm-weekly:
+  recipients:
+    - tsoni@quicinc.com
+  hardware: [qcs6490-rb3gen2]
+  origins: [maestro]
+  period_days: 7
+```
+
 
 ## Signup tree for checkout summary
 
