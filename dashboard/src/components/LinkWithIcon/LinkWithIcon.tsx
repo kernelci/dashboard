@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils';
 export interface ILinkWithIcon {
   title?: MessagesKey;
   linkText?: string | ReactElement;
-  link?: string;
+  link?: string | null;
   icon?: ReactElement;
   linkComponent?: ReactElement;
   onClick?: () => void;
   unformattedTitle?: string;
   titleIcon?: JSX.Element;
   className?: string;
+  titleClassName?: string;
 }
 
 const LinkWithIcon = ({
@@ -27,6 +28,7 @@ const LinkWithIcon = ({
   unformattedTitle,
   titleIcon,
   className,
+  titleClassName,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
 
@@ -44,8 +46,10 @@ const LinkWithIcon = ({
       className={cn('flex flex-col items-start gap-1 text-[16px]', className)}
     >
       {(titleText || titleIcon) && (
-        <div className="flex flex-row gap-[5px]">
-          {titleText && <span className="font-bold">{titleText}</span>}
+        <div className="flex flex-row items-center gap-[5px]">
+          {titleText && (
+            <span className={titleClassName ?? 'font-bold'}>{titleText}</span>
+          )}
           {titleIcon}
         </div>
       )}
@@ -54,7 +58,7 @@ const LinkWithIcon = ({
           className={cn('flex flex-row items-center gap-1', {
             'underline hover:text-gray-900': onClick || link,
           })}
-          href={link}
+          href={link ?? undefined}
           target="_blank"
           rel="noreferrer"
           onClick={onClick}

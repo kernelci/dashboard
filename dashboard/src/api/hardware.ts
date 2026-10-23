@@ -5,6 +5,7 @@ import { useSearch } from '@tanstack/react-router';
 
 import type {
   HardwareListingResponse,
+  HardwareRegistryInfo,
   HardwareRevisionSelection,
   HardwareSelectorsResponse,
 } from '@/types/hardware';
@@ -21,6 +22,7 @@ type HardwareListingByRevisionApiItem = {
   build_status_summary: StatusCount;
   test_status_summary: StatusCount;
   boot_status_summary: StatusCount;
+  registry?: HardwareRegistryInfo | null;
 };
 
 type HardwareListingByRevisionApiResponse = {
@@ -136,6 +138,7 @@ const fetchHardwareListingByRevision = async (
       boot_status_summary: statusCountToShortStatusCount(
         item.boot_status_summary,
       ),
+      registry: item.registry,
     })),
   };
 };

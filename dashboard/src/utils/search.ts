@@ -156,6 +156,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   gitRepositoryUrl: 'gu',
   gitBranch: 'gb',
   gitCommitHash: 'ch',
+  registryFilter: 'rf',
 } as const;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
