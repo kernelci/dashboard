@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -22,6 +22,38 @@ class HardwareListingByRevisionQueryParamsDocumentationOnly(BaseModel):
         description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION
     )
     git_commit_hash: str = Field(description=DocStrings.COMMIT_HASH_PATH_DESCRIPTION)
+    architecture: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    processor: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    platformVendor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    siliconVendor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    platform: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    systemModule: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    formFactor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    boardType: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
 
 
 class HardwareListingByRevisionQueryParams(BaseModel):

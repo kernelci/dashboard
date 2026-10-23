@@ -9,7 +9,10 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.queries.hardware import get_hardware_listing_data_from_status_table
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    get_hardware_daily_listing,
+    hardware_registry_filter_from_request,
+)
 from kernelCI_app.typeModels.commonListing import ListingStatusCount
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareListingItem,
@@ -68,11 +71,12 @@ class HardwareView(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        hardwares_raw = get_hardware_listing_data_from_status_table(
+        hardwares_raw = get_hardware_daily_listing(
             origin=origin,
             start_date=start_date,
             end_date=end_date,
             commits_list=query_params.commits_list,
+            registry_filter=hardware_registry_filter_from_request(request.GET),
         )
 
         try:

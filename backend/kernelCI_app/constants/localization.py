@@ -117,6 +117,12 @@ class DocStrings:
         "Optional comma-separated git commit identifiers: full SHA(s) "
         "and/or tag strings that appear in checkout.git_commit_tags."
     )
+    HARDWARE_REGISTRY_FILTER_DESCRIPTION = (
+        "Comma-separated registry values. Values in one field are OR; "
+        "different fields are AND. A platform that is not in the registry "
+        "matches only the platform filter, and only when no other registry "
+        "field is set."
+    )
 
     LAB_LISTING_ORIGIN_DESCRIPTION = "Origin of the lab results"
 
