@@ -280,6 +280,16 @@ else:
                 "--days=1",
             ],
         ),
+        (
+            "10 */6 * * *",
+            "django.core.management.call_command",
+            ["recompute_lab_daily", "--days=30"],
+        ),
+        (
+            "20 * * * *",
+            "django.core.management.call_command",
+            ["recompute_lab_daily", "--days=1"],
+        ),
     ]
 
 # Email settings for SMTP backend

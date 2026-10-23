@@ -21,6 +21,12 @@ def _create_cache_params_hash(params: dict) -> str:
     return stable_hash(params_string)
 
 
+def _query_cache_key(key, params: Optional[dict] = None) -> str:
+    if params is None:
+        return key
+    return "%s-%s" % (key, _create_cache_params_hash(params))
+
+
 def set_query_cache(
     *,
     key,
@@ -31,11 +37,7 @@ def set_query_cache(
     test_id=None,
     timeout=timeout,
 ):
-    if params is not None:
-        params_hash = _create_cache_params_hash(params)
-        hash_key = "%s-%s" % (key, params_hash)
-    else:
-        hash_key = "%s" % key
+    hash_key = _query_cache_key(key, params)
 
     _add_to_lookup(hash_key, commit_hash, _commit_lookup)
     _add_to_lookup(hash_key, build_id, _build_lookup)
@@ -45,10 +47,34 @@ def set_query_cache(
 
 
 def get_query_cache(key, params: Optional[dict] = None):
+    return cache.get(_query_cache_key(key, params))
+
+
+def clear_cache(key, params: Optional[dict] = None) -> None:
     if params is not None:
-        params_hash = _create_cache_params_hash(params)
-        return cache.get("%s-%s" % (key, params_hash))
-    return cache.get("%s" % key)
+        cache.delete(_query_cache_key(key, params))
+        return
+
+    cache.delete(key)
+    prefix = f"{key}-"
+    version_mark = f":{cache.version}:"
+    backend = cache._cache
+    get_client = getattr(backend, "get_client", None)
+    if get_client is not None:
+        raw_keys = get_client().scan_iter(match=f"*{version_mark}{prefix}*", count=200)
+    elif isinstance(backend, dict):
+        raw_keys = list(backend)
+    else:
+        return
+
+    names = []
+    for raw_key in raw_keys:
+        stored = raw_key.decode() if isinstance(raw_key, bytes) else raw_key
+        logical = stored.split(version_mark, 1)[-1]
+        if logical.startswith(prefix):
+            names.append(logical)
+    if names:
+        cache.delete_many(names)
 
 
 def set_notification_cache(*, notification: str) -> None:
