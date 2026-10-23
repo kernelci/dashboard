@@ -1079,14 +1079,14 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "kci-dev"
-version = "0.1.11"
+version = "0.1.12"
 description = "Stand alone tool for Linux Kernel developers and maintainers to interact with KernelCI"
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["dev"]
 files = [
-    {file = "kci_dev-0.1.11-py3-none-any.whl", hash = "sha256:77764f1ca7e26232a46ce2cc3b6d17e70a904f3735a658a8f0bd8355d5c44691"},
-    {file = "kci_dev-0.1.11.tar.gz", hash = "sha256:85988cb1a9cd15116d2a203db2a54ec3a183c426d264a186cad30535c8ed90dc"},
+    {file = "kci_dev-0.1.12-py3-none-any.whl", hash = "sha256:6743fad7bbc659e8d1c572f57f235864c5bbd58f7c48807cfa69d25835ae48d0"},
+    {file = "kci_dev-0.1.12.tar.gz", hash = "sha256:d1bd92d1a6c99172f526480bc7c1e7a54a03a415a6f462352e3d030ae0c56961"},
 ]
 
 [package.dependencies]
@@ -2870,4 +2870,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4"
-content-hash = "f29164b9cfe6dbc63c58052699a30d5769f0350b9768db239ab88745155659d1"
+content-hash = "a2e674b5b38c7f439f51afde4600387e2b3f286499874330c732bef6e9798d0e"

@@ -14,6 +14,7 @@ API = os.environ.get("DASHBOARD_API") or (
 )
 
 ARM64_COMMIT = "a1c24ab822793eb513351686f631bd18952b7870"
+ARM64_BASE = "5b4ec6e1eb7603b6d86a172d77efdf75eb741e7e"
 ARM64_GITURL = "https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git"
 ARM64_BRANCH = "for-kernelci"
 ARM64_TREE = "arm64/for-kernelci"
@@ -89,7 +90,9 @@ def settings_file(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return path
 
 
-def run_kci_dev(settings_file: Path, *args: str, parse=json.loads):
+def _run_kci_dev(
+    settings_file: Path, args: tuple[str, ...]
+) -> subprocess.CompletedProcess:
     cmd = [
         _kci_dev_executable(),
         "--settings",
@@ -97,22 +100,31 @@ def run_kci_dev(settings_file: Path, *args: str, parse=json.loads):
         "--debug",
         "results",
         *args,
-        "--json",
     ]
-    proc = subprocess.run(  # noqa: S603
+    return subprocess.run(  # noqa: S603
         cmd,
         capture_output=True,
         text=True,
         timeout=120,
         check=False,
     )
-    # kci-dev exits 0 on an unusable payload, so empty stdout is also a failure.
-    assert proc.returncode == 0 and proc.stdout.strip(), (
-        f"command: {' '.join(cmd)}\n"
+
+
+def _format_failure(
+    cmd_args: tuple[str, ...], proc: subprocess.CompletedProcess
+) -> str:
+    return (
+        f"command: results {' '.join(cmd_args)}\n"
         f"exit code: {proc.returncode}\n"
         f"stdout:\n{proc.stdout}\n"
         f"stderr:\n{proc.stderr}"
     )
+
+
+def run_kci_dev(settings_file: Path, *args: str, parse=json.loads):
+    proc = _run_kci_dev(settings_file, (*args, "--json"))
+    # kci-dev exits 0 on an unusable payload, so empty stdout is also a failure.
+    assert proc.returncode == 0 and proc.stdout.strip(), _format_failure(args, proc)
     return parse(proc.stdout.strip())
 
 
@@ -165,6 +177,91 @@ def test_issues(settings_file: Path) -> None:
     assert issues
     _assert_fields(issues, ISSUE_FIELDS)
     assert any(issue["id"] == ISSUE_ID for issue in issues)
+
+
+@pytest.fixture
+def compare_cli(monkeypatch):
+    # TODO: compare and gate call KernelCIClient() with no config, so --settings
+    # never reaches them. Check opening a kci-dev PR so they use the dashboard URL
+    # from the settings file, like trees/builds/tests. Then drop this subclass and
+    # run both commands through run_kci_dev.
+    import kcidev.api as api
+    from kcidev.api import KernelCIClient
+    from kcidev.main import get_cli
+
+    class Client(KernelCIClient):
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("dashboard_api", API)
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(api, "KernelCIClient", Client)
+    return get_cli()
+
+
+def _invoke_comparison(compare_cli, args: list[str]) -> tuple[int, dict]:
+    from click.testing import CliRunner
+
+    result = CliRunner().invoke(compare_cli, args)
+    report_line = next(
+        line for line in reversed(result.output.splitlines()) if line.startswith('{"')
+    )
+    return result.exit_code, json.loads(report_line)
+
+
+def _assert_seeded_builds(code: int, report: dict) -> None:
+    seen = {item["base_id"] for item in report["items"]} | {
+        item["head_id"] for item in report["items"]
+    }
+    assert "allwinner_build_valid" in seen
+    assert ARM64_BUILD in seen
+    # Tree-report answers an error for this seed: both checkouts are outside
+    # its 24h window, so the CLI marks the report incomplete and exits 2.
+    assert report["incomplete"] is True
+    assert code == 2
+
+
+def test_compare(compare_cli) -> None:
+    code, report = _invoke_comparison(
+        compare_cli,
+        [
+            "results",
+            "compare",
+            "--origin",
+            "maestro",
+            "--giturl",
+            ARM64_GITURL,
+            "--branch",
+            ARM64_BRANCH,
+            ARM64_BASE,
+            ARM64_COMMIT,
+            "--format",
+            "json",
+        ],
+    )
+    _assert_seeded_builds(code, report)
+
+
+def test_gate(compare_cli) -> None:
+    code, report = _invoke_comparison(
+        compare_cli,
+        [
+            "results",
+            "gate",
+            "--origin",
+            "maestro",
+            "--giturl",
+            ARM64_GITURL,
+            "--branch",
+            ARM64_BRANCH,
+            "--base",
+            ARM64_BASE,
+            "--head",
+            ARM64_COMMIT,
+            "--format",
+            "json",
+        ],
+    )
+    _assert_seeded_builds(code, report)
 
 
 def test_test(settings_file: Path) -> None:

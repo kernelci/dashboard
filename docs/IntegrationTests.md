@@ -357,7 +357,7 @@ See `.github/workflows/ci.yaml` for the complete CI configuration.
 
 `backend/kernelCI_app/tests/integrationTests/kci_dev_results_test.py` runs the installed [kci-dev](https://github.com/kernelci/kci-dev) CLI against this stack, as part of `pytest -m integration`. It does not run kci-dev's own tests.
 
-The pin is `kci-dev==0.1.11` in `backend/pyproject.toml`. Bump that pin to move to a newer CLI. The CLI talks to `TEST_BASE_URL` with `/api/` appended, the same variable the other integration clients use. `DASHBOARD_API`, when set, replaces that full URL. Issue listing passes `--origin origin-fake-00000000`, the origin `IssueFactory` writes.
+The pin is `kci-dev==0.1.12` in `backend/pyproject.toml`. Bump that pin to move to a newer CLI. The CLI talks to `TEST_BASE_URL` with `/api/` appended, the same variable the other integration clients use. `DASHBOARD_API`, when set, replaces that full URL. Issue listing passes `--origin origin-fake-00000000`, the origin `IssueFactory` writes. `results compare` and `results gate` use two seeded arm64 checkouts; `gate` is part of this pin.
 
 **Run** (after steps 1–4 above, from `backend/`):
 
