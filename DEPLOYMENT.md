@@ -169,9 +169,11 @@ Unlike the development deployment, our production environment connects to a
 pre-existing external PostgreSQL instance and use pre-built docker images
 stored in the GitHub Container Registry (GHCR).
 
-Production images are automatically built via GitHub Workflow,
-to every new commit in the main branch, or when
-the `Publish GHCR Images` workflow is triggered manually. After CI passes on
+Production images are automatically built via GitHub Workflow
+for every new commit on `main`, or when `Publish GHCR Images` is run manually
+from a branch or tag (**Use workflow from**). Images are tagged with that
+commit's full SHA. `latest` is updated only for automatic builds from `main`.
+Deployment pulls that SHA and never rebuilds the images. After CI passes on
 `main`, the dashboard is also deployed to staging
 ([deploy-staging](.github/workflows/deploy-staging.yaml)). Production is deployed
 manually via [deploy-production](.github/workflows/deploy-production.yaml) (see
@@ -226,7 +228,8 @@ docker compose -f docker-compose-next.yml --profile=with_commands up -d
 ### Updating to a new version
 
 ```bash
-# Pull latest images and restart
+# Pull a specific commit SHA and restart
+export IMAGE_TAG=<commit-sha>
 docker compose -f docker-compose-next.yml pull
 docker compose -f docker-compose-next.yml up -d
 ```
@@ -242,9 +245,10 @@ the path to follow so a step is not skipped. Production is never deployed by mer
     [Database schema changes](#database-schema-changes) (new tables: wait for Denys)
   - Create the `release/YYYYMMDD.N` tag on that commit
   - Push the tag
-  - Run **Publish GHCR Images** on that `main` commit; wait for backend, frontend, and proxy
-  - Run **Deploy production Dashboard** from `main` with `tag` set to the new release
-    (only after the publish finished)
+  - Run **Publish GHCR Images** from the new release tag (**Use workflow from**);
+    wait for backend, frontend, and proxy
+  - Run **Deploy production Dashboard** from that same tag, only after publish
+    finishes. It deploys the images tagged with that commit's full SHA
 
 - Post-deploy
   - Open <https://dashboard.kernelci.org> in a browser and confirm the new release tag
@@ -293,11 +297,12 @@ convention (`N` starts at `0` and increments for further releases on the same da
     git push origin release/20260729.0
     ```
 
-2. Manually trigger the `Publish GHCR Images` workflow. Images built by the
-earlier push to `main` were baked before the tag existed, so they still carry the
-previous version string. Wait for the backend, frontend, and proxy jobs to finish.
-3. Trigger the `Deploy production Dashboard` workflow with the new tag, from `main`
-while `main` still points at the tagged commit.
+2. Manually trigger the `Publish GHCR Images` workflow from that tag.
+Images built by the earlier push to `main` were baked before the tag
+existed, so they still carry the previous version string. Wait for the
+backend, frontend, and proxy jobs to finish.
+3. Trigger the `Deploy production Dashboard` workflow from that same tag.
+It deploys the images tagged with that commit's full SHA.
 4. Open <https://dashboard.kernelci.org> in a browser and confirm the new release
 tag at the bottom of the left side panel.
 5. If the release contained migrations, tell Denys Fedoryshchenko on Discord, so he
@@ -306,21 +311,21 @@ can apply the permission grants the migrations do not cover.
 The same steps from the command line:
 
 ```bash
-gh workflow run "Publish GHCR Images" --repo kernelci/dashboard --ref main
+gh workflow run "Publish GHCR Images" --repo kernelci/dashboard --ref release/20260729.0
 gh run watch <run-id> --repo kernelci/dashboard
 
-gh workflow run "Deploy production Dashboard" --repo kernelci/dashboard --ref main \
-    -f tag=release/20260729.0
+gh workflow run "Deploy production Dashboard" --repo kernelci/dashboard --ref release/20260729.0
 gh run watch <run-id> --repo kernelci/dashboard
 ```
 
 #### Things that are easy to get wrong
 
-- The `tag` input does not select the images. It only sets `DASHBOARD_VERSION` (side menu)
-and the Discord messages. Production pulls `:latest` unless the host `.env` sets
-`IMAGE_TAG`. Do not start step 3 until step 2 has finished.
-- Run the deploy workflow from `main` while `main` is still the tagged commit, so the
-compose files on the host match that release. The host clone is `--depth 1 --branch main`.
+- There is no image-tag input. Publish and deploy both use the selected ref's
+full commit SHA. `latest` is pushed only by automatic builds from `main`.
+Do not start step 3 until step 2 has finished.
+- Run publish from the release tag, not from `main` before the tag exists.
+Images built earlier still carry the previous version string. The host fetches
+that SHA and checks it out, so the compose files match the release.
 - The **ingester** and `pending_aggregations_processor` are not started by this workflow
 (the `with_commands` profile is not used), and `--remove-orphans` stops them if they are
 already running on the host. See [Ingester deployment](#ingester-deployment).
@@ -332,9 +337,12 @@ database host, which is a different deployment from the one described here.
 ## 3. Staging
 
 The current staging version of the KernelCI Dashboard is deployed similarly
-to [production](#2-production), with the exception that staging deployment
-does not pull docker images from the GHCR registry;
-instead docker images are built locally.
+to [production](#2-production): it pulls the docker images tagged with the
+commit SHA from the GHCR registry, instead of building them locally.
+
+CI deploys the push commit after the tests pass. Staging can also be deployed
+manually by running the workflow from a branch or tag whose images are already
+published.
 
 However, it important to point that despite being in a different environment,
 the staging still shares the PostgreSQL database with production.
@@ -344,6 +352,13 @@ significantly impact the database.
 A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/deploy-staging.yaml).
 It runs automatically on pushes to `main` after the checks in
 [ci.yaml](.github/workflows/ci.yaml) succeed.
+
+That workflow notifies Discord when the deployed commit adds Django migration
+files. The check diffs `HEAD~1`, which is the whole pull request only while
+`main` is updated by squash merges: each push is one commit, and its parent is
+the commit staging last deployed. A rebase of several commits, or a manual run
+from a multi-commit branch, reports only the tip commit. If the repository
+stops using squash-and-merge, update the check in `deploy-staging.yaml`.
 
 > [!IMPORTANT]
 > The **ingester** on `db.kernelci.org` is **not** deployed by this workflow.
