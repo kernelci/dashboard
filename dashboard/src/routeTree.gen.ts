@@ -25,6 +25,7 @@ import { Route as MainHardwareHardwareIdRouteRouteImport } from './routes/_main/
 import { Route as MainIssueIssueIdRouteRouteImport } from './routes/_main/issue/$issueId/route'
 import { Route as MainIssuesIndexRouteImport } from './routes/_main/issues/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
+import { Route as MainLabsLabNameRouteImport } from './routes/_main/labs/$labName'
 import { Route as MainMetricsIndexRouteImport } from './routes/_main/metrics/index'
 import { Route as MainPrivacyIndexRouteImport } from './routes/_main/privacy/index'
 import { Route as MainTestTestIdRouteRouteImport } from './routes/_main/test/$testId/route'
@@ -138,6 +139,11 @@ const MainIssuesIndexRoute = MainIssuesIndexRouteImport.update({
 const MainLabsIndexRoute = MainLabsIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => MainLabsRouteRoute,
+} as any)
+const MainLabsLabNameRoute = MainLabsLabNameRouteImport.update({
+  id: '/$labName',
+  path: '/$labName',
   getParentRoute: () => MainLabsRouteRoute,
 } as any)
 const MainMetricsIndexRoute = MainMetricsIndexRouteImport.update({
@@ -350,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/issue/$issueId': typeof MainIssueIssueIdRouteRouteWithChildren
   '/test/$testId': typeof MainTestTestIdRouteRouteWithChildren
   '/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
+  '/labs/$labName': typeof MainLabsLabNameRoute
   '/hardware/': typeof MainHardwareIndexRoute
   '/issues/': typeof MainIssuesIndexRoute
   '/labs/': typeof MainLabsIndexRoute
@@ -390,6 +397,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/log-viewer': typeof LogViewerRoute
   '/': typeof MainIndexRoute
+  '/labs/$labName': typeof MainLabsLabNameRoute
   '/hardware': typeof MainHardwareIndexRoute
   '/issues': typeof MainIssuesIndexRoute
   '/labs': typeof MainLabsIndexRoute
@@ -438,6 +446,7 @@ export interface FileRoutesById {
   '/_main/issue/$issueId': typeof MainIssueIssueIdRouteRouteWithChildren
   '/_main/test/$testId': typeof MainTestTestIdRouteRouteWithChildren
   '/_main/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
+  '/_main/labs/$labName': typeof MainLabsLabNameRoute
   '/_main/hardware/': typeof MainHardwareIndexRoute
   '/_main/issues/': typeof MainIssuesIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
@@ -491,6 +500,7 @@ export interface FileRouteTypes {
     | '/issue/$issueId'
     | '/test/$testId'
     | '/tree/$treeId'
+    | '/labs/$labName'
     | '/hardware/'
     | '/issues/'
     | '/labs/'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/log-viewer'
     | '/'
+    | '/labs/$labName'
     | '/hardware'
     | '/issues'
     | '/labs'
@@ -578,6 +589,7 @@ export interface FileRouteTypes {
     | '/_main/issue/$issueId'
     | '/_main/test/$testId'
     | '/_main/tree/$treeId'
+    | '/_main/labs/$labName'
     | '/_main/hardware/'
     | '/_main/issues/'
     | '/_main/labs/'
@@ -733,6 +745,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/labs/'
       preLoaderRoute: typeof MainLabsIndexRouteImport
+      parentRoute: typeof MainLabsRouteRoute
+    }
+    '/_main/labs/$labName': {
+      id: '/_main/labs/$labName'
+      path: '/$labName'
+      fullPath: '/labs/$labName'
+      preLoaderRoute: typeof MainLabsLabNameRouteImport
       parentRoute: typeof MainLabsRouteRoute
     }
     '/_main/metrics/': {
@@ -1033,10 +1052,12 @@ const MainIssuesRouteRouteWithChildren = MainIssuesRouteRoute._addFileChildren(
 )
 
 interface MainLabsRouteRouteChildren {
+  MainLabsLabNameRoute: typeof MainLabsLabNameRoute
   MainLabsIndexRoute: typeof MainLabsIndexRoute
 }
 
 const MainLabsRouteRouteChildren: MainLabsRouteRouteChildren = {
+  MainLabsLabNameRoute: MainLabsLabNameRoute,
   MainLabsIndexRoute: MainLabsIndexRoute,
 }
 
