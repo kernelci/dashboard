@@ -206,6 +206,7 @@ class TestGenerateMetricsReport(TestCase):
         mock_send.assert_not_called()
         mock_instance.assert_called_once()
 
+    @patch(f"{MOCK_MODULE}.load_metrics_rules", lambda: [])
     @patch(f"{MOCK_MODULE}.send_email_report")
     @patch(f"{MOCK_MODULE}.setup_jinja_template")
     @patch(f"{MOCK_MODULE}.get_metrics_data")
@@ -219,6 +220,7 @@ class TestGenerateMetricsReport(TestCase):
         mock_instance.assert_called_once()
         mock_send.assert_called_once()
 
+    @patch(f"{MOCK_MODULE}.load_metrics_rules", lambda: [])
     @patch(f"{MOCK_MODULE}.send_email_report")
     @patch(f"{MOCK_MODULE}.setup_jinja_template")
     @patch(f"{MOCK_MODULE}.get_metrics_data")
@@ -254,6 +256,7 @@ class TestGenerateMetricsReport(TestCase):
             deltas=mock.ANY,
         )
 
+    @patch(f"{MOCK_MODULE}.load_metrics_rules", lambda: [])
     @patch(f"{MOCK_MODULE}.send_email_report")
     @patch(f"{MOCK_MODULE}.setup_jinja_template")
     @patch(f"{MOCK_MODULE}.get_metrics_data")
@@ -287,6 +290,7 @@ class TestMetricsReportTemplate(TestCase):
             ),
             patch(f"{MOCK_MODULE}.get_metrics_data", return_value=data),
             patch(f"{MOCK_MODULE}.get_running_instance", return_value="production"),
+            patch(f"{MOCK_MODULE}.load_metrics_rules", lambda: []),
         ):
             generate_metrics_report(email_service=MagicMock(), email_args=MagicMock())
 
@@ -456,13 +460,159 @@ class TestScopedMetricsMail(TestCase):
     @patch(f"{MOCK_MODULE}.load_metrics_rules")
     @patch(f"{MOCK_MODULE}.get_metrics_data")
     @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
-    def test_invalid_rules_send_nothing(
-        self, _instance, mock_get, mock_load, mock_send
+    @patch(f"{MOCK_MODULE}.setup_jinja_template")
+    def test_invalid_rules_still_send_community(
+        self, mock_template, _instance, mock_get, mock_load, mock_send
     ):
+        mock_get.return_value = make_metrics_data()
+        mock_template.return_value.render.return_value = "rendered content"
         mock_load.side_effect = MetricsRuleError(
             file="a.yaml", rule="rule", key="to", message="bad"
         )
         with self.assertRaises(MetricsRuleError):
             generate_metrics_report(email_service=MagicMock(), email_args=MagicMock())
-        mock_get.assert_not_called()
-        mock_send.assert_not_called()
+        mock_get.assert_called_once_with(start_days_ago=7, end_days_ago=0)
+        mock_send.assert_called_once()
+
+    @patch(f"{MOCK_MODULE}.logger")
+    @patch(f"{MOCK_MODULE}.send_email_report")
+    @patch(f"{MOCK_MODULE}.setup_jinja_template")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_failed_period_skips_its_rules(
+        self, _instance, mock_get, mock_load, mock_template, mock_send, mock_logger
+    ):
+        mock_template.return_value.render.return_value = "rendered content"
+
+        def fetch(*, start_days_ago, end_days_ago):
+            if start_days_ago == 14:
+                raise RuntimeError("db down")
+            return make_metrics_data()
+
+        mock_get.side_effect = fetch
+        mock_load.return_value = [
+            _rule(to=["week@example.com"], period_days=7),
+            _rule(to=["long@example.com"], period_days=14),
+            _rule(to=["also-long@example.com"], period_days=14),
+        ]
+
+        generate_metrics_report(
+            email_service=MagicMock(),
+            email_args=SimpleNamespace(to="community@example.com"),
+        )
+
+        assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
+            "community@example.com",
+            "week@example.com",
+        ]
+        mock_logger.exception.assert_called_once_with(
+            "metrics period %s days failed, skipping its rules",
+            14,
+        )
+
+    @patch(f"{MOCK_MODULE}.logger")
+    @patch(f"{MOCK_MODULE}.send_email_report")
+    @patch(f"{MOCK_MODULE}.setup_jinja_template")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_failed_community_query_sends_other_periods_then_raises(
+        self, _instance, mock_get, mock_load, mock_template, mock_send, mock_logger
+    ):
+        mock_template.return_value.render.return_value = "rendered content"
+
+        def fetch(*, start_days_ago, end_days_ago):
+            if start_days_ago == 7:
+                raise RuntimeError("db down")
+            return make_metrics_data()
+
+        mock_get.side_effect = fetch
+        mock_load.return_value = [
+            _rule(to=["week@example.com"], period_days=7),
+            _rule(to=["long@example.com"], period_days=14),
+        ]
+
+        with self.assertRaises(RuntimeError):
+            generate_metrics_report(
+                email_service=MagicMock(),
+                email_args=SimpleNamespace(to="community@example.com"),
+            )
+
+        assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
+            "long@example.com",
+        ]
+        mock_logger.exception.assert_called_once_with(
+            "metrics period %s days failed, skipping its rules",
+            7,
+        )
+
+    @patch(f"{MOCK_MODULE}.logger")
+    @patch(f"{MOCK_MODULE}.send_email_report")
+    @patch(f"{MOCK_MODULE}.setup_jinja_template")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_failed_community_send_still_sends_rules_then_raises(
+        self, _instance, mock_get, mock_load, mock_template, mock_send, mock_logger
+    ):
+        mock_get.return_value = make_metrics_data()
+        mock_template.return_value.render.return_value = "rendered content"
+        mock_load.return_value = [
+            _rule(to=["ok@example.com"], period_days=7),
+        ]
+
+        def send(*, service, report, email_args):
+            if email_args.to == "community@example.com":
+                raise ValueError("smtp rejected")
+
+        mock_send.side_effect = send
+        with self.assertRaises(ValueError):
+            generate_metrics_report(
+                email_service=MagicMock(),
+                email_args=SimpleNamespace(to="community@example.com"),
+            )
+
+        assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
+            "community@example.com",
+            "ok@example.com",
+        ]
+        mock_logger.exception.assert_called_once_with(
+            "metrics mail to %s failed",
+            "community@example.com",
+        )
+
+    @patch(f"{MOCK_MODULE}.logger")
+    @patch(f"{MOCK_MODULE}.send_email_report")
+    @patch(f"{MOCK_MODULE}.setup_jinja_template")
+    @patch(f"{MOCK_MODULE}.load_metrics_rules")
+    @patch(f"{MOCK_MODULE}.get_metrics_data")
+    @patch(f"{MOCK_MODULE}.get_running_instance", return_value="production")
+    def test_rejected_address_continues(
+        self, _instance, mock_get, mock_load, mock_template, mock_send, mock_logger
+    ):
+        mock_get.return_value = make_metrics_data()
+        mock_template.return_value.render.return_value = "rendered content"
+        mock_load.return_value = [
+            _rule(to=["bad@example.com", "ok@example.com"], period_days=7),
+        ]
+
+        def send(*, service, report, email_args):
+            if email_args.to == "bad@example.com":
+                raise ValueError("invalid address")
+
+        mock_send.side_effect = send
+        generate_metrics_report(
+            email_service=MagicMock(),
+            email_args=SimpleNamespace(to="community@example.com", cc="cc@example.com"),
+        )
+
+        assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
+            "community@example.com",
+            "bad@example.com",
+            "ok@example.com",
+        ]
+        mock_logger.exception.assert_called_once_with(
+            "metrics mail to %s failed",
+            "bad@example.com",
+        )

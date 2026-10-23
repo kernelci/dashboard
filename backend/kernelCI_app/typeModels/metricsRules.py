@@ -1,7 +1,10 @@
+from email.utils import getaddresses
 from pathlib import Path
 
 import yaml
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from kernelCI_app.typeModels.metrics_notifications import MetricsReportData
@@ -59,7 +62,20 @@ class MetricsRule(BaseModel):
     origins: list[str] | None = None
     labs: list[str] | None = None
 
-    @field_validator("to", "origins", "labs")
+    @field_validator("to")
+    @classmethod
+    def to_are_single_addresses(cls, value: list[str]) -> list[str]:
+        for item in value:
+            parsed = getaddresses([item])
+            try:
+                if len(parsed) != 1:
+                    raise DjangoValidationError("more than one address")
+                validate_email(parsed[0][1])
+            except DjangoValidationError as exc:
+                raise ValueError("must be a single email address") from exc
+        return value
+
+    @field_validator("origins", "labs")
     @classmethod
     def entries_are_non_empty(cls, value: list[str] | None) -> list[str] | None:
         if value is None:

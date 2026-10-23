@@ -89,6 +89,18 @@ second:
                 "rule",
                 "period_days",
             ),
+            (
+                {"a.yaml": "rule:\n  period_days: 7\n  to: [not-an-address]\n"},
+                "a.yaml",
+                "rule",
+                "to",
+            ),
+            (
+                {"a.yaml": 'rule:\n  period_days: 7\n  to: ["a@b.com, c@d.com"]\n'},
+                "a.yaml",
+                "rule",
+                "to",
+            ),
         ]
         for files, file, rule, key in cases:
             with self.subTest(file=file, key=key):

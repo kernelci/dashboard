@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import sys
 from collections import defaultdict
 from datetime import datetime, time, timedelta, timezone
@@ -68,6 +69,8 @@ from kernelCI_cache.queries.notifications import (
     mark_issue_notification_sent,
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
+
+logger = logging.getLogger(__name__)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
@@ -899,44 +902,75 @@ def generate_metrics_report(
         print("This command only runs on production or dev environments.")
         return
 
-    rules = load_metrics_rules()
     now = datetime.now(timezone.utc)
     community_key = (start_days_ago, end_days_ago)
-    period_keys = [community_key]
+    community_failure: Exception | None = None
+    try:
+        community = get_metrics_data(
+            start_days_ago=community_key[0], end_days_ago=community_key[1]
+        )
+    except Exception as exc:
+        community = None
+        community_failure = exc
+        logger.exception(
+            "metrics period %s days failed, skipping its rules",
+            community_key[0],
+        )
+    else:
+        try:
+            _send_metrics_mail(
+                data=community,
+                email_service=email_service,
+                email_args=email_args,
+                start_days_ago=community_key[0],
+                end_days_ago=community_key[1],
+                now=now,
+            )
+        except Exception as exc:
+            community_failure = exc
+            logger.exception("metrics mail to %s failed", email_args.to)
+
+    rules = load_metrics_rules()
+    fetched: dict[tuple[int, int], MetricsReportData | None] = {
+        community_key: community
+    }
     for rule in rules:
         key = (rule.period_days, 0)
-        if key not in period_keys:
-            period_keys.append(key)
-
-    fetched: dict[tuple[int, int], MetricsReportData] = {}
-    for key in period_keys:
-        fetched[key] = get_metrics_data(start_days_ago=key[0], end_days_ago=key[1])
-
-    _send_metrics_mail(
-        data=fetched[community_key],
-        email_service=email_service,
-        email_args=email_args,
-        start_days_ago=community_key[0],
-        end_days_ago=community_key[1],
-        now=now,
-    )
-    for rule in rules:
-        key = (rule.period_days, 0)
-        scoped = scope_metrics_data(fetched[key], rule)
+        if key not in fetched:
+            try:
+                fetched[key] = get_metrics_data(
+                    start_days_ago=key[0], end_days_ago=key[1]
+                )
+            except Exception:
+                fetched[key] = None
+                logger.exception(
+                    "metrics period %s days failed, skipping its rules",
+                    key[0],
+                )
+        data = fetched[key]
+        if data is None:
+            continue
+        scoped = scope_metrics_data(data, rule)
         for address in rule.to:
             args = copy.copy(email_args)
             args.to = address
             args.cc = None
             args.add_mailing_lists = False
             args.ignore_recipients = True
-            _send_metrics_mail(
-                data=scoped,
-                email_service=email_service,
-                email_args=args,
-                start_days_ago=key[0],
-                end_days_ago=key[1],
-                now=now,
-            )
+            try:
+                _send_metrics_mail(
+                    data=scoped,
+                    email_service=email_service,
+                    email_args=args,
+                    start_days_ago=key[0],
+                    end_days_ago=key[1],
+                    now=now,
+                )
+            except Exception:
+                logger.exception("metrics mail to %s failed", address)
+
+    if community_failure is not None:
+        raise community_failure
 
 
 def run_fake_report(*, service, email_args):
