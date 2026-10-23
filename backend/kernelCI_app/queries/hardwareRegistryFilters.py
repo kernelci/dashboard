@@ -115,15 +115,62 @@ _REVISION_JOIN = """
         AND revision.git_commit_hash = %(git_commit_hash)s
 """
 
+# Build rows store build_origin. The page origin is the test origin, so count
+# the build that a test of this origin ran. Two build origins on the same
+# checkout and platform are both included.
+_BUILD_TESTED_BY_ORIGIN = """
+    EXISTS (
+        SELECT 1
+        FROM hardware_daily_tests tested
+        WHERE tested.test_origin = %(origin)s
+          AND tested.checkout_day = daily.checkout_day
+          AND tested.platform = daily.platform
+          AND tested.checkout_id = daily.checkout_id
+    )
+"""
+
+# Latest checkout of each tree for each platform this origin tested.
+_LATEST_PLATFORM_CHECKOUTS = """
+    SELECT DISTINCT ON (
+        tests.platform,
+        checkouts.tree_name,
+        checkouts.git_repository_branch,
+        checkouts.git_repository_url,
+        checkouts.origin
+    )
+        tests.checkout_id,
+        tests.platform
+    FROM hardware_daily_tests tests
+    INNER JOIN checkouts
+        ON checkouts.id = tests.checkout_id
+    WHERE tests.test_origin = %(origin)s
+      AND tests.checkout_day >= %(start_day)s
+      AND tests.checkout_day <= %(end_day)s
+    ORDER BY
+        tests.platform,
+        checkouts.tree_name,
+        checkouts.git_repository_branch,
+        checkouts.git_repository_url,
+        checkouts.origin,
+        checkouts.start_time DESC
+"""
+
+_PICKED_JOIN = """
+    INNER JOIN picked
+        ON picked.checkout_id = daily.checkout_id
+        AND picked.platform = daily.platform
+"""
+
 
 def _side_counts(
     *,
     rows_name: str,
     table: str,
-    origin_column: str,
+    origin_sql: str,
     sums: str,
     commits: bool,
     revision: bool = False,
+    extra_join: str = "",
 ) -> str:
     if revision:
         checkout_join = _REVISION_JOIN
@@ -139,7 +186,8 @@ def _side_counts(
             SELECT daily.*
             FROM {table} daily
             {checkout_join}
-            WHERE daily.{origin_column} = %(origin)s
+            {extra_join}
+            WHERE {origin_sql}
             {day_filter}
         ),
         {rows_name}_hardware AS (
@@ -161,12 +209,16 @@ def _side_counts(
 
 
 def _daily_listing_query(*, commits: bool, revision: bool, where: str) -> str:
+    latest = not commits and not revision
     return f"""
         WITH {
+        f"picked AS ({_LATEST_PLATFORM_CHECKOUTS})," if latest else ""
+    }
+        {
         _side_counts(
             rows_name="build",
             table="hardware_daily_builds",
-            origin_column="build_origin",
+            origin_sql=_BUILD_TESTED_BY_ORIGIN,
             sums='''
                 SUM(daily.build_pass) AS build_pass,
                 SUM(daily.build_failed) AS build_failed,
@@ -174,13 +226,14 @@ def _daily_listing_query(*, commits: bool, revision: bool, where: str) -> str:
             ''',
             commits=commits,
             revision=revision,
+            extra_join=_PICKED_JOIN if latest else "",
         )
     },
         {
         _side_counts(
             rows_name="test",
             table="hardware_daily_tests",
-            origin_column="test_origin",
+            origin_sql="daily.test_origin = %(origin)s",
             sums='''
                 SUM(daily.boot_pass) AS boot_pass,
                 SUM(daily.boot_failed) AS boot_failed,
@@ -191,6 +244,7 @@ def _daily_listing_query(*, commits: bool, revision: bool, where: str) -> str:
             ''',
             commits=commits,
             revision=revision,
+            extra_join=_PICKED_JOIN if latest else "",
         )
     }
         SELECT
@@ -291,7 +345,8 @@ def get_hardware_registry_filter_options(
 ) -> dict[str, list[str]]:
     """Distinct registry values for the platforms in the current listing.
 
-    Without a revision, that is the daily window. With one, it is that checkout.
+    Without a revision, each platform keeps the latest checkout of each tree
+    in the window. With one, it is that checkout.
     Platform ids include boards that are not in the registry. The other lists
     do not: those boards have no architecture, vendor, or board type to offer.
     """
@@ -304,33 +359,19 @@ def get_hardware_registry_filter_options(
         )
     )
     if revision:
+        picked = ""
         seen = f"""
-            SELECT daily.platform
-            FROM hardware_daily_builds daily
-            {_REVISION_JOIN}
-            WHERE daily.build_origin = %(origin)s
-            UNION
-            SELECT daily.platform
+            SELECT DISTINCT daily.platform
             FROM hardware_daily_tests daily
             {_REVISION_JOIN}
             WHERE daily.test_origin = %(origin)s
         """
     else:
-        seen = """
-            SELECT platform
-            FROM hardware_daily_builds
-            WHERE build_origin = %(origin)s
-              AND checkout_day >= %(start_day)s
-              AND checkout_day <= %(end_day)s
-            UNION
-            SELECT platform
-            FROM hardware_daily_tests
-            WHERE test_origin = %(origin)s
-              AND checkout_day >= %(start_day)s
-              AND checkout_day <= %(end_day)s
-        """
+        picked = f"picked AS ({_LATEST_PLATFORM_CHECKOUTS}),"
+        seen = "SELECT DISTINCT platform FROM picked"
     query = f"""
-        WITH seen AS (
+        WITH {picked}
+        seen AS (
             {seen}
         ),
         registered AS (
