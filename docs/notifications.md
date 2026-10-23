@@ -39,7 +39,7 @@ These options are available for all actions and are always optional:
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
 | `--add-mailing-lists` | Include community mailing lists in recipients | Flag | False |
-| `--ignore-recipients` | Bypass the recipients in the subscription file | Flag | False |
+| `--ignore-recipients` | Bypass the recipients in the subscription or `regression/` files | Flag | False |
 | `--send` | Send email after generating report | Flag | False |
 | `--to` | Specify direct recipient email | String | None |
 | `--cc` | Specify CC recipient emails as "email1, email2" list | String | None |
@@ -102,10 +102,45 @@ poetry run python manage.py notifications \
 
 ## Adding yourself to recipients
 
-Edit the corresponding tree file in the [subscriptions folder](../backend/data/notifications/subscriptions) and send a PR to the dashboard.
+Edit the file for your tree and send a PR to the dashboard. Use the git tree
+name reported by the Web Dashboard.
 
-Use the git tree name reported by the
-Web Dashboard.
+- `[STATUS]` checkout summaries: `default_recipients` in the
+  [subscriptions folder](../backend/data/notifications/subscriptions).
+- `[REGRESSION]` issue reports: the
+  [regression folder](../backend/data/notifications/regression). The report
+  body names the file it took the Cc from.
+
+### Regression recipients
+
+Each `regression/<tree>.yaml` has a top-level key that must be a tree key
+from `subscriptions/`. The tree's `url` decides which issues the file applies
+to. Each entry Cc's its `recipients` when every scope key it sets matches:
+
+```yaml
+stable:
+  - recipients: [list@example.org]          # no scope keys: every build issue on this tree's URL
+  - branch: [linux-6.12.y, linux-6.6.y]
+    architecture: [arm64]
+    recipients: [maintainer@example.com]
+```
+
+| Key | Values | Matched against |
+|---|---|---|
+| `recipients` | addresses, at least one, sent as written | |
+| `issues` | `build` only | the issue kind |
+| `branch` | string or list | the branch printed in the report |
+| `architecture`, `config_name`, `compiler` | string or list | any build where the issue occurred |
+
+The Cc is the union of the matching entries, with repeated addresses dropped.
+Any other key, including `platform` and `origin`, fails `pytest -m unit` with
+the file, entry index, and key.
+
+`test_report` only uses entries without scope keys.
+
+With `--add-mailing-lists`, regression reports are sent to the `to` address in
+[`regression/default.yaml`](../backend/data/notifications/regression/default.yaml).
+`[STATUS]` summaries keep the address in `common.py`.
 
 
 ## Signup tree for checkout summary

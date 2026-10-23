@@ -1,0 +1,4 @@
+chrome-platform:
+  - recipients:
+      - chrome-platform@lists.linux.dev
+      - tzungbi@kernel.org
