@@ -173,6 +173,31 @@ urlpatterns = [
     ),
     path("hardware/", view_cache(views.HardwareView), name="hardware"),
     path("labs/origins/", views.LabOriginsView.as_view(), name="labOriginsView"),
+    path(
+        "labs/<str:lab_name>/lab-attention/",
+        view_cache(views.LabDetailsAttentionView),
+        name="labDetailsLabAttention",
+    ),
+    path(
+        "labs/<str:lab_name>/builds/",
+        view_cache(views.LabDetailsBuildsView),
+        name="labDetailsBuilds",
+    ),
+    path(
+        "labs/<str:lab_name>/boots/",
+        view_cache(views.LabDetailsBootsView),
+        name="labDetailsBoots",
+    ),
+    path(
+        "labs/<str:lab_name>/tests/",
+        view_cache(views.LabDetailsTestsView),
+        name="labDetailsTests",
+    ),
+    path(
+        "labs/<str:lab_name>/",
+        view_cache(views.LabDetailsView),
+        name="labDetails",
+    ),
     path("labs/", view_cache(views.LabView), name="labs"),
     path(
         "hardware-by-revision/",
