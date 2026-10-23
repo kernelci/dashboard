@@ -46,8 +46,6 @@ def get_lab_build_rows(
             b.architecture AS build_architecture,
             b.compiler AS build_compiler,
             b.config_name AS build_config_name,
-            b.log_url AS build_log_url,
-            b.log_excerpt AS build_log_excerpt,
             c.tree_name AS tree_name,
             c.git_repository_branch AS git_branch,
             c.git_commit_hash AS commit_hash,
