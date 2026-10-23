@@ -1,4 +1,6 @@
+import copy
 import json
+import logging
 import sys
 from collections import defaultdict
 from datetime import datetime, time, timedelta, timezone
@@ -53,6 +55,7 @@ from kernelCI_app.typeModels.metrics_notifications import (
     LabMetricsData,
     MetricsReportData,
 )
+from kernelCI_app.typeModels.metricsRules import load_metrics_rules, scope_metrics_data
 from kernelCI_app.utils import group_status, is_boot
 from kernelCI_cache.queries.issues import (
     get_all_issue_keys,
@@ -66,6 +69,8 @@ from kernelCI_cache.queries.notifications import (
     mark_issue_notification_sent,
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
+
+logger = logging.getLogger(__name__)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
@@ -853,6 +858,37 @@ def compute_metrics_deltas(data: MetricsReportData) -> dict:
     }
 
 
+def _send_metrics_mail(
+    *,
+    data: MetricsReportData,
+    email_service,
+    email_args,
+    start_days_ago: int,
+    end_days_ago: int,
+    now: datetime,
+) -> None:
+    bounds = interval_params(start_days_ago, end_days_ago)
+    start_datetime = datetime.fromisoformat(bounds["start_date"])
+    exclusive_end = datetime.fromisoformat(bounds["end_date"])
+    end_datetime = datetime.combine(
+        exclusive_end.date() - timedelta(days=1),
+        time.max,
+        tzinfo=timezone.utc,
+    )
+    deltas = compute_metrics_deltas(data)
+    template = setup_jinja_template("metrics_report.txt.j2")
+    report = {
+        "content": template.render(
+            **data.model_dump(),
+            start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+            end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+            deltas=deltas,
+        ),
+        "title": "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z"),
+    }
+    send_email_report(service=email_service, report=report, email_args=email_args)
+
+
 def generate_metrics_report(
     *,
     email_service,
@@ -867,36 +903,74 @@ def generate_metrics_report(
         return
 
     now = datetime.now(timezone.utc)
-    bounds = interval_params(start_days_ago, end_days_ago)
-    start_datetime = datetime.fromisoformat(bounds["start_date"])
-    exclusive_end = datetime.fromisoformat(bounds["end_date"])
-    end_datetime = datetime.combine(
-        exclusive_end.date() - timedelta(days=1),
-        time.max,
-        tzinfo=timezone.utc,
-    )
+    community_key = (start_days_ago, end_days_ago)
+    community_failure: Exception | None = None
+    try:
+        community = get_metrics_data(
+            start_days_ago=community_key[0], end_days_ago=community_key[1]
+        )
+    except Exception as exc:
+        community = None
+        community_failure = exc
+        logger.exception(
+            "metrics period %s days failed, skipping its rules",
+            community_key[0],
+        )
+    else:
+        try:
+            _send_metrics_mail(
+                data=community,
+                email_service=email_service,
+                email_args=email_args,
+                start_days_ago=community_key[0],
+                end_days_ago=community_key[1],
+                now=now,
+            )
+        except Exception as exc:
+            community_failure = exc
+            logger.exception("metrics mail to %s failed", email_args.to)
 
-    data: MetricsReportData = get_metrics_data(
-        start_days_ago=start_days_ago,
-        end_days_ago=end_days_ago,
-    )
+    rules = load_metrics_rules()
+    fetched: dict[tuple[int, int], MetricsReportData | None] = {
+        community_key: community
+    }
+    for rule in rules:
+        key = (rule.period_days, 0)
+        if key not in fetched:
+            try:
+                fetched[key] = get_metrics_data(
+                    start_days_ago=key[0], end_days_ago=key[1]
+                )
+            except Exception:
+                fetched[key] = None
+                logger.exception(
+                    "metrics period %s days failed, skipping its rules",
+                    key[0],
+                )
+        data = fetched[key]
+        if data is None:
+            continue
+        scoped = scope_metrics_data(data, rule)
+        for address in rule.to:
+            args = copy.copy(email_args)
+            args.to = address
+            args.cc = None
+            args.add_mailing_lists = False
+            args.ignore_recipients = True
+            try:
+                _send_metrics_mail(
+                    data=scoped,
+                    email_service=email_service,
+                    email_args=args,
+                    start_days_ago=key[0],
+                    end_days_ago=key[1],
+                    now=now,
+                )
+            except Exception:
+                logger.exception("metrics mail to %s failed", address)
 
-    deltas = compute_metrics_deltas(data)
-
-    report = {}
-    template = setup_jinja_template("metrics_report.txt.j2")
-    report["content"] = template.render(
-        **data.model_dump(),
-        start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
-        end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
-        deltas=deltas,
-    )
-
-    report["title"] = "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z")
-
-    send_email_report(service=email_service, report=report, email_args=email_args)
-
-    return
+    if community_failure is not None:
+        raise community_failure
 
 
 def run_fake_report(*, service, email_args):
