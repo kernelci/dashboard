@@ -20,6 +20,18 @@ export interface HardwareListingResponse {
   hardware: HardwareListingApiItem[];
 }
 
+export type HardwareRegistrySyncFile = {
+  name: string;
+  url: string;
+  content_hash: string;
+  updated_at?: string | null;
+};
+
+export type HardwareRegistrySyncResponse = {
+  synced_at: string | null;
+  files: HardwareRegistrySyncFile[];
+};
+
 export type HardwareSelectorRevision = {
   git_commit_hash: string;
   git_commit_name?: string | null;

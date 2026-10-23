@@ -823,9 +823,24 @@ class HardwareRegistryPlatform(models.Model):
     url = models.TextField(blank=True, null=True)
     details = models.TextField(blank=True, null=True)
     form_factor = models.TextField(blank=True, null=True)
+    compatible = ArrayField(models.TextField(), blank=True, null=True)
 
     class Meta:
         db_table = "hardware_registry_platforms"
 
     def __str__(self) -> str:
         return self.id
+
+
+class HardwareRegistrySync(models.Model):
+    """Last successful --index run. One row, id=1."""
+
+    id = models.PositiveSmallIntegerField(primary_key=True)
+    synced_at = models.DateTimeField()
+    files = models.JSONField(default=list)
+
+    class Meta:
+        db_table = "hardware_registry_sync"
+
+    def __str__(self) -> str:
+        return str(self.synced_at)

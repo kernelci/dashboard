@@ -42,6 +42,18 @@ class HardwareListingByRevisionResponse(BaseModel):
     hardware: list[HardwareItem]
 
 
+class HardwareRegistrySyncFile(BaseModel):
+    name: str
+    url: str
+    content_hash: str
+    updated_at: Optional[datetime] = None
+
+
+class HardwareRegistrySyncResponse(BaseModel):
+    synced_at: Optional[datetime] = None
+    files: list[HardwareRegistrySyncFile] = Field(default_factory=list)
+
+
 # Since OpenAPI does not support timestamp as datetime we add an extra model just for
 # documentation purposes. This model is not used in the code.
 # TODO Remove timestamp from the api and this model
