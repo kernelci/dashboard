@@ -1,6 +1,8 @@
 from unittest.mock import patch
 
+import pytest
 from django.core.cache import cache
+from django.test import override_settings
 
 from kernelCI_app.cache import (
     DISCORD_NOTIFICATION_COOLDOWN,
@@ -225,8 +227,19 @@ class TestAddToLookup:
 
 
 class TestClearCache:
-    def setup_method(self):
-        cache.clear()
+    @pytest.fixture(autouse=True)
+    def _locmem_cache(self):
+        with override_settings(
+            CACHES={
+                "default": {
+                    "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                    "LOCATION": "cache-test-clear",
+                }
+            }
+        ):
+            cache.clear()
+            yield
+            cache.clear()
 
     def test_clear_one_parameter_set(self):
         five_days = {"origin": "maestro", "interval_in_days": 5}
