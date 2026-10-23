@@ -316,6 +316,61 @@ def test_ignore_recipients_skips_copies(tmp_path):
     assert sent.call_args.kwargs["email_args"].to == "kernelci-results@groups.io"
 
 
+@pytest.mark.parametrize("ignore_recipients", [False, True])
+def test_ignore_recipients_can_skip_invalid_files(tmp_path, ignore_recipients):
+    directory = write_new_issues(
+        tmp_path,
+        {
+            "default.yaml": "to: team@example.org\nissues: [boot]\n",
+            "broonie-sound.yaml": "broonie-sound:\n  - recipients: []\n",
+        },
+        {"broonie-sound.yaml": SOUND_SUBSCRIPTION},
+    )
+    args = _email_args(ignore_recipients=ignore_recipients)
+    boot = _issue(id="boot-sound", build_id=None, test_id="t1")
+    if not ignore_recipients:
+        with pytest.raises(RecipientFileError, match="recipients"):
+            _run(directory, [boot], args)
+        return
+
+    _, sent, _ = _run(directory, [_issue(), boot], args)
+
+    assert sent.call_count == 1
+    assert sent.call_args.kwargs["email_args"].to == "team@example.org"
+    content = sent.call_args.kwargs["report"]["content"]
+    assert "boot-sound" in content
+    assert "issue-1" not in content
+
+
+def test_ignore_recipients_still_validates_default(tmp_path):
+    directory = write_new_issues(
+        tmp_path, {"default.yaml": "to: team@example.org\nissues: [unknown]\n"}
+    )
+
+    with pytest.raises(RecipientFileError, match="default.yaml.*issues"):
+        _run(directory, [], _email_args(ignore_recipients=True))
+
+
+def test_loader_accepts_custom_defaults_and_subscriptions(tmp_path):
+    directory = write_new_issues(
+        tmp_path,
+        {
+            "default.yaml": "to: team@example.org\nissues: [test]\n",
+            "broonie-sound.yaml": (
+                "broonie-sound:\n  - recipients: [maintainer@example.com]\n"
+            ),
+        },
+        {"broonie-sound.yaml": SOUND_SUBSCRIPTION},
+    )
+
+    default, entries = load_new_issue_files(directory)
+
+    assert default.to == "team@example.org"
+    assert default.issues == ["test"]
+    assert len(entries) == 1
+    assert entries[0].tree_url == SOUND_URL
+
+
 def test_no_new_issues_sends_nothing(tmp_path, capsys):
     directory = write_new_issues(tmp_path, {"default.yaml": DEFAULT_YAML})
     _, sent, regression = _run(directory, [], _email_args())
@@ -352,8 +407,4 @@ def test_loader_rejects_architecture(tmp_path):
 def test_committed_new_issue_files_are_valid():
     directory = os.path.join(settings.BACKEND_DATA_DIR, NEW_ISSUES_FOLDER)
 
-    default, entries = load_new_issue_files(directory)
-
-    assert entries == []
-    assert default.to == "kernelci-results@groups.io"
-    assert default.issues == ["build", "boot"]
+    load_new_issue_files(directory)

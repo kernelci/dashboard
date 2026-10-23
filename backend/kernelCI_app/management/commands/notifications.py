@@ -215,9 +215,9 @@ def look_for_new_issues(*, service, email_args, directory: Optional[str] = None)
 
     if directory is None:
         directory = os.path.join(settings.BACKEND_DATA_DIR, NEW_ISSUES_FOLDER)
-    default, entries = load_new_issue_files(directory)
-    if email_args.ignore_recipients:
-        entries = []
+    default, entries = load_new_issue_files(
+        directory, ignore_recipients=email_args.ignore_recipients
+    )
     if not email_args.to:
         email_args.to = default.to
 

@@ -268,11 +268,14 @@ def load_recipient_default(directory: str) -> RecipientDefault:
 
 def load_new_issue_files(
     directory: str,
+    *,
+    ignore_recipients: bool = False,
 ) -> tuple[NewIssuesDefault, list[RecipientEntry]]:
     """Loads `default.yaml` and every other recipient file in `directory`.
 
     Tree keys match a subscription url. Hardware keys match a platform and,
     when the entry omits origin, use that platform's origin.
+    With ignore_recipients, only default.yaml is read and validated.
     """
     path = os.path.join(directory, DEFAULT_FILE)
     try:
@@ -284,6 +287,8 @@ def load_new_issue_files(
     for issue in default.issues:
         if issue not in NEW_ISSUE_KINDS:
             raise RecipientFileError(path, f"issue '{issue}' not allowed", key="issues")
+    if ignore_recipients:
+        return default, []
     entries = _collect_entries(
         directory,
         allowed_keys=NEW_ISSUE_KEYS,
