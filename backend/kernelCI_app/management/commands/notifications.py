@@ -922,19 +922,21 @@ def generate_metrics_report(
     )
     for rule in rules:
         key = (rule.period_days, 0)
-        args = copy.copy(email_args)
-        args.to = ", ".join(rule.to)
-        args.cc = None
-        args.add_mailing_lists = False
-        args.ignore_recipients = True
-        _send_metrics_mail(
-            data=scope_metrics_data(fetched[key], rule),
-            email_service=email_service,
-            email_args=args,
-            start_days_ago=key[0],
-            end_days_ago=key[1],
-            now=now,
-        )
+        scoped = scope_metrics_data(fetched[key], rule)
+        for address in rule.to:
+            args = copy.copy(email_args)
+            args.to = address
+            args.cc = None
+            args.add_mailing_lists = False
+            args.ignore_recipients = True
+            _send_metrics_mail(
+                data=scoped,
+                email_service=email_service,
+                email_args=args,
+                start_days_ago=key[0],
+                end_days_ago=key[1],
+                now=now,
+            )
 
 
 def run_fake_report(*, service, email_args):

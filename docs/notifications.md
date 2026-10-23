@@ -36,7 +36,7 @@ The command supports these actions:
 
 ## Weekly metrics mail
 
-Saturday's `metrics_summary` cron sends one project-wide report. A lab or an origin can receive its own copy from YAML files in [backend/data/notifications/metrics/](../backend/data/notifications/metrics/). Each file holds one or more rules. The top-level key is the rule name. A name can appear only once across the directory. After the community mail, each rule sends one mail from the same template.
+Saturday's `metrics_summary` cron sends one project-wide report. A lab or an origin can receive its own copy from YAML files in [backend/data/notifications/metrics/](../backend/data/notifications/metrics/). Each file holds one or more rules. The top-level key is the rule name. A name can appear only once across the directory. After the community mail, each rule sends that same mail once per address in `to`.
 
 ```yaml
 collabora-labs:
@@ -48,7 +48,7 @@ collabora-labs:
 
 | Key | Required | What it does |
 | --- | --- | --- |
-| `to` | yes | One or more RFC 5322 addresses. They are the To header of this mail, sent unchanged. |
+| `to` | yes | One or more RFC 5322 addresses. Each address is its own mail. |
 | `period_days` | yes | Whole days, greater than 0. The window is `start_days_ago=period_days` and `end_days_ago=0`, the same shape as the community mail. |
 | `origins` | no | Keeps these origins in the build regressions table and the per-origin issue lists. |
 | `labs` | no | Keeps these labs in the lab table. A lab active last week and silent this week stays, marked extinct. A name in neither week is left out. |

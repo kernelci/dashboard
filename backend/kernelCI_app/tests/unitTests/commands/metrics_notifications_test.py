@@ -421,10 +421,12 @@ class TestScopedMetricsMail(TestCase):
         ]
         bodies = [sent.args[4] for sent in mock_smtp.call_args_list]
         recipients = [(sent.args[2], sent.args[5]) for sent in mock_smtp.call_args_list]
-        community, scoped, missing, gone, longer = bodies
+        community, scoped, scoped_copy, missing, gone, longer = bodies
+        assert scoped == scoped_copy
         assert recipients == [
             ("kernelci@lists.linux.dev", "kernelci-results@groups.io"),
-            ("Collabora team <team@example.com>, other@example.com", ""),
+            ("Collabora team <team@example.com>", ""),
+            ("other@example.com", ""),
             ("a@example.com", ""),
             ("gone@example.com", ""),
             ("fortnight@example.com", ""),
