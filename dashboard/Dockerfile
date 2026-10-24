@@ -1,5 +1,5 @@
 # Stage 1: Build the dashboard assets
-FROM node:22.3-alpine AS builder
+FROM node:22.23.4-alpine3.24 AS builder
 
 WORKDIR /dashboard
 
@@ -16,7 +16,7 @@ ENV VITE_DASHBOARD_VERSION=$DASHBOARD_VERSION
 RUN pnpm build
 
 # Stage 2: Copy the static files from the builder stage
-FROM alpine:3.20
+FROM alpine:3.24
 
 VOLUME ["/data/static/"]
 
