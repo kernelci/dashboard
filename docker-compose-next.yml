@@ -46,7 +46,7 @@ services:
             retries: 5
 
     backend:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:?Set IMAGE_TAG to the commit SHA}
         entrypoint: "./utils/docker/backend_entrypoint.sh"
         command:
             - poetry
@@ -79,7 +79,7 @@ services:
             start_period: 60s
 
     dashboard:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-frontend:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-frontend:${IMAGE_TAG:?Set IMAGE_TAG to the commit SHA}
         volumes:
             - static-data:/data/static
 
@@ -104,7 +104,7 @@ services:
             start_period: 500ms
 
     proxy:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-proxy:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-proxy:${IMAGE_TAG:?Set IMAGE_TAG to the commit SHA}
         restart: always
         healthcheck:
             test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
@@ -132,7 +132,7 @@ services:
             PROXY_TARGET: ${PROXY_TARGET:-http://backend:8000}
 
     ingester:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:?Set IMAGE_TAG to the commit SHA}
         command:
             - poetry
             - run
@@ -156,7 +156,7 @@ services:
         profiles: ["with_commands"]
 
     pending_aggregations_processor:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:?Set IMAGE_TAG to the commit SHA}
         command:
             - poetry
             - run

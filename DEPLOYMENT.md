@@ -172,7 +172,7 @@ stored in the GitHub Container Registry (GHCR).
 Production images are automatically built via GitHub Workflow
 for every new commit on `main`, or when `Publish GHCR Images` is run manually
 from a branch or tag (**Use workflow from**). Images are tagged with that
-commit's full SHA. `latest` is updated only for automatic builds from `main`.
+commit's full SHA.
 Deployment pulls that SHA and never rebuilds the images. After CI passes on
 `main`, the dashboard is also deployed to staging
 ([deploy-staging](.github/workflows/deploy-staging.yaml)). Production is deployed
@@ -321,7 +321,7 @@ gh run watch <run-id> --repo kernelci/dashboard
 #### Things that are easy to get wrong
 
 - There is no image-tag input. Publish and deploy both use the selected ref's
-full commit SHA. `latest` is pushed only by automatic builds from `main`.
+full commit SHA.
 Do not start step 3 until step 2 has finished.
 - Run publish from the release tag, not from `main` before the tag exists.
 Images built earlier still carry the previous version string. The host fetches

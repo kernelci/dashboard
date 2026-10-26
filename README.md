@@ -138,8 +138,7 @@ This workflow is triggered on pushes to main (on the original repository) and al
 
 After CI passes, pushes to `main` also deploy the dashboard to staging (see [DEPLOYMENT.md — Staging](./DEPLOYMENT.md#3-staging)).
 
-- the full commit SHA, for every build
-- `latest`, only for automatic builds from `main`
+Images are tagged with the full commit SHA.
 
 At the end of the run, the workflow writes an image digest summary in the GitHub Actions job summary.
 
