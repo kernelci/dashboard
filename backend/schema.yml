@@ -575,21 +575,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsTestsResponse'
           description: ''
-  /api/hardware/registry-sync/:
-    get:
-      operationId: hardware_registry_sync_retrieve
-      tags:
-      - hardware
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HardwareRegistrySyncResponse'
   /api/hardware/registry-filters/:
     get:
       operationId: hardware_registry_filters_retrieve
@@ -663,6 +648,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareRegistryFilterOptions'
+          description: ''
+  /api/hardware/registry-sync/:
+    get:
+      operationId: hardware_registry_sync_retrieve
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareRegistrySyncResponse'
           description: ''
   /api/hardware/selectors/:
     get:
@@ -3609,46 +3610,6 @@ components:
       - hardware
       title: HardwareListingResponse
       type: object
-    HardwareRegistrySyncFile:
-      properties:
-        name:
-          title: Name
-          type: string
-        url:
-          title: Url
-          type: string
-        content_hash:
-          title: Content Hash
-          type: string
-        updated_at:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: 'null'
-          default: null
-          title: Updated At
-      required:
-      - name
-      - url
-      - content_hash
-      title: HardwareRegistrySyncFile
-      type: object
-    HardwareRegistrySyncResponse:
-      properties:
-        synced_at:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: 'null'
-          default: null
-          title: Synced At
-        files:
-          items:
-            $ref: '#/components/schemas/HardwareRegistrySyncFile'
-          title: Files
-          type: array
-      title: HardwareRegistrySyncResponse
-      type: object
     HardwareRegistryFilterOptions:
       properties:
         architecture:
@@ -3701,6 +3662,46 @@ components:
       - form_factor
       - board_type
       title: HardwareRegistryFilterOptions
+      type: object
+    HardwareRegistrySyncFile:
+      properties:
+        name:
+          title: Name
+          type: string
+        url:
+          title: Url
+          type: string
+        content_hash:
+          title: Content Hash
+          type: string
+        updated_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Updated At
+      required:
+      - name
+      - url
+      - content_hash
+      title: HardwareRegistrySyncFile
+      type: object
+    HardwareRegistrySyncResponse:
+      properties:
+        synced_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Synced At
+        files:
+          items:
+            $ref: '#/components/schemas/HardwareRegistrySyncFile'
+          title: Files
+          type: array
+      title: HardwareRegistrySyncResponse
       type: object
     HardwareSelectorBranch:
       properties:
