@@ -91,16 +91,16 @@ FROM counted c
 LEFT JOIN platform_compatibles pc USING (checkout_id, platform)
 """
 
-# Builds have no platform; attach them to every platform they tested, but DISTINCT so
-# a build is not counted once per test (or per test lab).
+# Builds have no platform. Keep the test origin so each origin counts only the
+# builds it ran, and DISTINCT so one build is not counted once per test.
 INSERT_BUILDS = f"""
 INSERT INTO hardware_daily_builds (
-    checkout_day, checkout_id, checkout_origin, build_origin, build_lab, platform,
-    compatibles, build_pass, build_failed, build_inc
+    checkout_day, checkout_id, checkout_origin, test_origin, build_origin, build_lab,
+    platform, compatibles, build_pass, build_failed, build_inc
 )
 WITH day_builds AS (
-    SELECT DISTINCT checkout_id, checkout_origin, build_id, build_origin, build_lab,
-                    platform, build_result
+    SELECT DISTINCT checkout_id, checkout_origin, origin, build_id, build_origin,
+                    build_lab, platform, build_result
     FROM day_tests
     WHERE build_id NOT LIKE '{MAESTRO_DUMMY_BUILD_PREFIX}%%'
 ),
@@ -108,6 +108,7 @@ counted AS (
     SELECT
         checkout_id,
         checkout_origin,
+        origin,
         build_origin,
         build_lab,
         platform,
@@ -115,12 +116,13 @@ counted AS (
         count(*) FILTER (WHERE build_result = 'failed') AS build_failed,
         count(*) FILTER (WHERE build_result = 'inc') AS build_inc
     FROM day_builds
-    GROUP BY checkout_id, checkout_origin, build_origin, build_lab, platform
+    GROUP BY checkout_id, checkout_origin, origin, build_origin, build_lab, platform
 )
 SELECT
     %(day)s,
     c.checkout_id,
     c.checkout_origin,
+    c.origin,
     c.build_origin,
     c.build_lab,
     c.platform,

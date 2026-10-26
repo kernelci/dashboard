@@ -246,18 +246,14 @@ const HardwareDetailsFilter = ({
     [paramFilter],
   );
 
-  const handleSelectTree = useCallback(
-    (value: string) => {
-      const key = value.split('__')[1] ?? '';
-
-      if (treeIndexes.includes(key)) {
-        setTreeIndexes(treeIndexes.filter(k => k !== key));
-      } else {
-        setTreeIndexes([...treeIndexes, key]);
-      }
-    },
-    [treeIndexes],
-  );
+  const handleSelectTree = useCallback((value: string) => {
+    const key = value.split('__')[1] ?? '';
+    setTreeIndexes(current =>
+      current.includes(key)
+        ? current.filter(item => item !== key)
+        : [...current, key],
+    );
+  }, []);
 
   const drawerLink: IDrawerLink = useMemo(
     () => ({

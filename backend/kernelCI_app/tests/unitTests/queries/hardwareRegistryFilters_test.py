@@ -72,8 +72,7 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         query, params = cursor.execute.call_args[0]
         self.assertIn("hardware_daily_builds", query)
         self.assertIn("hardware_daily_tests", query)
-        self.assertIn("tested.test_origin = %(origin)s", query)
-        self.assertIn("tested.checkout_id = daily.checkout_id", query)
+        self.assertNotIn("tested.test_origin", query)
         self.assertNotIn("build_origin", query)
         self.assertIn("daily.test_origin = %(origin)s", query)
         self.assertIn("picked.checkout_id = daily.checkout_id", query)
@@ -125,7 +124,8 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         listing_query = cursor.execute.call_args[0][0]
         self.assertIn("hardware_daily_builds", listing_query)
         self.assertIn("hardware_daily_tests", listing_query)
-        self.assertIn("tested.checkout_id = daily.checkout_id", listing_query)
+        self.assertNotIn("tested.checkout_id", listing_query)
+        self.assertIn("daily.test_origin = %(origin)s", listing_query)
         self.assertNotIn("build_origin", listing_query)
         self.assertIn("revision.git_commit_hash = %(git_commit_hash)s", listing_query)
         self.assertNotIn("picked", listing_query)
