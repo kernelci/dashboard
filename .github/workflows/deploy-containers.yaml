@@ -46,7 +46,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ github.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-backend:latest', steps.meta.outputs.prefix) || '' }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ github.sha }}
 
   build-and-push-dashboard:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
@@ -85,7 +85,7 @@ jobs:
           push: true
           build-args: |
             DASHBOARD_VERSION=${{ steps.dashboard_version.outputs.dashboard_version }}
-          tags: ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ github.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-frontend:latest', steps.meta.outputs.prefix) || '' }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ github.sha }}
 
   build-and-push-proxy:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
@@ -115,7 +115,7 @@ jobs:
         with:
           context: ./proxy
           push: true
-          tags: ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ github.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-proxy:latest', steps.meta.outputs.prefix) || '' }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ github.sha }}
 
   verify:
     if: always()
