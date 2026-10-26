@@ -9,6 +9,9 @@ from drf_spectacular.views import (
 
 from kernelCI_app import views
 
+# The labs listing query scans builds and tests. Keep the response for 10 hours.
+LABS_LISTING_CACHE_TIMEOUT = 10 * 60 * 60
+
 
 def view_cache(view, timeout: int = settings.CACHE_TIMEOUT):
     return cache_page(timeout)(view.as_view())
@@ -173,7 +176,11 @@ urlpatterns = [
     ),
     path("hardware/", view_cache(views.HardwareView), name="hardware"),
     path("labs/origins/", views.LabOriginsView.as_view(), name="labOriginsView"),
-    path("labs/", view_cache(views.LabView), name="labs"),
+    path(
+        "labs/",
+        view_cache(views.LabView, timeout=LABS_LISTING_CACHE_TIMEOUT),
+        name="labs",
+    ),
     path(
         "hardware-by-revision/",
         view_cache(views.HardwareByRevisionView),

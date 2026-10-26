@@ -193,12 +193,6 @@ export function LabsTable({
   return (
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex flex-wrap items-center justify-end gap-4">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={{ br: <br /> }}
-          />
-        </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
           <ItemsPerPageSelector
             table={table}
