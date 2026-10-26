@@ -404,6 +404,8 @@ class TestScopedMetricsMail(TestCase):
                 period_days=14,
                 origins=["maestro"],
             ),
+            _rule(to=["plain@example.com"], period_days=7),
+            _rule(to=["empty@example.com"], period_days=7, origins=[], labs=[]),
         ]
         email_args = SimpleNamespace(
             send=True,
@@ -425,8 +427,9 @@ class TestScopedMetricsMail(TestCase):
         ]
         bodies = [sent.args[4] for sent in mock_smtp.call_args_list]
         recipients = [(sent.args[2], sent.args[5]) for sent in mock_smtp.call_args_list]
-        community, scoped, scoped_copy, missing, gone, longer = bodies
+        community, scoped, scoped_copy, missing, gone, longer, plain, empty = bodies
         assert scoped == scoped_copy
+        assert plain == community
         assert recipients == [
             ("kernelci@lists.linux.dev", "kernelci-results@groups.io"),
             ("Collabora team <team@example.com>", ""),
@@ -434,6 +437,8 @@ class TestScopedMetricsMail(TestCase):
             ("a@example.com", ""),
             ("gone@example.com", ""),
             ("fortnight@example.com", ""),
+            ("plain@example.com", ""),
+            ("empty@example.com", ""),
         ]
         assert email_args.cc == "kernelci-results@groups.io"
         assert (
@@ -455,6 +460,7 @@ class TestScopedMetricsMail(TestCase):
         assert "-1,000 (-100%)" in gone
         assert re.search(r"Trees monitored\s+3\s+1\s", longer)
         assert "redhat" not in longer
+        assert "105" in empty and "redhat" not in empty and "lava-collabora" not in empty
 
     @patch(f"{MOCK_MODULE}.send_email_report")
     @patch(f"{MOCK_MODULE}.load_metrics_rules")
@@ -469,8 +475,9 @@ class TestScopedMetricsMail(TestCase):
         mock_load.side_effect = MetricsRuleError(
             file="a.yaml", rule="rule", key="to", message="bad"
         )
-        with self.assertRaises(MetricsRuleError):
+        with self.assertRaises(ExceptionGroup) as caught:
             generate_metrics_report(email_service=MagicMock(), email_args=MagicMock())
+        assert [type(exc) for exc in caught.exception.exceptions] == [MetricsRuleError]
         mock_get.assert_called_once_with(start_days_ago=7, end_days_ago=0)
         mock_send.assert_called_once()
 
@@ -497,10 +504,14 @@ class TestScopedMetricsMail(TestCase):
             _rule(to=["also-long@example.com"], period_days=14),
         ]
 
-        generate_metrics_report(
-            email_service=MagicMock(),
-            email_args=SimpleNamespace(to="community@example.com"),
-        )
+        with self.assertRaises(ExceptionGroup) as caught:
+            generate_metrics_report(
+                email_service=MagicMock(),
+                email_args=SimpleNamespace(to="community@example.com"),
+            )
+        assert [(str(exc), exc.__notes__) for exc in caught.exception.exceptions] == [
+            ("db down", ["metrics period 14 days"])
+        ]
 
         assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
             "community@example.com",
@@ -533,11 +544,12 @@ class TestScopedMetricsMail(TestCase):
             _rule(to=["long@example.com"], period_days=14),
         ]
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ExceptionGroup) as caught:
             generate_metrics_report(
                 email_service=MagicMock(),
                 email_args=SimpleNamespace(to="community@example.com"),
             )
+        assert [str(exc) for exc in caught.exception.exceptions] == ["db down"]
 
         assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
             "long@example.com",
@@ -565,21 +577,29 @@ class TestScopedMetricsMail(TestCase):
         def send(*, service, report, email_args):
             if email_args.to == "community@example.com":
                 raise ValueError("smtp rejected")
+            if email_args.to == "ok@example.com":
+                raise ValueError("rule rejected")
 
         mock_send.side_effect = send
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ExceptionGroup) as caught:
             generate_metrics_report(
                 email_service=MagicMock(),
                 email_args=SimpleNamespace(to="community@example.com"),
             )
+        assert [str(exc) for exc in caught.exception.exceptions] == [
+            "smtp rejected",
+            "rule rejected",
+        ]
 
         assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
             "community@example.com",
             "ok@example.com",
         ]
-        mock_logger.exception.assert_called_once_with(
-            "metrics mail to %s failed",
-            "community@example.com",
+        mock_logger.exception.assert_has_calls(
+            [
+                call("metrics mail to %s failed", "community@example.com"),
+                call("metrics mail to %s failed", "ok@example.com"),
+            ]
         )
 
     @patch(f"{MOCK_MODULE}.logger")
@@ -594,25 +614,40 @@ class TestScopedMetricsMail(TestCase):
         mock_get.return_value = make_metrics_data()
         mock_template.return_value.render.return_value = "rendered content"
         mock_load.return_value = [
-            _rule(to=["bad@example.com", "ok@example.com"], period_days=7),
+            _rule(
+                to=["bad@example.com", "ok@example.com", "later@example.com"],
+                period_days=7,
+            ),
         ]
 
         def send(*, service, report, email_args):
             if email_args.to == "bad@example.com":
                 raise ValueError("invalid address")
+            if email_args.to == "later@example.com":
+                raise ValueError("smtp down")
 
         mock_send.side_effect = send
-        generate_metrics_report(
-            email_service=MagicMock(),
-            email_args=SimpleNamespace(to="community@example.com", cc="cc@example.com"),
-        )
+        with self.assertRaises(ExceptionGroup) as caught:
+            generate_metrics_report(
+                email_service=MagicMock(),
+                email_args=SimpleNamespace(
+                    to="community@example.com", cc="cc@example.com"
+                ),
+            )
+        assert [(str(exc), exc.__notes__) for exc in caught.exception.exceptions] == [
+            ("invalid address", ["metrics mail to bad@example.com"]),
+            ("smtp down", ["metrics mail to later@example.com"]),
+        ]
 
         assert [sent.kwargs["email_args"].to for sent in mock_send.call_args_list] == [
             "community@example.com",
             "bad@example.com",
             "ok@example.com",
+            "later@example.com",
         ]
-        mock_logger.exception.assert_called_once_with(
-            "metrics mail to %s failed",
-            "bad@example.com",
+        mock_logger.exception.assert_has_calls(
+            [
+                call("metrics mail to %s failed", "bad@example.com"),
+                call("metrics mail to %s failed", "later@example.com"),
+            ]
         )

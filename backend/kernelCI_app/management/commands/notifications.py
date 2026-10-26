@@ -904,14 +904,15 @@ def generate_metrics_report(
 
     now = datetime.now(timezone.utc)
     community_key = (start_days_ago, end_days_ago)
-    community_failure: Exception | None = None
+    failures: list[Exception] = []
     try:
         community = get_metrics_data(
             start_days_ago=community_key[0], end_days_ago=community_key[1]
         )
     except Exception as exc:
         community = None
-        community_failure = exc
+        exc.add_note(f"metrics period {community_key[0]} days")
+        failures.append(exc)
         logger.exception(
             "metrics period %s days failed, skipping its rules",
             community_key[0],
@@ -927,10 +928,17 @@ def generate_metrics_report(
                 now=now,
             )
         except Exception as exc:
-            community_failure = exc
+            exc.add_note(f"metrics mail to {email_args.to}")
+            failures.append(exc)
             logger.exception("metrics mail to %s failed", email_args.to)
 
-    rules = load_metrics_rules()
+    try:
+        rules = load_metrics_rules()
+    except Exception as exc:
+        failures.append(exc)
+        logger.exception("metrics rules failed to load")
+        rules = []
+
     fetched: dict[tuple[int, int], MetricsReportData | None] = {
         community_key: community
     }
@@ -941,8 +949,10 @@ def generate_metrics_report(
                 fetched[key] = get_metrics_data(
                     start_days_ago=key[0], end_days_ago=key[1]
                 )
-            except Exception:
+            except Exception as exc:
                 fetched[key] = None
+                exc.add_note(f"metrics period {key[0]} days")
+                failures.append(exc)
                 logger.exception(
                     "metrics period %s days failed, skipping its rules",
                     key[0],
@@ -966,11 +976,13 @@ def generate_metrics_report(
                     end_days_ago=key[1],
                     now=now,
                 )
-            except Exception:
+            except Exception as exc:
+                exc.add_note(f"metrics mail to {address}")
+                failures.append(exc)
                 logger.exception("metrics mail to %s failed", address)
 
-    if community_failure is not None:
-        raise community_failure
+    if failures:
+        raise ExceptionGroup("metrics report failed", failures)
 
 
 def run_fake_report(*, service, email_args):

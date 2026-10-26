@@ -31,8 +31,11 @@ second:
   to: [other@example.com]
 """,
             )
+            _write(directory, "empty.yaml", "")
+            _write(directory, "ignored.yml", "rule: [\n")
             loaded = load_metrics_rules(directory)
 
+        self.assertEqual(len(loaded), 2)
         self.assertEqual(loaded[0].origins, ["maestro"])
         self.assertEqual(loaded[0].labs, ["lava-collabora"])
         self.assertEqual(loaded[0].period_days, 7)
@@ -100,6 +103,50 @@ second:
                 "a.yaml",
                 "rule",
                 "to",
+            ),
+            (
+                {"a.yaml": "rule:\n  period_days: 7\n"},
+                "a.yaml",
+                "rule",
+                "to",
+            ),
+            (
+                {"a.yaml": "rule:\n  to: [a@example.com]\n"},
+                "a.yaml",
+                "rule",
+                "period_days",
+            ),
+            (
+                {
+                    "a.yaml": "rule:\n  period_days: 7\n  to: [a@example.com]\n  origins: ['']\n"
+                },
+                "a.yaml",
+                "rule",
+                "origins",
+            ),
+            (
+                {"a.yaml": "- a\n"},
+                "a.yaml",
+                "",
+                "",
+            ),
+            (
+                {"a.yaml": "rule: 7\n"},
+                "a.yaml",
+                "rule",
+                "",
+            ),
+            (
+                {"a.yaml": "rule: [\n"},
+                "a.yaml",
+                "",
+                "",
+            ),
+            (
+                {"a.yaml": "1:\n  period_days: 7\n  to: [a@example.com]\n"},
+                "a.yaml",
+                "1",
+                "1",
             ),
         ]
         for files, file, rule, key in cases:
