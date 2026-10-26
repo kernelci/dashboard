@@ -1265,13 +1265,14 @@ class Command(BaseCommand):
             else ""
         )
         query = f"""
-            SELECT checkout_day, checkout_id, checkout_origin, build_origin, build_lab,
-                   platform, compatibles, build_pass, build_failed, build_inc
+            SELECT checkout_day, checkout_id, checkout_origin, test_origin, build_origin,
+                   build_lab, platform, compatibles, build_pass, build_failed, build_inc
             FROM hardware_daily_builds
             WHERE checkout_day >= (NOW() - INTERVAL %s)::date
             AND checkout_day <= (NOW() - INTERVAL %s)::date
             {origin_condition}
-            ORDER BY checkout_day, build_origin, build_lab, platform, checkout_id
+            ORDER BY checkout_day, test_origin, build_origin, build_lab, platform,
+                     checkout_id
         """
         query_params = [self.start_interval, self.end_interval] + self.origins * 2
 
@@ -1285,13 +1286,14 @@ class Command(BaseCommand):
                 checkout_day=parse_date(record[0]) if record[0] else None,
                 checkout_id=record[1],
                 checkout_origin=record[2],
-                build_origin=record[3],
-                build_lab=record[4],
-                platform=record[5],
-                compatibles=parse_array(record[6]),
-                build_pass=record[7] or 0,
-                build_failed=record[8] or 0,
-                build_inc=record[9] or 0,
+                test_origin=record[3],
+                build_origin=record[4],
+                build_lab=record[5],
+                platform=record[6],
+                compatibles=parse_array(record[7]),
+                build_pass=record[8] or 0,
+                build_failed=record[9] or 0,
+                build_inc=record[10] or 0,
             )
             for record in records
         ]

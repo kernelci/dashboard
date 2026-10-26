@@ -13,6 +13,7 @@ from kernelCI_app.models import (
     HardwareDailyTests,
     Tests,
 )
+from kernelCI_app.queries.hardwareRegistryFilters import get_hardware_daily_listing
 from kernelCI_app.tests.factories import BuildFactory, CheckoutFactory, TestFactory
 
 DAY = date(2026, 7, 15)
@@ -183,3 +184,27 @@ def test_pruned_raw_data_keeps_the_existing_rows():
 
     assert HardwareDailyTests.objects.get().boot_pass == 1
     assert HardwareDailyBuilds.objects.get().build_pass == 1
+
+
+def _listing_build_pass(origin: str) -> int:
+    rows = get_hardware_daily_listing(
+        origin=origin,
+        start_date=DAY_START,
+        end_date=DAY_START + timedelta(days=1),
+    )
+    assert len(rows) == 1
+    return rows[0][2]
+
+
+@pytest.mark.django_db
+def test_each_origin_counts_only_the_build_it_tested():
+    checkout = _checkout()
+    first = BuildFactory(checkout=checkout, status="PASS", origin="maestro")
+    second = BuildFactory(checkout=checkout, status="PASS", origin="maestro")
+    _test_on(first, "pA", origin="maestro")
+    _test_on(second, "pA", origin="ti")
+
+    _recompute()
+
+    assert _listing_build_pass("maestro") == 1
+    assert _listing_build_pass("ti") == 1

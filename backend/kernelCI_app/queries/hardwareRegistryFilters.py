@@ -115,20 +115,6 @@ _REVISION_JOIN = """
         AND revision.git_commit_hash = %(git_commit_hash)s
 """
 
-# Build rows store build_origin. The page origin is the test origin, so count
-# the build that a test of this origin ran. Two build origins on the same
-# checkout and platform are both included.
-_BUILD_TESTED_BY_ORIGIN = """
-    EXISTS (
-        SELECT 1
-        FROM hardware_daily_tests tested
-        WHERE tested.test_origin = %(origin)s
-          AND tested.checkout_day = daily.checkout_day
-          AND tested.platform = daily.platform
-          AND tested.checkout_id = daily.checkout_id
-    )
-"""
-
 # Latest checkout of each tree for each platform this origin tested.
 _LATEST_PLATFORM_CHECKOUTS = """
     SELECT DISTINCT ON (
@@ -211,14 +197,12 @@ def _side_counts(
 def _daily_listing_query(*, commits: bool, revision: bool, where: str) -> str:
     latest = not commits and not revision
     return f"""
-        WITH {
-        f"picked AS ({_LATEST_PLATFORM_CHECKOUTS})," if latest else ""
-    }
+        WITH {f"picked AS ({_LATEST_PLATFORM_CHECKOUTS})," if latest else ""}
         {
         _side_counts(
             rows_name="build",
             table="hardware_daily_builds",
-            origin_sql=_BUILD_TESTED_BY_ORIGIN,
+            origin_sql="daily.test_origin = %(origin)s",
             sums='''
                 SUM(daily.build_pass) AS build_pass,
                 SUM(daily.build_failed) AS build_failed,
