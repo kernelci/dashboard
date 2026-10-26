@@ -31,7 +31,9 @@ from kernelCI_app.typeModels.labDetails import (
 )
 
 
-def _parse_listing_params(request: Request) -> tuple[Optional[ListingQueryParameters], Optional[Response]]:
+def _parse_listing_params(
+    request: Request,
+) -> tuple[Optional[ListingQueryParameters], Optional[Response]]:
     try:
         params = ListingQueryParameters(
             origin=request.GET.get("origin"),

@@ -661,6 +661,191 @@ paths:
               schema:
                 $ref: '#/components/schemas/LabListingResponse'
           description: ''
+  /api/labs/{lab_name}/:
+    get:
+      operationId: labs_retrieve_2
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: path
+        name: lab_name
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabDetailsResponse'
+          description: ''
+  /api/labs/{lab_name}/boots/:
+    get:
+      operationId: labs_boots_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: path
+        name: lab_name
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabBootRowsResponse'
+          description: ''
+  /api/labs/{lab_name}/builds/:
+    get:
+      operationId: labs_builds_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: path
+        name: lab_name
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabBuildRowsResponse'
+          description: ''
+  /api/labs/{lab_name}/lab-attention/:
+    get:
+      operationId: labs_lab_attention_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: path
+        name: lab_name
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabAttentionResponse'
+          description: ''
+  /api/labs/{lab_name}/tests/:
+    get:
+      operationId: labs_tests_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: path
+        name: lab_name
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabTestRowsResponse'
+          description: ''
   /api/labs/origins/:
     get:
       operationId: labs_origins_retrieve
@@ -4010,6 +4195,409 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
+    KindEnum:
+      enum:
+      - boot
+      - test
+      type: string
+    LabAttentionItem:
+      properties:
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          title: Kind
+        path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Path
+        platform:
+          title: Platform
+          type: string
+        tree_name:
+          title: Tree Name
+          type: string
+        git_branch:
+          title: Git Branch
+          type: string
+        commit_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commit Name
+        commit_hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commit Hash
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        last_failure_date:
+          format: date
+          title: Last Failure Date
+          type: string
+        passed_labs:
+          items:
+            type: string
+          title: Passed Labs
+          type: array
+      required:
+      - kind
+      - platform
+      - tree_name
+      - git_branch
+      - config_name
+      - architecture
+      - compiler
+      - last_failure_date
+      - passed_labs
+      title: LabAttentionItem
+      type: object
+    LabAttentionResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/LabAttentionItem'
+          title: Items
+          type: array
+      required:
+      - items
+      title: LabAttentionResponse
+      type: object
+    LabBootRowItem:
+      properties:
+        tree_name:
+          title: Tree Name
+          type: string
+        git_branch:
+          title: Git Branch
+          type: string
+        platform:
+          title: Platform
+          type: string
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status:
+          title: Status
+          type: string
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Start Time
+        duration:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Duration
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Log Url
+        log_excerpt:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Log Excerpt
+      required:
+      - tree_name
+      - git_branch
+      - platform
+      - config_name
+      - architecture
+      - compiler
+      - status
+      title: LabBootRowItem
+      type: object
+    LabBootRowsResponse:
+      properties:
+        boots:
+          items:
+            $ref: '#/components/schemas/LabBootRowItem'
+          title: Boots
+          type: array
+      required:
+      - boots
+      title: LabBootRowsResponse
+      type: object
+    LabBuildRowItem:
+      properties:
+        tree_name:
+          title: Tree Name
+          type: string
+        git_branch:
+          title: Git Branch
+          type: string
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status:
+          title: Status
+          type: string
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Start Time
+        duration:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Duration
+      required:
+      - tree_name
+      - git_branch
+      - config_name
+      - architecture
+      - compiler
+      - status
+      title: LabBuildRowItem
+      type: object
+    LabBuildRowsResponse:
+      properties:
+        builds:
+          items:
+            $ref: '#/components/schemas/LabBuildRowItem'
+          title: Builds
+          type: array
+      required:
+      - builds
+      title: LabBuildRowsResponse
+      type: object
+    LabDailyPoint:
+      properties:
+        day:
+          format: date
+          title: Day
+          type: string
+        pass_count:
+          default: 0
+          title: Pass Count
+          type: integer
+        fail_count:
+          default: 0
+          title: Fail Count
+          type: integer
+        inconclusive_count:
+          default: 0
+          title: Inconclusive Count
+          type: integer
+      required:
+      - day
+      title: LabDailyPoint
+      type: object
+    LabDetailsResponse:
+      properties:
+        lab_name:
+          title: Lab Name
+          type: string
+        trees:
+          items:
+            $ref: '#/components/schemas/LabDetailsTreeItem'
+          title: Trees
+          type: array
+        distribution:
+          $ref: '#/components/schemas/LabDistribution'
+        fill:
+          $ref: '#/components/schemas/LabFillStats'
+      required:
+      - lab_name
+      - trees
+      - distribution
+      - fill
+      title: LabDetailsResponse
+      type: object
+    LabDetailsTreeItem:
+      properties:
+        key:
+          title: Key
+          type: string
+        tree_name:
+          title: Tree Name
+          type: string
+        git_branch:
+          title: Git Branch
+          type: string
+        commit_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commit Name
+        commit_hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commit Hash
+        builds:
+          $ref: '#/components/schemas/StatusCount'
+        boots:
+          $ref: '#/components/schemas/StatusCount'
+        tests:
+          $ref: '#/components/schemas/StatusCount'
+        build_issues:
+          items:
+            $ref: '#/components/schemas/Issue'
+          title: Build Issues
+          type: array
+        boot_issues:
+          items:
+            $ref: '#/components/schemas/Issue'
+          title: Boot Issues
+          type: array
+        test_issues:
+          items:
+            $ref: '#/components/schemas/Issue'
+          title: Test Issues
+          type: array
+        daily:
+          $ref: '#/components/schemas/LabTreeDailySeries'
+      required:
+      - key
+      - tree_name
+      - git_branch
+      - builds
+      - boots
+      - tests
+      - build_issues
+      - boot_issues
+      - test_issues
+      - daily
+      title: LabDetailsTreeItem
+      type: object
+    LabDistribution:
+      properties:
+        platforms:
+          items:
+            $ref: '#/components/schemas/LabFrequencyCounts'
+          title: Platforms
+          type: array
+        configs:
+          items:
+            $ref: '#/components/schemas/LabFrequencyCounts'
+          title: Configs
+          type: array
+        compilers:
+          items:
+            $ref: '#/components/schemas/LabFrequencyCounts'
+          title: Compilers
+          type: array
+        architectures:
+          items:
+            $ref: '#/components/schemas/LabFrequencyCounts'
+          title: Architectures
+          type: array
+        build_status:
+          $ref: '#/components/schemas/StatusCount'
+        boot_status:
+          $ref: '#/components/schemas/StatusCount'
+        test_status:
+          $ref: '#/components/schemas/StatusCount'
+      required:
+      - platforms
+      - configs
+      - compilers
+      - architectures
+      - build_status
+      - boot_status
+      - test_status
+      title: LabDistribution
+      type: object
+    LabFillStats:
+      properties:
+        checkout_total:
+          title: Checkout Total
+          type: integer
+        checkouts_built:
+          title: Checkouts Built
+          type: integer
+        checkouts_booted:
+          title: Checkouts Booted
+          type: integer
+        checkouts_tested:
+          title: Checkouts Tested
+          type: integer
+        builds_total:
+          title: Builds Total
+          type: integer
+        builds_with_duration:
+          title: Builds With Duration
+          type: integer
+        runs_total:
+          title: Runs Total
+          type: integer
+        runs_with_duration:
+          title: Runs With Duration
+          type: integer
+        runs_with_platform:
+          title: Runs With Platform
+          type: integer
+        runs_with_log_url:
+          title: Runs With Log Url
+          type: integer
+        runs_with_log_excerpt:
+          title: Runs With Log Excerpt
+          type: integer
+      required:
+      - checkout_total
+      - checkouts_built
+      - checkouts_booted
+      - checkouts_tested
+      - builds_total
+      - builds_with_duration
+      - runs_total
+      - runs_with_duration
+      - runs_with_platform
+      - runs_with_log_url
+      - runs_with_log_excerpt
+      title: LabFillStats
+      type: object
+    LabFrequencyCounts:
+      properties:
+        name:
+          title: Name
+          type: string
+        count:
+          title: Count
+          type: integer
+      required:
+      - name
+      - count
+      title: LabFrequencyCounts
+      type: object
     LabListingItem:
       properties:
         lab_name:
@@ -4067,6 +4655,127 @@ components:
       required:
       - origins
       title: LabOriginsResponse
+      type: object
+    LabTestRowItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        status:
+          title: Status
+          type: string
+        path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Path
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Start Time
+        duration:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Duration
+        tree_name:
+          title: Tree Name
+          type: string
+        git_repository_branch:
+          title: Git Repository Branch
+          type: string
+        lab:
+          title: Lab
+          type: string
+        config_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Config Name
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        compiler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Compiler
+        platform:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Log Url
+        log_excerpt:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Log Excerpt
+        environment_misc:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          default: null
+          title: Environment Misc
+      required:
+      - id
+      - status
+      - tree_name
+      - git_repository_branch
+      - lab
+      title: LabTestRowItem
+      type: object
+    LabTestRowsResponse:
+      properties:
+        tests:
+          items:
+            $ref: '#/components/schemas/LabTestRowItem'
+          title: Tests
+          type: array
+      required:
+      - tests
+      title: LabTestRowsResponse
+      type: object
+    LabTreeDailySeries:
+      properties:
+        builds:
+          items:
+            $ref: '#/components/schemas/LabDailyPoint'
+          title: Builds
+          type: array
+        boots:
+          items:
+            $ref: '#/components/schemas/LabDailyPoint'
+          title: Boots
+          type: array
+        tests:
+          items:
+            $ref: '#/components/schemas/LabDailyPoint'
+          title: Tests
+          type: array
+      required:
+      - builds
+      - boots
+      - tests
+      title: LabTreeDailySeries
       type: object
     ListingStatusCount:
       properties:
