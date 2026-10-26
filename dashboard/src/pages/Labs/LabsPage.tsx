@@ -1,9 +1,12 @@
 import { useMemo, type JSX } from 'react';
 
+import { FormattedMessage } from 'react-intl';
+
 import type { LabListingItem } from '@/types/lab';
 
 import { useLabsListing } from '@/api/labs';
 
+import { BaseBanner } from '@/components/Banner/BaseBanner';
 import { Toaster } from '@/components/ui/toaster';
 
 import { matchesRegexOrIncludes } from '@/lib/string';
@@ -35,6 +38,9 @@ export function LabsPage({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
+        <BaseBanner>
+          <FormattedMessage id="labsListing.preview" />
+        </BaseBanner>
         <LabsTable
           labTableRows={listItems}
           status={status}

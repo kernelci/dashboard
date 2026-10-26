@@ -320,6 +320,9 @@ export const messages = {
     'labsListing.description':
       'List of labs with aggregated build, boot and test status',
     'labsListing.notFound': 'No lab information available',
+    'labsListing.preview':
+      'Preview feature. This page may contain bugs or run slowly. ' +
+      `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
     'labsListing.title': 'Lab Listing ― KCI Dashboard',
     'logSheet.downloadLog': 'You can download the full log here: {link}',
     'logSheet.fileName': 'File Name',
