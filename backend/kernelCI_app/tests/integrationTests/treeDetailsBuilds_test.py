@@ -20,6 +20,10 @@ from kernelCI_app.utils import string_to_json
 
 client = TreeClient()
 
+pytestmark = pytest.mark.skip(
+    reason="Tree builds endpoint is temporarily disabled"
+)
+
 
 @pytest.mark.parametrize(
     "base_tree, status_code, has_error_body",
