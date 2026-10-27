@@ -650,6 +650,42 @@ class TestFetchGuards:
 
 
 class TestSyncCommitCommands:
+    @pytest.mark.parametrize("instance", ["production", None])
+    @pytest.mark.parametrize(
+        ("command", "work"),
+        [
+            ("sync_commit_mirror", "sync_commit_metadata"),
+            ("sync_commit_ingest", "sync_commit_metadata"),
+            ("sync_commit_gc", "gc_mirror"),
+        ],
+    )
+    def test_commands_run_on_production_and_development(
+        self, monkeypatch, tmp_path, instance, command, work
+    ):
+        calls = []
+        stats = dict.fromkeys(
+            [
+                "remotes_ok",
+                "remotes_failed",
+                "parsed",
+                "commits_written",
+                "edges_written",
+                "gaps_fetched",
+                "gaps_written",
+            ],
+            0,
+        )
+
+        def fake(*args, **kwargs):
+            calls.append((args, kwargs))
+            return stats
+
+        module = f"kernelCI_app.management.commands.{command}"
+        monkeypatch.setattr(f"{module}.{work}", fake)
+        monkeypatch.setattr(f"{module}.get_running_instance", lambda: instance)
+        call_command(command, mirror_dir=str(tmp_path / "mirror"))
+        assert len(calls) == 1
+
     def test_mirror_command_skips_ingest(self, monkeypatch):
         seen: dict[str, object] = {}
 
@@ -716,7 +752,7 @@ class TestSyncCommitCommands:
             ("sync_commit_gc", "gc_mirror"),
         ],
     )
-    def test_commands_skip_outside_production(self, monkeypatch, command, work):
+    def test_commands_skip_staging(self, monkeypatch, command, work):
         called = False
 
         def fake(*args, **kwargs):
