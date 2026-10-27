@@ -460,7 +460,9 @@ class TestScopedMetricsMail(TestCase):
         assert "-1,000 (-100%)" in gone
         assert re.search(r"Trees monitored\s+3\s+1\s", longer)
         assert "redhat" not in longer
-        assert "105" in empty and "redhat" not in empty and "lava-collabora" not in empty
+        assert (
+            "105" in empty and "redhat" not in empty and "lava-collabora" not in empty
+        )
 
     @patch(f"{MOCK_MODULE}.send_email_report")
     @patch(f"{MOCK_MODULE}.load_metrics_rules")
