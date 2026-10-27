@@ -38,7 +38,7 @@ The job never writes `checkouts.git_commit_message`.
 `""`.
 
 `commits`: surrogate `id`, unique `git_commit_hash`, `author_identity_id`,
-`committer_identity_id`, author / committer dates, optional `fetched_from_url`.
+`committer_identity_id`, and author / committer dates.
 
 `commit_message`: `commit_id` primary key, `subject`, `message` as UTF-8 bytes.
 
@@ -184,6 +184,11 @@ omits trees and blobs, so the bitmap step aborts after the new pack is
 written and the mirror grows. The mirror config sets the same option. It
 does not pass `--aggressive` or `gc.repackFilter`. Promisor packs stay
 promisor packs, so the omitted trees are not downloaded.
+
+The commands run on production and development; staging skips them.
+The low-speed fetch timeout is five minutes to tolerate slow servers.
+Aggressive GC is left disabled because its long runtime makes it unsuitable
+for the scheduled job.
 
 ## What is fetched
 
