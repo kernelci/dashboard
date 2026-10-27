@@ -62,7 +62,7 @@ MIRROR_GIT_CONFIG = {
     "http.version": "HTTP/1.1",
     "http.postBuffer": str(512 * 1024 * 1024),
     "http.lowSpeedLimit": "1000",
-    "http.lowSpeedTime": "60",
+    "http.lowSpeedTime": "300",
     "gc.auto": "0",
     # A treeless pack has no full closure, so the bitmap bare repos write by
     # default aborts repack after the new pack is on disk.

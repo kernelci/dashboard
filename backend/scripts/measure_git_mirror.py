@@ -121,7 +121,7 @@ def _ensure_bare(repo: Path) -> None:
     # After that 400, git sits on the dead connection instead of exiting. Give curl
     # a stall deadline, and keep auto-gc from repacking a multi-GB mirror mid-run.
     _git(repo, "config", "http.lowSpeedLimit", "1000")
-    _git(repo, "config", "http.lowSpeedTime", "60")
+    _git(repo, "config", "http.lowSpeedTime", "300")
     _git(repo, "config", "gc.auto", "0")
 
 

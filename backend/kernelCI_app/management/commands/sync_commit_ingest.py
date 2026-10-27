@@ -38,8 +38,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if get_running_instance() != "production":
-            print("This command only runs on production.")
+        if get_running_instance() == "staging":
+            print("This command only runs on production or development.")
             return
 
         mirror_dir = options["mirror_dir"] or settings.GIT_MIRROR_DIR
