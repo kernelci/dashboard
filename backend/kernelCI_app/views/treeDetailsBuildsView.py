@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Dict, List, Optional
+from typing import Optional
 
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
@@ -7,7 +7,6 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.errorHandling import create_api_error_response
@@ -15,13 +14,7 @@ from kernelCI_app.helpers.filters import (
     FilterParams,
 )
 from kernelCI_app.helpers.logger import create_endpoint_notification
-from kernelCI_app.helpers.treeDetails import (
-    decide_if_is_build_filtered_out,
-    decide_if_is_full_row_filtered_out,
-    get_build,
-    get_current_row_data,
-)
-from kernelCI_app.queries.tree import get_tree_data
+from kernelCI_app.queries.treeBuilds import get_tree_builds_response
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
@@ -35,42 +28,6 @@ from kernelCI_app.typeModels.treeDetails import (
 
 
 class BaseTreeDetailsBuilds(APIView):
-    def __init__(self):
-        self.filters = None
-
-        self.builds: List[Dict] = []
-        self.processed_builds = set()
-        self.tree_url = ""
-
-    def _process_builds(self, row_data):
-        build_id = row_data["build_id"]
-
-        if decide_if_is_build_filtered_out(self, row_data):
-            return
-
-        if build_id in self.processed_builds:
-            return
-
-        self.processed_builds.add(build_id)
-
-        build_item = get_build(row_data)
-
-        self.builds.append(build_item)
-
-    def _sanitize_rows(self, rows):
-        for row in rows:
-            row_data = get_current_row_data(row)
-
-            is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
-
-            if is_record_filter_out:
-                continue
-
-            if row_data["build_id"] is not None and not row_data["build_id"].startswith(
-                MAESTRO_DUMMY_BUILD_PREFIX
-            ):
-                self._process_builds(row_data)
-
     def get(
         self,
         request: HttpRequest,
@@ -80,53 +37,24 @@ class BaseTreeDetailsBuilds(APIView):
         commit_hash: str,
         origin: str,
     ) -> Response:
-        # TODO: re-enable once the query is bounded; it exhausts backend memory
-        # on large trees (e.g. linux-next) and took production down.
-        return create_api_error_response(
-            error_message="Tree builds endpoint is temporarily disabled",
-            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
-        )
-
-        rows = get_tree_data(
-            data_type="builds",
-            origin_param=origin,
-            git_url_param=git_url,
-            git_branch_param=git_branch,
-            tree_name=tree_name,
-            commit_hash=commit_hash,
-        )
-
-        self.filters = FilterParams(request)
-
-        if len(rows) == 0:
-            return create_api_error_response(
-                error_message=ClientStrings.TREE_NO_RESULTS,
-                status_code=HTTPStatus.OK,
-            )
-
-        if len(rows) == 1:
-            row_data = get_current_row_data(current_row=rows[0])
-            if row_data["build_id"] is None:
-                notification = create_endpoint_notification(
-                    message="Found checkout without builds",
-                    request=request,
-                )
-                send_discord_notification(content=notification)
-                return create_api_error_response(
-                    error_message=ClientStrings.TREE_BUILDS_NO_RESULTS,
-                    status_code=HTTPStatus.OK,
-                )
-
-        self._sanitize_rows(rows)
-
         try:
-            valid_response = TreeDetailsBuildsResponse(
-                builds=self.builds,
+            response = get_tree_builds_response(
+                filters=FilterParams(request),
+                origin=origin,
+                git_url=git_url,
+                git_branch=git_branch,
+                tree_name=tree_name,
+                commit_hash=commit_hash,
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(valid_response.model_dump())
+        if response.get("error") == ClientStrings.TREE_BUILDS_NO_RESULTS:
+            notification = create_endpoint_notification(
+                message="Found checkout without builds", request=request
+            )
+            send_discord_notification(content=notification)
+        return Response(response)
 
 
 class TreeDetailsBuildsDirect(BaseTreeDetailsBuilds):
