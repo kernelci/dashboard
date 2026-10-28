@@ -60,7 +60,13 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
             data=json.dumps(body),
             content_type="application/json",
         )
-        with patch(REGISTRY_PATCH, return_value=in_registry):
+        with (
+            patch(REGISTRY_PATCH, return_value=in_registry),
+            patch(
+                "kernelCI_app.views.hardwareDetailsSummaryView.get_first_hardware_registry",
+                return_value=None,
+            ),
+        ):
             return HardwareDetailsSummary().post(request, hardware_id=self.hardware_id)
 
     def _body(self, **overrides):
@@ -72,10 +78,6 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         with (
             patch(HEADS_PATCH) as mock_heads,
             patch(QUERY_PATCH) as mock_query,
-            patch(
-                "kernelCI_app.views.hardwareDetailsSummaryView.get_first_hardware_registry",
-                return_value=None,
-            ),
         ):
             mock_heads.return_value = self.heads
             mock_query.return_value = [SUMMARY_ROW]
