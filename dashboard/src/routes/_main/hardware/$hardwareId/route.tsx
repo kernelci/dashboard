@@ -38,6 +38,7 @@ const hardwareDetailsSearchSchema = z.object({
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   diffFilter: zDiffFilter
+    .removeCatch()
     .removeDefault()
     .default(DEFAULT_HARDWARE_DIFF_FILTER)
     .catch(DEFAULT_HARDWARE_DIFF_FILTER),
