@@ -29,7 +29,7 @@ jobs:
       - name: Check for new Django migrations
         id: check
         run: |
-          # Requires squash-and-merge onto main: one commit, so HEAD~1 is the
+          # Requires squash-and-merge onto staging: one commit, so HEAD~1 is the
           # previous deploy. Update this if that merge method changes.
           # See "Staging" in DEPLOYMENT.md.
           NEW_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- '**/migrations/*.py' \
