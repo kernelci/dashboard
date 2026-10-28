@@ -13,7 +13,11 @@ from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.typeModels.commonDetails import TestHistoryItem
 
 
-def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
+def _filter_clauses(
+    filters: FilterParams, data_type: Literal["boots", "tests"]
+) -> tuple[str, str, dict[str, Any]]:
+    tab = "boot" if data_type == "boots" else "test"
+    prefix = "Boot" if data_type == "boots" else "Test"
     params: dict[str, Any] = {
         "unknown": UNKNOWN_STRING,
         "uncategorized": UNCATEGORIZED_STRING,
@@ -34,7 +38,11 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
         "AND t.environment_misc->'platform' IS DISTINCT FROM to_jsonb(%(unknown)s::text) "
         f"THEN {test_platform} ELSE {build_platform} END"
     )
-    clauses = ["(t.path = 'boot' OR t.path LIKE 'boot.%%')"]
+    clauses = [
+        "(t.path = 'boot' OR t.path LIKE 'boot.%%')"
+        if data_type == "boots"
+        else "(t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')"
+    ]
     for name, column, values in (
         (
             "architectures",
@@ -44,27 +52,31 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
         ("compilers", "COALESCE(b.compiler, %(unknown)s)", filters.filterCompiler),
         ("configs", "COALESCE(b.config_name, %(unknown)s)", filters.filterConfigs),
         ("hardware", hardware, filters.filterHardware),
-        ("statuses", "COALESCE(t.status, 'NULL')", filters.filterBootStatus),
-        ("origins", "t.origin", filters.filter_boot_origin),
+        (
+            "statuses",
+            "COALESCE(t.status, 'NULL')",
+            getattr(filters, f"filter{prefix}Status"),
+        ),
+        ("origins", "t.origin", getattr(filters, f"filter_{tab}_origin")),
         (
             "labs",
             "COALESCE(NULLIF(COALESCE(tl.name, t.misc->>'runtime'), ''), %(unknown)s)",
-            filters.filter_labs["boot"],
+            filters.filter_labs[tab],
         ),
     ):
         if values:
             params[name] = sorted(values)
             clauses.append(f"({column}) = ANY(%({name})s)")
-    if filters.filterBootPath:
-        params["path"] = filters.filterBootPath
+    if getattr(filters, f"filter{prefix}Path"):
+        params["path"] = getattr(filters, f"filter{prefix}Path")
         clauses.append("strpos(t.path, %(path)s) > 0")
-    if filters.filterPlatforms["boot"]:
-        # The existing view passes no platform to is_boot_filtered_out (None).
-        params["platforms"] = sorted(filters.filterPlatforms["boot"])
+    if filters.filterPlatforms[tab]:
+        # The existing views pass no platform to their tab filter (None).
+        params["platforms"] = sorted(filters.filterPlatforms[tab])
         clauses.append("FALSE")
     for name, value, operator in (
-        ("duration_min", filters.filterBootDurationMin, ">="),
-        ("duration_max", filters.filterBootDurationMax, "<="),
+        ("duration_min", getattr(filters, f"filter{prefix}DurationMin"), ">="),
+        ("duration_max", getattr(filters, f"filter{prefix}DurationMax"), "<="),
     ):
         if value is not None:
             params[name] = value
@@ -73,7 +85,7 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
                 "(CASE WHEN t.duration = 'NaN'::float8 THEN 0 ELSE trunc(t.duration) END) "
                 f"{operator} %({name})s"
             )
-    issues = sorted(filters.filterIssues["boot"], key=str)
+    issues = sorted(filters.filterIssues[tab], key=str)
     params["issues"] = issues
     issue_clauses = []
     for index, issue in enumerate(issues):
@@ -94,7 +106,7 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
 
 def get_tree_test_history_response(
     *,
-    data_type: Literal["boots"],
+    data_type: Literal["boots", "tests"],
     filters: FilterParams,
     origin: str,
     git_url: Optional[str],
@@ -103,7 +115,7 @@ def get_tree_test_history_response(
     tree_name: Optional[str],
     full_environment_misc: bool = False,
 ) -> dict[str, Any]:
-    where, issue_where, params = _filter_clauses(filters)
+    where, issue_where, params = _filter_clauses(filters, data_type)
     params.update(
         origin=origin,
         git_url_param=git_url,

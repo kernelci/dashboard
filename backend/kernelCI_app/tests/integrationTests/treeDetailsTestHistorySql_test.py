@@ -19,6 +19,7 @@ from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.treeDetails import (
     decide_if_is_boot_filtered_out,
     decide_if_is_full_row_filtered_out,
+    decide_if_is_test_filtered_out,
     get_current_row_data,
 )
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Labs
@@ -31,6 +32,10 @@ from kernelCI_app.views.treeDetailsBootsView import (
     TreeDetailsBoots,
     TreeDetailsBootsDirect,
 )
+from kernelCI_app.views.treeDetailsTestsView import (
+    TreeDetailsTests,
+    TreeDetailsTestsDirect,
+)
 
 pytestmark = pytest.mark.django_db
 IDENTITY = dict(
@@ -42,9 +47,9 @@ IDENTITY = dict(
 )
 
 
-@pytest.fixture
-def data_type():
-    return "boots"
+@pytest.fixture(params=["boots", "tests"])
+def data_type(request):
+    return request.param
 
 
 def legacy_response(filters, data_type, full_environment_misc=False, **identity):
@@ -71,9 +76,14 @@ def legacy_response(filters, data_type, full_environment_misc=False, **identity)
             or data["test_id"] is None
         ):
             continue
-        if not is_boot(data["test_path"]):
+        if is_boot(data["test_path"]) != (data_type == "boots"):
             continue
-        if decide_if_is_boot_filtered_out(instance, data):
+        should_skip = (
+            decide_if_is_boot_filtered_out
+            if data_type == "boots"
+            else decide_if_is_test_filtered_out
+        )
+        if should_skip(instance, data):
             continue
         items.setdefault(
             data["test_id"], HistoryItem(**data["history_item"]).model_dump()
@@ -155,9 +165,12 @@ def dataset(data_type):
     for index, (parent, status, duration, compatible, environment) in enumerate(
         variants
     ):
-        path = "boot" if index == 0 else f"boot.{index}"
+        prefix = "boot" if data_type == "boots" else "suite"
+        path = prefix if index == 0 else f"{prefix}.{index}"
+        if index == 9 and data_type == "tests":
+            path = "bootloader"
         if index == 2:
-            path = "boot.%_special"
+            path = f"{prefix}.%_special"
         results.append(
             Results.objects.create(
                 id=f"result-{index}",
@@ -176,9 +189,13 @@ def dataset(data_type):
             )
         )
     for test_id, path, build_id in [
-        ("other-category", "suite.other", build.id),
+        (
+            "other-category",
+            "suite.other" if data_type == "boots" else "boot.other",
+            build.id,
+        ),
         ("null-path", None, build.id),
-        ("orphan", "boot.orphan", "missing-build"),
+        ("orphan", f"{prefix}.orphan", "missing-build"),
     ]:
         Results.objects.create(
             id=test_id, origin="maestro", path=path, build_id=build_id, status="FAIL"
@@ -278,8 +295,12 @@ ISSUE_CASES = [
 def test_filters_match_legacy(dataset, data_type, attributes, issues, full):
     filters = FilterParams(RequestFactory().get("/"))
     for field, value in attributes.items():
+        if data_type == "tests":
+            field = field.replace("filterBoot", "filterTest").replace(
+                "filter_boot_", "filter_test_"
+            )
         setattr(filters, field, value)
-    filters.filterIssues["boot"] = issues
+    filters.filterIssues["boot" if data_type == "boots" else "test"] = issues
     expected = legacy_response(
         filters, data_type, full_environment_misc=full, **IDENTITY
     )
@@ -301,7 +322,7 @@ def test_filters_match_legacy(dataset, data_type, attributes, issues, full):
 )
 def test_lab_and_platform_filter_behavior(dataset, data_type, field, values):
     filters = FilterParams(RequestFactory().get("/"))
-    getattr(filters, field)["boot"] = values
+    getattr(filters, field)["boot" if data_type == "boots" else "test"] = values
     assert canonical(
         get_tree_test_history_response(data_type=data_type, filters=filters, **IDENTITY)
     ) == canonical(legacy_response(filters, data_type, **IDENTITY))
@@ -390,11 +411,15 @@ def test_both_routes_and_commit_tags(dataset, data_type, direct, commit):
         },
     )
     if direct:
-        response = TreeDetailsBootsDirect.as_view()(
+        view = (
+            TreeDetailsBootsDirect if data_type == "boots" else TreeDetailsTestsDirect
+        )
+        response = view.as_view()(
             request, tree_name="fixture", git_branch="master", commit_hash=commit
         )
     else:
-        response = TreeDetailsBoots.as_view()(request, commit_hash=commit)
+        view = TreeDetailsBoots if data_type == "boots" else TreeDetailsTests
+        response = view.as_view()(request, commit_hash=commit)
     assert response.status_code == 200
     identity = dict(IDENTITY, commit_hash=commit)
     if not direct:
@@ -409,7 +434,7 @@ def test_both_routes_and_commit_tags(dataset, data_type, direct, commit):
 def test_sql_transfers_only_matching_test_once(dataset, data_type):
     filters = FilterParams(RequestFactory().get("/"))
     filters.filterHardware = {"board"}
-    filters.filterIssues["boot"] = {("a", 1)}
+    filters.filterIssues["boot" if data_type == "boots" else "test"] = {("a", 1)}
     rows = []
 
     def record(execute, sql, params, many, context):
@@ -441,3 +466,55 @@ def test_invalid_platform_validation_and_hardware_filtering(
     assert canonical(
         get_tree_test_history_response(data_type=data_type, filters=filters, **IDENTITY)
     ) == canonical(legacy_response(filters, data_type, **IDENTITY))
+
+
+@pytest.mark.parametrize("with_issue_filter", [False, True])
+def test_order_uses_latest_matching_issue_with_nulls_first(
+    dataset, data_type, with_issue_filter
+):
+    parent = Builds.objects.get(id="build")
+    prefix = "boot" if data_type == "boots" else "suite"
+    for suffix, issue_id in [("none", None), ("recent", "a"), ("old", "b")]:
+        result = Results.objects.create(
+            id="order-" + suffix,
+            origin="maestro",
+            build=parent,
+            path=f"{prefix}.order-{suffix}",
+            status="PASS",
+        )
+        if issue_id:
+            issue = Issues.objects.get(id=issue_id)
+            Incidents.objects.create(
+                id="order-incident-" + suffix,
+                origin="maestro",
+                build=parent,
+                test=result,
+                issue=issue,
+                issue_version=issue.version,
+            )
+    recent = Results.objects.get(id="order-recent")
+    older = Issues.objects.get(id="b")
+    Incidents.objects.create(
+        id="order-recent-older-incident",
+        origin="maestro",
+        build=parent,
+        test=recent,
+        issue=older,
+        issue_version=older.version,
+    )
+    filters = FilterParams(RequestFactory().get("/"))
+    field = "filterBootPath" if data_type == "boots" else "filterTestPath"
+    setattr(filters, field, ".order-")
+    if with_issue_filter:
+        filters.filterIssues["boot" if data_type == "boots" else "test"] = {
+            ("a", 1),
+            ("b", 2),
+        }
+    actual = get_tree_test_history_response(
+        data_type=data_type, filters=filters, **IDENTITY
+    )
+    assert actual == legacy_response(filters, data_type, **IDENTITY)
+    expected = ["order-recent", "order-old"]
+    if not with_issue_filter:
+        expected.insert(0, "order-none")
+    assert [item["id"] for item in actual[data_type]] == expected
