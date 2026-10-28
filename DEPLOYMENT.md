@@ -170,11 +170,11 @@ pre-existing external PostgreSQL instance and use pre-built docker images
 stored in the GitHub Container Registry (GHCR).
 
 Production images are automatically built via GitHub Workflow
-for every new commit on `main`, or when `Publish GHCR Images` is run manually
+for every new commit on `main` and `staging`, or when `Publish GHCR Images` is run manually
 from a branch or tag (**Use workflow from**). Images are tagged with that
 commit's full SHA.
 Deployment pulls that SHA and never rebuilds the images. After CI passes on
-`main`, the dashboard is also deployed to staging
+`staging`, the dashboard is deployed to staging
 ([deploy-staging](.github/workflows/deploy-staging.yaml)). Production is deployed
 manually via [deploy-production](.github/workflows/deploy-production.yaml) (see
 the [Production deploy checklist](#production-deploy-checklist) and
@@ -263,8 +263,9 @@ the path to follow so a step is not skipped. Production is never deployed by mer
 
 ### Tagging a release
 
-Production is never deployed by merging. Pushes to `main` run [ci.yaml](.github/workflows/ci.yaml),
-deploy staging, and publish GHCR images; production is always triggered manually.
+Production is never deployed by merging. Pushes to `staging` run [ci.yaml](.github/workflows/ci.yaml),
+deploy staging, and publish GHCR images; production is always triggered manually,
+and the workflow fails if the commit is not on `main`.
 
 Every production deployment must be preceded by a release tag.
 The dashboard displays its version (`git describe --tags`) at the bottom of the
@@ -350,12 +351,13 @@ Which demands extra caution for changes that require migrations or
 significantly impact the database.
 
 A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/deploy-staging.yaml).
-It runs automatically on pushes to `main` after the checks in
-[ci.yaml](.github/workflows/ci.yaml) succeed.
+It runs automatically on pushes to `staging` after the checks in
+[ci.yaml](.github/workflows/ci.yaml) succeed. Sprint work merges to `staging`;
+hotfixes go to `main` through a reviewed pull request and are merged back into `staging`.
 
 That workflow notifies Discord when the deployed commit adds Django migration
 files. The check diffs `HEAD~1`, which is the whole pull request only while
-`main` is updated by squash merges: each push is one commit, and its parent is
+`staging` is updated by squash merges: each push is one commit, and its parent is
 the commit staging last deployed. A rebase of several commits, or a manual run
 from a multi-commit branch, reports only the tip commit. If the repository
 stops using squash-and-merge, update the check in `deploy-staging.yaml`.
