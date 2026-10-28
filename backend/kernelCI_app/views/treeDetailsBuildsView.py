@@ -80,6 +80,13 @@ class BaseTreeDetailsBuilds(APIView):
         commit_hash: str,
         origin: str,
     ) -> Response:
+        # TODO: re-enable once the query is bounded; it exhausts backend memory
+        # on large trees (e.g. linux-next) and took production down.
+        return create_api_error_response(
+            error_message="Tree builds endpoint is temporarily disabled",
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+
         rows = get_tree_data(
             data_type="builds",
             origin_param=origin,

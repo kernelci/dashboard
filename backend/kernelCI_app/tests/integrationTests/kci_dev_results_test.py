@@ -148,11 +148,14 @@ def test_summary(settings_file: Path) -> None:
     assert summary["builds"]["pass"] > 0
 
 
-def test_builds(settings_file: Path) -> None:
-    builds = run_kci_dev(settings_file, "builds", *CHECKOUT_ARGS)
-    assert builds
-    _assert_fields(builds, BUILD_FIELDS)
-    assert any(b["id"] == ARM64_BUILD for b in builds)
+def test_builds_temporarily_unavailable(settings_file: Path) -> None:
+    # The tree builds endpoint is temporarily disabled to prevent memory exhaustion.
+    args = ("builds", *CHECKOUT_ARGS, "--json")
+    proc = _run_kci_dev(settings_file, args)
+    failure = _format_failure(args, proc)
+    assert proc.returncode != 0, failure
+    assert not proc.stdout.strip(), failure
+    assert "status 503" in proc.stderr, failure
 
 
 def test_build(settings_file: Path) -> None:
@@ -208,14 +211,9 @@ def _invoke_comparison(compare_cli, args: list[str]) -> tuple[int, dict]:
     return result.exit_code, json.loads(report_line)
 
 
-def _assert_seeded_builds(code: int, report: dict) -> None:
-    seen = {item["base_id"] for item in report["items"]} | {
-        item["head_id"] for item in report["items"]
-    }
-    assert "allwinner_build_valid" in seen
-    assert ARM64_BUILD in seen
-    # Tree-report answers an error for this seed: both checkouts are outside
-    # its 24h window, so the CLI marks the report incomplete and exits 2.
+def _assert_builds_unavailable(code: int, report: dict) -> None:
+    # Compare and gate also depend on the disabled tree builds endpoint.
+    assert "builds" in report["error"], report
     assert report["incomplete"] is True
     assert code == 2
 
@@ -238,7 +236,7 @@ def test_compare(compare_cli) -> None:
             "json",
         ],
     )
-    _assert_seeded_builds(code, report)
+    _assert_builds_unavailable(code, report)
 
 
 def test_gate(compare_cli) -> None:
@@ -261,7 +259,7 @@ def test_gate(compare_cli) -> None:
             "json",
         ],
     )
-    _assert_seeded_builds(code, report)
+    _assert_builds_unavailable(code, report)
 
 
 def test_test(settings_file: Path) -> None:

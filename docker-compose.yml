@@ -31,11 +31,14 @@ services:
             - run
             - gunicorn
             - kernelCI.wsgi:application
-            - --workers=5
+            - --workers=3
+            - --max-requests=500
+            - --max-requests-jitter=50
             - --forwarded-allow-ips=*
             - --bind=0.0.0.0:8000
             - --timeout=250
         entrypoint: "./utils/docker/backend_entrypoint.sh"
+        mem_limit: 3g
         depends_on:
             redis:
                 condition: service_healthy
