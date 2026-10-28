@@ -1,3 +1,6 @@
+import gzip
+import pickle
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +12,7 @@ from kernelCI_app.cache import (
     DISCORD_NOTIFICATION_KEY,
     _add_to_lookup,
     _create_cache_params_hash,
+    _is_gzip,
     clear_cache,
     get_notification_cache,
     get_query_cache,
@@ -126,6 +130,41 @@ class TestGetQueryCache:
         result = get_query_cache(key)
 
         assert result is None
+
+    @patch("kernelCI_app.cache.cache")
+    def test_repetitive_rows_roundtrip_compressed(self, mock_cache):
+        stored = {}
+        mock_cache.set.side_effect = lambda key, value, timeout=None: (
+            stored.__setitem__(key, value)
+        )
+        mock_cache.get.side_effect = stored.get
+        when = datetime(2026, 7, 17, tzinfo=timezone.utc)
+        row = ("PASS", "maestro", "qcs6490-rb3gen2", when)
+        rows = [row] * 400
+
+        set_query_cache(key="treeDetailsTests", rows=rows, compress=True)
+
+        blob = stored["treeDetailsTests"]
+        assert _is_gzip(blob)
+        assert len(blob) < len(pickle.dumps(rows, protocol=pickle.HIGHEST_PROTOCOL))
+        got = get_query_cache("treeDetailsTests")
+        assert got == rows
+        assert isinstance(got[0], tuple)
+        assert got[0][3] == when
+
+    @patch("kernelCI_app.cache.cache")
+    def test_compress_defaults_off(self, mock_cache):
+        rows = [("PASS", "maestro")] * 400
+
+        set_query_cache(key="treeCommits", rows=rows)
+
+        assert mock_cache.set.call_args[0][1] == rows
+
+    @patch("kernelCI_app.cache.cache")
+    def test_corrupt_gzip_is_a_miss(self, mock_cache):
+        mock_cache.get.return_value = gzip.compress(b"not a pickle")
+
+        assert get_query_cache("treeDetailsTests") is None
 
 
 class TestSetNotificationCache:

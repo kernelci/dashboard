@@ -167,7 +167,7 @@ def get_hardware_selectors(origin: str) -> list[dict]:
         cursor.execute(query, params)
         rows = dict_fetchall(cursor)
 
-    set_query_cache(key=cache_key, params=cache_params, rows=rows)
+    set_query_cache(key=cache_key, params=cache_params, rows=rows, compress=True)
     return rows
 
 
@@ -455,7 +455,9 @@ def get_hardware_details_data(
             start_date=start_datetime,
             end_date=end_datetime,
         )
-        set_query_cache(key=cache_key, params=tests_cache_params, rows=records)
+        set_query_cache(
+            key=cache_key, params=tests_cache_params, rows=records, compress=True
+        )
 
     return records
 
@@ -670,7 +672,9 @@ def get_hardware_details_summary(
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         query_rows = dict_fetchall(cursor)
-        set_query_cache(key=cache_key, params=tests_cache_params, rows=query_rows)
+        set_query_cache(
+            key=cache_key, params=tests_cache_params, rows=query_rows, compress=True
+        )
         return query_rows
 
 
@@ -996,7 +1000,7 @@ def get_hardware_trees_data(
                 )
             )
 
-        set_query_cache(key=cache_key, params=params, rows=trees)
+        set_query_cache(key=cache_key, params=params, rows=trees, compress=True)
 
     return trees
 
