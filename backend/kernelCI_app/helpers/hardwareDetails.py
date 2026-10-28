@@ -76,6 +76,15 @@ def unstable_parse_post_body(*, instance, request) -> None:
     instance.filters = FilterParams(body, process_body=True)
 
 
+def listing_origin_args(instance) -> dict:
+    filters = instance.filters
+    return {
+        "test_origins": list(filters.filter_test_origin) or None,
+        "build_origins": list(filters.filter_build_origin) or None,
+        "checkout_origins": list(filters.filter_checkout_origin) or None,
+    }
+
+
 def set_trees_status_summary(
     *, trees: List[Tree], tree_status_summary: defaultdict
 ) -> None:

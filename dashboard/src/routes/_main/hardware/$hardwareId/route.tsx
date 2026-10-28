@@ -11,7 +11,7 @@ import {
 
 import { zTreeCommits } from '@/types/hardware/hardwareDetails';
 import {
-  DEFAULT_DIFF_FILTER,
+  DEFAULT_HARDWARE_DIFF_FILTER,
   DEFAULT_ORIGIN,
   type SearchSchema,
   zDiffFilter,
@@ -24,7 +24,7 @@ const defaultValues = {
   treeIndexes: null,
   treeCommits: {},
   tableFilter: zTableFilterInfoDefault,
-  diffFilter: DEFAULT_DIFF_FILTER,
+  diffFilter: DEFAULT_HARDWARE_DIFF_FILTER,
   hardwareSearch: '',
 };
 const hardwareDetailsSearchSchema = z.object({
@@ -37,7 +37,10 @@ const hardwareDetailsSearchSchema = z.object({
     .default(null),
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
-  diffFilter: zDiffFilter,
+  diffFilter: zDiffFilter
+    .removeDefault()
+    .default(DEFAULT_HARDWARE_DIFF_FILTER)
+    .catch(DEFAULT_HARDWARE_DIFF_FILTER),
   hardwareSearch: z.string().catch(''),
 } satisfies SearchSchema);
 

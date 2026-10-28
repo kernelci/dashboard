@@ -273,6 +273,12 @@ export const zDiffFilter = z
   .catch(DEFAULT_DIFF_FILTER);
 
 export type TFilter = z.infer<typeof zDiffFilter>;
+
+// {} means the user cleared the filter. These are the untouched defaults.
+export const DEFAULT_HARDWARE_DIFF_FILTER: TFilter = {
+  checkoutOrigins: { [DEFAULT_ORIGIN]: true },
+  buildOrigin: { [DEFAULT_ORIGIN]: true },
+};
 export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
 export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
 
@@ -346,6 +352,8 @@ const requestFilters = {
     'test.origin',
     'test.lab',
     'boot.lab',
+    'build.lab',
+    'checkout.origin',
   ],
   issueListing: [
     'origin',
@@ -391,6 +399,8 @@ export const filterFieldMap = {
   // don't share, so only the test and boot tabs get the selection
   'test.lab': 'labs',
   'boot.lab': 'labs',
+  'build.lab': 'buildLabs',
+  'checkout.origin': 'checkoutOrigins',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',

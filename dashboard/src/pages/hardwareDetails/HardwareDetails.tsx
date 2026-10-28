@@ -36,7 +36,10 @@ import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
 
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import { mapFilterToReq } from '@/components/Tabs/Filters';
+import {
+  mapFilterToReq,
+  withHardwareListingFilters,
+} from '@/components/Tabs/Filters';
 
 import DetailsFilterList, {
   createFlatFilter,
@@ -173,7 +176,7 @@ function HardwareDetails(): JSX.Element {
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
-  const reqFilter = mapFilterToReq(diffFilter);
+  const reqFilter = mapFilterToReq(withHardwareListingFilters(diffFilter));
 
   const inconsistencyNavigateParams = useMemo(
     () => ({ hardwareId }),

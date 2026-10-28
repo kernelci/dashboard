@@ -1,10 +1,35 @@
 import { describe, expect, it } from 'vitest';
 
 import { getActiveDurationFilter, zDiffFilter } from '@/types/general';
-import { mapFilterToReq } from '@/components/Tabs/Filters';
+import {
+  mapFilterToReq,
+  withHardwareListingFilters,
+} from '@/components/Tabs/Filters';
 import { createFlatFilter } from '@/components/Tabs/FilterList';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import { parseSearch } from '@/utils/search';
+
+describe('withHardwareListingFilters', () => {
+  it('copies the listing test origin onto boots and labs onto the details lab filter', () => {
+    const mapped = mapFilterToReq(
+      withHardwareListingFilters({
+        testOrigin: { ti: true },
+        testLabs: { 'lab-a': true },
+        buildOrigin: { maestro: true },
+        buildLabs: { 'lab-b': true },
+        checkoutOrigins: { maestro: true },
+      }),
+    ) as Record<string, string[]>;
+
+    expect(mapped['test.origin']).toEqual(['ti']);
+    expect(mapped['boot.origin']).toEqual(['ti']);
+    expect(mapped['test.lab']).toEqual(['lab-a']);
+    expect(mapped['boot.lab']).toEqual(['lab-a']);
+    expect(mapped['build.origin']).toEqual(['maestro']);
+    expect(mapped['build.lab']).toEqual(['lab-b']);
+    expect(mapped['checkout.origin']).toEqual(['maestro']);
+  });
+});
 
 describe('getActiveDurationFilter', () => {
   const durationSeconds = 42;
