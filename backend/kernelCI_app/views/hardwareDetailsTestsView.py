@@ -166,6 +166,8 @@ class HardwareDetailsTests(APIView):
             end_datetime=self.end_datetime,
             test_origins=origins["test_origins"],
             history_only=True,
+            lab_scope="test",
+            test_labs=self.filters.filter_labs["test"],
         )
 
         if len(records) == 0:

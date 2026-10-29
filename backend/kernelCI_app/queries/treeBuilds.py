@@ -12,6 +12,7 @@ from kernelCI_app.constants.general import (
 )
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.filters import FilterParams
+from kernelCI_app.helpers.labFilter import lab_filter_sql
 from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
@@ -37,11 +38,6 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
         ("statuses", "upper(COALESCE(b.status, 'NULL'))", filters.filterBuildStatus),
         ("origins", "b.origin", filters.filter_build_origin),
         (
-            "labs",
-            "COALESCE(NULLIF(COALESCE(l.name, b.misc->>'lab'), ''), %(unknown)s)",
-            filters.filter_labs["build"],
-        ),
-        (
             "hardware",
             "CASE WHEN NOT COALESCE(b.misc ? 'platform', FALSE) THEN %(unknown)s "
             "WHEN jsonb_typeof(b.misc->'platform') = 'string' THEN b.misc->>'platform' END",
@@ -51,6 +47,13 @@ def _filter_clauses(filters: FilterParams) -> tuple[str, str, dict[str, Any]]:
         if values:
             params[name] = sorted(values)
             clauses.append(f"{column} = ANY(%({name})s)")
+
+    lab_sql, lab_params = lab_filter_sql(
+        filters.filter_labs["build"], lab_id_column="b.lab_id", param="labs"
+    )
+    if lab_sql:
+        clauses.append(lab_sql)
+        params.update(lab_params)
 
     for name, value, operator in (
         ("duration_min", filters.filterBuildDurationMin, ">="),
@@ -105,7 +108,7 @@ def get_tree_builds_response(
         commit_hash=commit_hash,
         tree_name=tree_name,
     )
-    cache_key = "treeBuildsResponseV1"
+    cache_key = "treeBuildsResponseV2"
     cached = get_query_cache(cache_key, params)
     if cached is not None:
         return cached

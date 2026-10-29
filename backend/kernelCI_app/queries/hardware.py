@@ -6,6 +6,13 @@ from django.db import connection, connections
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.labFilter import (
+    as_positional,
+    full_page_lab_sql,
+    hardware_details_lab_sql,
+    lab_filter_sql,
+    test_side_lab_sql,
+)
 from kernelCI_app.models import HardwareRegistryPlatform
 from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
@@ -612,8 +619,12 @@ def get_hardware_details_data(
     end_datetime: datetime,
     test_origins: Optional[list[str]] = None,
     history_only: bool = False,
+    lab_scope: str = "all",
+    build_labs: Optional[set[str]] = None,
+    boot_labs: Optional[set[str]] = None,
+    test_labs: Optional[set[str]] = None,
 ):
-    cache_key = "hardwareDetailsFullDataByCheckout"
+    cache_key = "hardwareDetailsFullDataByCheckoutV2"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -622,6 +633,10 @@ def get_hardware_details_data(
         "start_date": start_datetime,
         "end_date": end_datetime,
         "history_only": history_only,
+        "lab_scope": lab_scope,
+        "build_labs": sorted(build_labs or []),
+        "boot_labs": sorted(boot_labs or []),
+        "test_labs": sorted(test_labs or []),
     }
 
     records = get_query_cache(cache_key, tests_cache_params)
@@ -634,6 +649,10 @@ def get_hardware_details_data(
             start_date=start_datetime,
             end_date=end_datetime,
             history_only=history_only,
+            lab_scope=lab_scope,
+            build_labs=build_labs,
+            boot_labs=boot_labs,
+            test_labs=test_labs,
         )
         set_query_cache(
             key=cache_key, params=tests_cache_params, rows=records, compress=True
@@ -649,11 +668,13 @@ def get_hardware_build_data(
     start_datetime: datetime,
     end_datetime: datetime,
     build_origins: Optional[list[str]] = None,
+    build_labs: Optional[set[str]] = None,
 ):
     cache_key = "hardwareDetailsBuildDataByCheckout"
     cache_params = {
         "hardware_id": hardware_id,
         "build_origins": build_origins,
+        "build_labs": sorted(build_labs or []),
         "trees": trees_with_selected_commits,
         "start_date": start_datetime,
         "end_date": end_datetime,
@@ -666,6 +687,7 @@ def get_hardware_build_data(
             start_date=start_datetime,
             end_date=end_datetime,
             build_origins=build_origins,
+            build_labs=build_labs,
         )
         set_query_cache(key=cache_key, params=cache_params, rows=records)
     return records
@@ -710,6 +732,9 @@ def get_hardware_details_summary(
     end_datetime: datetime,
     test_origins: Optional[list[str]] = None,
     build_origins: Optional[list[str]] = None,
+    build_labs: Optional[set[str]] = None,
+    boot_labs: Optional[set[str]] = None,
+    test_labs: Optional[set[str]] = None,
 ):
     if not checkouts:
         return []
@@ -721,7 +746,7 @@ def get_hardware_details_summary(
     if tests_duration is None:
         tests_duration = (None, None)
 
-    cache_key = "hardwareDetailsSummaryByCheckout"
+    cache_key = "hardwareDetailsSummaryByCheckoutV2"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -733,6 +758,9 @@ def get_hardware_details_summary(
         "builds_duration": builds_duration,
         "boots_duration": boots_duration,
         "tests_duration": tests_duration,
+        "build_labs": sorted(build_labs or []),
+        "boot_labs": sorted(boot_labs or []),
+        "test_labs": sorted(test_labs or []),
     }
 
     query_rows = get_query_cache(cache_key, tests_cache_params)
@@ -751,6 +779,10 @@ def get_hardware_details_summary(
                     tests.environment_misc ->> 'platform' = %(platform)s
                     OR tests.environment_compatible @> ARRAY[%(platform)s]::TEXT[]
                 )"""
+    build_lab_sql, build_lab_params = lab_filter_sql(
+        build_labs, lab_id_column="builds.lab_id", param="build_labs"
+    )
+    test_lab_sql, test_lab_params = test_side_lab_sql(boot_labs, test_labs)
 
     query = """
            (SELECT
@@ -799,7 +831,7 @@ def get_hardware_details_summary(
                     checkouts.git_repository_branch,
                     checkouts.git_commit_hash,
                     checkouts.origin
-                ) IN (VALUES {checkout_values}) {builds_duration_clause}
+                ) IN (VALUES {checkout_values}) {builds_duration_clause} {build_lab_clause}
             GROUP BY checkouts.id, builds.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot)
             UNION ALL
@@ -845,7 +877,7 @@ def get_hardware_details_summary(
                     checkouts.git_repository_branch,
                     checkouts.git_commit_hash,
                     checkouts.origin
-                ) IN (VALUES {checkout_values}) {boots_tests_duration_clause}
+                ) IN (VALUES {checkout_values}) {boots_tests_duration_clause} {test_lab_clause}
             GROUP BY checkouts.id, tests.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot);
     """.format(
@@ -857,6 +889,8 @@ def get_hardware_details_summary(
         test_origin_clause=test_origin_clause,
         build_origin_clause=build_origin_clause,
         platform_predicate=platform_predicate,
+        build_lab_clause=("AND " + build_lab_sql if build_lab_sql else ""),
+        test_lab_clause=("AND " + test_lab_sql if test_lab_sql else ""),
     )
 
     build_duration_min, build_duration_max = builds_duration
@@ -876,6 +910,8 @@ def get_hardware_details_summary(
         "boot_duration_max": boot_duration_max,
         "test_duration_min": test_duration_min,
         "test_duration_max": test_duration_max,
+        **build_lab_params,
+        **test_lab_params,
     }
 
     with connection.cursor() as cursor:
@@ -925,7 +961,8 @@ _HISTORY_RECORD_COLUMNS = """
                 incidents.test_id AS incidents__test_id,
                 T7.issue_id AS build__incidents__issue__id,
                 T8.version AS build__incidents__issue__version,
-                COALESCE(tl.name, tests.misc->>'runtime') AS lab
+                COALESCE(tl.name, tests.misc->>'runtime') AS lab,
+                tests.lab_id AS lab_id
 """
 
 _FULL_RECORD_COLUMNS = """
@@ -963,7 +1000,10 @@ _FULL_RECORD_COLUMNS = """
                 T7.issue_id AS build__incidents__issue__id,
                 T8.version AS build__incidents__issue__version,
                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
-                COALESCE(bl.name, builds.misc->>'lab') AS build_lab
+                COALESCE(bl.name, builds.misc->>'lab') AS build_lab,
+                tests.lab_id AS lab_id,
+                builds.lab_id AS build_lab_id,
+                issues."_timestamp" AS issue_timestamp
 """
 
 
@@ -975,6 +1015,10 @@ def query_records(
     end_date: int,
     test_origins: Optional[list[str]] = None,
     history_only: bool = False,
+    lab_scope: str = "all",
+    build_labs: Optional[set[str]] = None,
+    boot_labs: Optional[set[str]] = None,
+    test_labs: Optional[set[str]] = None,
 ) -> list[dict] | None:
     checkouts = _checkout_rows(trees)
     if not checkouts:
@@ -1020,6 +1064,7 @@ def query_records(
                     checkouts.git_commit_hash,
                     checkouts.origin
                 ) IN ({checkouts})
+                __LAB_CLAUSE__
             ORDER BY
                 issues."_timestamp" DESC
             """.format(
@@ -1028,13 +1073,39 @@ def query_records(
         checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
     )
 
+    if lab_scope == "all":
+        lab_sql, lab_params = full_page_lab_sql(
+            boot_labs=boot_labs, test_labs=test_labs, build_labs=build_labs
+        )
+    else:
+        lab_sql, lab_params = hardware_details_lab_sql(
+            scope=lab_scope,
+            boot_labs=boot_labs,
+            test_labs=test_labs,
+            build_labs=build_labs,
+        )
+    lab_sql, lab_values = as_positional(lab_sql, lab_params)
+    if lab_scope == "all" and lab_sql:
+        inner = query.replace("__LAB_CLAUSE__", "").replace(
+            'ORDER BY\n                issues."_timestamp" DESC', ""
+        )
+        query = (
+            "WITH hardware_rows AS ("
+            + inner
+            + ") SELECT * FROM hardware_rows WHERE "
+            + lab_sql
+            + " ORDER BY issue_timestamp DESC"
+        )
+    else:
+        query = query.replace("__LAB_CLAUSE__", f"AND {lab_sql}" if lab_sql else "")
+
     params = [
         hardware_id,
         hardware_id,
         *test_origin_params,
         start_date,
         end_date,
-    ] + [value for checkout in checkouts for value in checkout]
+    ] + [value for checkout in checkouts for value in checkout] + lab_values
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
@@ -1048,6 +1119,7 @@ def query_build_records(
     start_date: datetime,
     end_date: datetime,
     build_origins: Optional[list[str]] = None,
+    build_labs: Optional[set[str]] = None,
 ) -> list[dict] | None:
     """One row per build on the selected checkouts that tested this platform."""
     checkouts = _checkout_rows(trees)
@@ -1057,6 +1129,11 @@ def query_build_records(
     build_origin_sql, build_origin_params = _positional_origin_sql(
         "builds.origin", build_origins
     )
+    build_lab_sql, build_lab_params = lab_filter_sql(
+        build_labs, lab_id_column="builds.lab_id", param="build_labs"
+    )
+    build_lab_sql, build_lab_values = as_positional(build_lab_sql, build_lab_params)
+    build_lab_clause = f"AND {build_lab_sql}" if build_lab_sql else ""
     query = """
             SELECT DISTINCT ON (builds.id)
                 builds.status AS status,
@@ -1128,10 +1205,12 @@ def query_build_records(
                     checkouts.git_commit_hash,
                     checkouts.origin
                 ) IN ({checkouts})
+                {build_lab_clause}
             ORDER BY
                 builds.id, tests.start_time DESC
             """.format(
         build_origin_sql=build_origin_sql,
+        build_lab_clause=build_lab_clause,
         checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
     )
     params = [
@@ -1142,7 +1221,7 @@ def query_build_records(
         end_date,
         start_date,
         end_date,
-    ] + [value for checkout in checkouts for value in checkout]
+    ] + [value for checkout in checkouts for value in checkout] + build_lab_values
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return dict_fetchall(cursor)

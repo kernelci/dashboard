@@ -166,6 +166,8 @@ class HardwareDetailsBoots(APIView):
             end_datetime=self.end_datetime,
             test_origins=origins["test_origins"],
             history_only=True,
+            lab_scope="boot",
+            boot_labs=self.filters.filter_labs["boot"],
         )
 
         if len(records) == 0:

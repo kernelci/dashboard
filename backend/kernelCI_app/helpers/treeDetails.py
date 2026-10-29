@@ -8,6 +8,7 @@ from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
 )
+from kernelCI_app.helpers.labFilter import lab_for_filter
 from kernelCI_app.helpers.misc import (
     get_environment_misc_value,
     handle_misc,
@@ -114,6 +115,9 @@ def get_current_row_data(
         "issue_comment": current_row[38],
         "issue_report_url": current_row[39],
     }
+    if len(current_row) > 41:
+        current_row_data["test_lab_id"] = current_row[40]
+        current_row_data["build_lab_id"] = current_row[41]
 
     parsed_environment_misc = handle_misc(
         misc_value_or_default(current_row_data["test_environment_misc"])
@@ -308,7 +312,11 @@ def decide_if_is_build_filtered_out(instance, row_data):
         issue_version=issue_version,
         incident_test_id=incident_test_id,
         build_origin=build_origin,
-        lab=row_data.get("build_lab"),
+        lab=(
+            lab_for_filter(row_data.get("build_lab_id"), row_data.get("build_lab"))
+            if "build_lab_id" in row_data
+            else row_data.get("build_lab")
+        ),
     )
     return is_build_filtered_out
 
@@ -330,7 +338,11 @@ def decide_if_is_boot_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
-        lab=row_data["history_item"]["lab"],
+        lab=(
+            lab_for_filter(row_data.get("test_lab_id"), row_data["history_item"]["lab"])
+            if "test_lab_id" in row_data
+            else row_data["history_item"]["lab"]
+        ),
     )
 
 
@@ -362,7 +374,11 @@ def decide_if_is_test_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
-        lab=row_data["history_item"]["lab"],
+        lab=(
+            lab_for_filter(row_data.get("test_lab_id"), row_data["history_item"]["lab"])
+            if "test_lab_id" in row_data
+            else row_data["history_item"]["lab"]
+        ),
     )
 
 
