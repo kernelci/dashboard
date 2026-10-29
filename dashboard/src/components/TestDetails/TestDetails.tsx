@@ -135,15 +135,12 @@ const TestDetailsSections = ({
         to="/hardware/$hardwareId"
         params={{ hardwareId }}
         state={s => s}
-        search={{
-          origin: searchParams.origin,
-        }}
       >
         {hardware}
         <LinkIcon className="text-blue text-xl" />
       </MemoizedLinkItem>
     );
-  }, [searchParams, hardware, hardwareId]);
+  }, [hardware, hardwareId]);
 
   const compatiblesLink = useMemo(() => {
     if (!test.environment_compatible) {
@@ -159,9 +156,6 @@ const TestDetailsSections = ({
               to="/hardware/$hardwareId"
               params={{ hardwareId: compatible }}
               state={s => s}
-              search={{
-                origin: searchParams.origin,
-              }}
             >
               {compatible}
               <LinkIcon className="text-blue text-xl" />
@@ -170,7 +164,7 @@ const TestDetailsSections = ({
         )}
       </div>
     );
-  }, [searchParams, test.environment_compatible]);
+  }, [test.environment_compatible]);
 
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),

@@ -156,10 +156,9 @@ const prepareTreeItems = ({
   });
 
 function HardwareDetails(): JSX.Element {
-  const { treeIndexes, treeCommits, diffFilter, origin, hardwareSearch } =
-    useSearch({
-      from: '/_main/hardware/$hardwareId',
-    });
+  const { treeIndexes, treeCommits, diffFilter, hardwareSearch } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareDetailsTimeRange();
 
@@ -227,7 +226,6 @@ function HardwareDetails(): JSX.Element {
       hardwareId: hardwareId,
       startTimestampInSeconds: startTimestampInSeconds,
       endTimestampInSeconds: endTimestampInSeconds,
-      origin: origin,
       filter: reqFilter,
       selectedIndexes: treeIndexes,
       treeCommits: treeCommits,
@@ -319,7 +317,6 @@ function HardwareDetails(): JSX.Element {
   const { isLoading: commitHistoryIsLoading, data: commitHistoryData } =
     useHardwareDetailsCommitHistory(
       {
-        origin,
         hardwareId,
         endTimestampInSeconds,
         startTimestampInSeconds,
@@ -570,7 +567,6 @@ function HardwareDetails(): JSX.Element {
                     search={previousParams => {
                       return {
                         intervalInDays: previousParams.intervalInDays,
-                        origin: previousParams.origin,
                         hardwareSearch: previousParams.hardwareSearch,
                       };
                     }}

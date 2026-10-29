@@ -239,7 +239,7 @@ describe('kci-dev command generation', () => {
       expect(
         createHardwareResultsCommand(result, {
           name: 'qemu',
-          origin: 'maestro',
+          filters: { checkoutOrigins: ['maestro'] },
         })?.argv,
       ).toEqual([
         'kci-dev',
@@ -280,7 +280,15 @@ describe('kci-dev command generation', () => {
     expect(createResultDetailsCommand('build')).toBeUndefined();
     expect(createHardwareListingCommand({})).toBeUndefined();
     expect(
-      createHardwareResultsCommand('builds', { origin: 'maestro' }),
+      createHardwareResultsCommand('builds', {
+        filters: { checkoutOrigins: ['maestro'] },
+      }),
+    ).toBeUndefined();
+    expect(
+      createHardwareResultsCommand('builds', {
+        name: 'qemu',
+        filters: { checkoutOrigins: ['maestro', 'microsoft'] },
+      }),
     ).toBeUndefined();
   });
 
@@ -306,7 +314,7 @@ describe('kci-dev command generation', () => {
       createHardwareListingCommand({ origin: 'maestro' }),
       createHardwareResultsCommand('tests', {
         name: 'qemu',
-        origin: 'maestro',
+        filters: { checkoutOrigins: ['maestro'] },
       }),
     ];
     for (const generated of commands) {
@@ -346,8 +354,7 @@ describe('kci-dev command generation', () => {
     })!;
     const hardwareBoots = createHardwareResultsCommand('boots', {
       name: 'qemu',
-      origin: 'maestro',
-      filters,
+      filters: { ...filters, checkoutOrigins: ['maestro'] },
     })!;
     expect(treeBoots.argv).toContain('--boot-origin');
     expect(treeTests.argv).not.toContain('--boot-origin');
@@ -355,31 +362,44 @@ describe('kci-dev command generation', () => {
     expect(hardwareBoots.argv).not.toContain('--boot-origin');
   });
 
-  it('discloses hardware architecture and unsupported result origins', () => {
+  it('uses a single test origin as --origin and discloses the rest', () => {
     const generated = createHardwareResultsCommand('tests', {
       name: 'qemu',
-      origin: 'checkout-origin',
       filters: {
+        checkoutOrigins: ['checkout-origin'],
         architectures: ['arm64'],
         buildOrigins: ['build-origin'],
         testOrigins: ['test-origin'],
       },
     })!;
+    expect(generated.argv).toEqual(
+      expect.arrayContaining(['--origin', 'test-origin']),
+    );
+    expect(generated.argv).not.toContain('checkout-origin');
     expect(generated.argv).not.toContain('--arch');
-    expect(generated.omittedFilters).toEqual([
-      'architecture',
-      'build origin',
-      'test origin',
-    ]);
+    expect(generated.omittedFilters).toEqual(['architecture', 'build origin']);
   });
 
-  it('extracts build, boot, and test origins independently', () => {
+  it('falls back to the checkout origin and discloses multiple test origins', () => {
+    const generated = createHardwareResultsCommand('tests', {
+      name: 'qemu',
+      filters: { checkoutOrigins: ['maestro'], testOrigins: ['a', 'b'] },
+    })!;
+    expect(generated.argv).toEqual(
+      expect.arrayContaining(['--origin', 'maestro']),
+    );
+    expect(generated.omittedFilters).toEqual(['test origin']);
+  });
+
+  it('extracts checkout, build, boot, and test origins independently', () => {
     const state = {
+      checkoutOrigins: { checkoutA: true },
       buildOrigin: { buildA: true },
       bootOrigin: { bootA: true },
       testOrigin: { testA: true },
     } as never;
     expect(dashboardFiltersFromDiffFilter(state, 'tests')).toMatchObject({
+      checkoutOrigins: ['checkoutA'],
       buildOrigins: ['buildA'],
       bootOrigins: ['bootA'],
       testOrigins: ['testA'],

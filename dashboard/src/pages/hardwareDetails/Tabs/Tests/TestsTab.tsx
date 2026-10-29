@@ -55,16 +55,10 @@ const TestsTab = ({
   testsSummary,
   fullDataResult,
 }: ITestsTab): JSX.Element => {
-  const {
-    tableFilter,
-    diffFilter,
-    origin,
-    treeIndexes,
-    treeCommits,
-    hardwareSearch,
-  } = useSearch({
-    from: '/_main/hardware/$hardwareId',
-  });
+  const { tableFilter, diffFilter, treeIndexes, treeCommits, hardwareSearch } =
+    useSearch({
+      from: '/_main/hardware/$hardwareId',
+    });
 
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
@@ -137,7 +131,6 @@ const TestsTab = ({
       <MemoizedKcidevCommandButton
         command={createHardwareResultsCommand('tests', {
           name: hardwareId,
-          origin,
           filters: {
             ...dashboardFiltersFromDiffFilter(diffFilter, 'tests'),
             hasHardwareDateWindow: true,
@@ -149,7 +142,7 @@ const TestsTab = ({
         })}
       />
     ),
-    [diffFilter, hardwareId, hardwareSearch, origin, treeCommits, treeIndexes],
+    [diffFilter, hardwareId, hardwareSearch, treeCommits, treeIndexes],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {

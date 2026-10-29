@@ -3533,10 +3533,12 @@ components:
     HardwareDetailsPostBody:
       properties:
         origin:
-          default: maestro
-          description: Origin of the tests of the hardware
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Deprecated. Test origin, applied only when filter has no origin
           title: Origin
-          type: string
         startTimestampInSeconds:
           anyOf:
           - type: string

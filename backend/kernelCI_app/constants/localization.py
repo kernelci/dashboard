@@ -97,7 +97,9 @@ class DocStrings:
 
     LISTING_QUERY_ORIGIN_DESCRIPTION = "Origin filter"
 
-    HARDWARE_DETAILS_ORIGIN_DESCRIPTION = "Origin of the tests of the hardware"
+    HARDWARE_DETAILS_ORIGIN_DESCRIPTION = (
+        "Deprecated. Test origin, applied only when filter has no origin"
+    )
     HARDWARE_DETAILS_SEL_COMMITS_DESCRIPTION = (
         "Dictionary mapping stable tree keys to selected commit hashes. "
         "Keys are the first 14 hexadecimal characters of SHA-256 over "

@@ -78,11 +78,15 @@ def unstable_parse_post_body(*, instance, request) -> None:
 
 def listing_origin_args(instance) -> dict:
     filters = instance.filters
-    return {
+    origins = {
         "test_origins": list(filters.filter_test_origin) or None,
         "build_origins": list(filters.filter_build_origin) or None,
         "checkout_origins": list(filters.filter_checkout_origin) or None,
     }
+    # kci-dev sends only the body `origin`, which has always meant the test origin.
+    if instance.origin and not any(origins.values()):
+        origins["test_origins"] = [instance.origin]
+    return origins
 
 
 def set_trees_status_summary(
