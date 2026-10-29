@@ -163,6 +163,8 @@ class HardwareDetailsTests(APIView):
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            lab_scope="test",
+            test_labs=self.filters.filter_labs["test"],
         )
 
         if len(records) == 0:

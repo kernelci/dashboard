@@ -84,6 +84,9 @@ class TestTreeCommitsHistory(SimpleTestCase):
             git_branch="chromeos-5.4",
             tree_name=None,
             include_types=["builds", "boots", "tests"],
+            build_labs=set(),
+            boot_labs=set(),
+            test_labs=set(),
         )
 
     @patch("kernelCI_app.views.treeCommitsHistory.get_tree_commit_history")
@@ -142,6 +145,9 @@ class TestTreeCommitsHistory(SimpleTestCase):
             git_branch="chromeos-5.4",
             tree_name=None,
             include_types=["builds"],
+            build_labs=set(),
+            boot_labs=set(),
+            test_labs=set(),
         )
 
     @patch("kernelCI_app.views.treeCommitsHistory.get_tree_commit_history")

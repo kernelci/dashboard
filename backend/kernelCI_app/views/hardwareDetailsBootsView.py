@@ -163,6 +163,8 @@ class HardwareDetailsBoots(APIView):
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            lab_scope="boot",
+            boot_labs=self.filters.filter_labs["boot"],
         )
 
         if len(records) == 0:

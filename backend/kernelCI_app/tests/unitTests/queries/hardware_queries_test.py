@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.queries.hardware import (
     _generate_query_params,
     get_hardware_commit_history,
@@ -268,3 +269,34 @@ class TestQueryRecords:
             "abc123",
             "maestro",
         ]
+        assert "WITH hardware_rows" not in executed_query
+
+    @patch("kernelCI_app.queries.hardware.dict_fetchall")
+    @patch("kernelCI_app.queries.hardware.connection")
+    def test_query_records_full_page_lab_uses_window_rows(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        mock_dict_fetchall.return_value = []
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        query_records(
+            hardware_id="hardware",
+            origin="maestro",
+            trees=[TEST_TREE],
+            start_date=START_DATE,
+            end_date=END_DATE,
+            boot_labs={"lava"},
+            test_labs={UNKNOWN_STRING},
+        )
+
+        executed_query, params = mock_cursor.execute.call_args[0]
+        assert "WITH hardware_rows AS" in executed_query
+        assert "FROM hardware_rows rep" in executed_query
+        assert "FROM tests rep" not in executed_query
+        assert (
+            'ORDER BY\n                issues."_timestamp" DESC' not in executed_query
+        )
+        assert "ORDER BY issue_timestamp DESC" in executed_query
+        assert "boot.%%" in executed_query
+        assert "lab_id IS NULL" in executed_query
+        assert params[-1] == ["lava"]

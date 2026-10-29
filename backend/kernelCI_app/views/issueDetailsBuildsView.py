@@ -10,6 +10,7 @@ from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.queries.issues import get_issue_builds
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
@@ -38,8 +39,11 @@ class IssueDetailsBuilds(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
+        filters = FilterParams(_request)
         builds_data = get_issue_builds(
-            issue_id=path_params.issue_id, version=query_params.version
+            issue_id=path_params.issue_id,
+            version=query_params.version,
+            labs=filters.filter_issue_labs,
         )
 
         for build in builds_data:
