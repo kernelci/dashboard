@@ -1,4 +1,6 @@
+import gzip
 import json
+import pickle
 from typing import Optional
 
 from django.conf import settings
@@ -27,6 +29,30 @@ def _query_cache_key(key, params: Optional[dict] = None) -> str:
     return "%s-%s" % (key, _create_cache_params_hash(params))
 
 
+def _pack_query_cache(value):
+    raw = pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+    compressed = gzip.compress(raw)
+    if len(compressed) < len(raw):
+        return compressed
+    return value
+
+
+def _is_gzip(value) -> bool:
+    # gzip header. _pack_query_cache is the only writer of bytes in this cache.
+    return isinstance(value, bytes) and value.startswith(b"\x1f\x8b")
+
+
+def _unpack_query_cache(value):
+    if not _is_gzip(value):
+        return value
+    try:
+        # Same trust as Django's Redis serializer: this process wrote the blob.
+        return pickle.loads(gzip.decompress(value))  # noqa: S301
+    except Exception:
+        # A broken blob is a miss, so the query runs again.
+        return None
+
+
 def set_query_cache(
     *,
     key,
@@ -36,6 +62,7 @@ def set_query_cache(
     build_id=None,
     test_id=None,
     timeout=timeout,
+    compress=False,
 ):
     hash_key = _query_cache_key(key, params)
 
@@ -43,11 +70,12 @@ def set_query_cache(
     _add_to_lookup(hash_key, build_id, _build_lookup)
     _add_to_lookup(hash_key, test_id, _test_lookup)
 
-    return cache.set(hash_key, rows, timeout)
+    stored = _pack_query_cache(rows) if compress else rows
+    return cache.set(hash_key, stored, timeout)
 
 
 def get_query_cache(key, params: Optional[dict] = None):
-    return cache.get(_query_cache_key(key, params))
+    return _unpack_query_cache(cache.get(_query_cache_key(key, params)))
 
 
 def clear_cache(key, params: Optional[dict] = None) -> None:

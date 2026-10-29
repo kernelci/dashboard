@@ -304,7 +304,7 @@ def get_tree_details_data(
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            set_query_cache(key=cache_key, params=params, rows=rows)
+            set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
@@ -415,7 +415,7 @@ def get_tree_details_rollup(
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = dict_fetchall(cursor=cursor)
-            set_query_cache(key=cache_key, params=params, rows=rows)
+            set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
@@ -597,7 +597,7 @@ def get_tree_data(
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            set_query_cache(key=cache_key, params=params, rows=rows)
+            set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
@@ -702,7 +702,7 @@ def get_tree_details_builds(
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = dict_fetchall(cursor=cursor)
-            set_query_cache(key=cache_key, params=params, rows=rows)
+            set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
@@ -1008,7 +1008,7 @@ def get_tree_commit_history_hashes_aggregated(
         queries.append(tests_query)
 
     if not queries:
-        set_query_cache(key=cache_key, params=cache_params, rows=[])
+        set_query_cache(key=cache_key, params=cache_params, rows=[], compress=True)
         return []
 
     query = union_all(queries)
@@ -1016,7 +1016,7 @@ def get_tree_commit_history_hashes_aggregated(
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         rows = dict_fetchall(cursor)
-        set_query_cache(key=cache_key, params=cache_params, rows=rows)
+        set_query_cache(key=cache_key, params=cache_params, rows=rows, compress=True)
         return rows
 
 
@@ -1189,7 +1189,7 @@ def get_tree_compare_boots_tests_diff(
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         rows = dict_fetchall(cursor)
-        set_query_cache(key=cache_key, params=cache_params, rows=rows)
+        set_query_cache(key=cache_key, params=cache_params, rows=rows, compress=True)
         return rows
 
 
@@ -1524,7 +1524,7 @@ def get_tree_compare_rollup(
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         rows = dict_fetchall(cursor=cursor)
-        set_query_cache(key=cache_key, params=params, rows=rows)
+        set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
@@ -1594,7 +1594,7 @@ def get_tree_compare_builds(
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         rows = dict_fetchall(cursor=cursor)
-        set_query_cache(key=cache_key, params=params, rows=rows)
+        set_query_cache(key=cache_key, params=params, rows=rows, compress=True)
 
     return rows
 
