@@ -7,20 +7,13 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import (
-    decide_if_is_full_row_filtered_out,
-    decide_if_is_test_filtered_out,
-    get_current_row_data,
-)
-from kernelCI_app.queries.tree import get_tree_data
+from kernelCI_app.queries.treeTestHistory import get_tree_test_history_response
 from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsTestsResponse,
-    TestHistoryItem,
 )
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
@@ -31,52 +24,9 @@ from kernelCI_app.typeModels.treeDetails import (
     DirectTreeDetailsQueryParameters,
     TreeDetailsQueryParameters,
 )
-from kernelCI_app.utils import is_boot
 
 
 class BaseTreeDetailsTests(APIView):
-    def __init__(self):
-        self.processedTests = set()
-        self.filters = None
-        self.full_environment_misc: bool = False
-
-        self.testHistory = []
-
-    def _process_non_boots_test(self, row_data):
-        test_id = row_data["test_id"]
-        history_item = row_data["history_item"]
-
-        if decide_if_is_test_filtered_out(self, row_data):
-            return
-
-        if test_id in self.processedTests:
-            return
-
-        self.processedTests.add(test_id)
-
-        TestHistoryItem(**history_item)
-
-        self.testHistory.append(history_item)
-
-    def _sanitize_rows(self, rows):
-        for row in rows:
-            row_data = get_current_row_data(
-                row, full_environment_misc=self.full_environment_misc
-            )
-
-            is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
-
-            if is_record_filter_out:
-                continue
-
-            if row_data["test_id"] is None:
-                continue
-
-            if is_boot(row_data["test_path"]):
-                continue
-            else:
-                self._process_non_boots_test(row_data)
-
     def get(
         self,
         request: HttpRequest,
@@ -87,35 +37,20 @@ class BaseTreeDetailsTests(APIView):
         origin: str,
         full_environment_misc: bool = False,
     ) -> Response:
-        self.full_environment_misc = full_environment_misc
-
-        rows = get_tree_data(
-            data_type="tests",
-            origin_param=origin,
-            git_url_param=git_url,
-            git_branch_param=git_branch,
-            tree_name=tree_name,
-            commit_hash=commit_hash,
-        )
-
-        self.filters = FilterParams(request)
-
-        if len(rows) == 0:
-            return create_api_error_response(
-                error_message=ClientStrings.TREE_NO_RESULTS,
-                status_code=HTTPStatus.OK,
-            )
-
         try:
-            self._sanitize_rows(rows)
-
-            valid_response = CommonDetailsTestsResponse(
-                tests=self.testHistory,
+            response = get_tree_test_history_response(
+                data_type="tests",
+                filters=FilterParams(request),
+                origin=origin,
+                git_url=git_url,
+                git_branch=git_branch,
+                tree_name=tree_name,
+                commit_hash=commit_hash,
+                full_environment_misc=full_environment_misc,
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-        return Response(valid_response.model_dump())
+        return Response(response)
 
 
 class TreeDetailsTestsDirect(BaseTreeDetailsTests):
