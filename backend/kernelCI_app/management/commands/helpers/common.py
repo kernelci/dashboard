@@ -13,10 +13,6 @@ from kernelCI_app.typeModels.notificationRecipients import (
     load_recipient_files,
 )
 
-KERNELCI_RESULTS = "kernelci-results@groups.io"
-KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
-REGRESSIONS_LIST = "regressions@lists.linux.dev"
-
 REGZBOT_TREES = {"mainline", "next", "stable"}
 
 REGRESSION_FOLDER = "notifications/regression/"
@@ -77,10 +73,12 @@ def _entry_matches(entry: RecipientEntry, issue: dict, build_incidents) -> bool:
         return False
     if entry.branch and issue.get("git_repository_branch") not in entry.branch:
         return False
-    return all(
-        any(incident.get(key) in values for incident in build_incidents)
-        for key, values in entry.scope.items()
-        if key in BUILD_INCIDENT_KEYS
+    build_scope = {
+        key: values for key, values in entry.scope.items() if key in BUILD_INCIDENT_KEYS
+    }
+    return not build_scope or any(
+        all(incident.get(key) in values for key, values in build_scope.items())
+        for incident in build_incidents
     )
 
 
@@ -157,12 +155,11 @@ def send_email_report(
     cc = ""
     reply_to = None
     if email_args.add_mailing_lists:
-        to = (
-            load_recipient_default(_regression_directory()).to
-            if email_args.regression_report
-            else KERNELCI_RESULTS
+        defaults = load_recipient_default(
+            os.path.join(settings.BACKEND_DATA_DIR, "notifications")
         )
-        reply_to = KERNELCI_REPLYTO
+        to = defaults.to
+        reply_to = defaults.reply_to
     else:
         to = email_args.to
 
@@ -177,7 +174,7 @@ def send_email_report(
         and email_args.regression_report
         and is_regzbot_tree(email_args.tree_name)
     ):
-        cc = ", ".join([REGRESSIONS_LIST, cc]) if cc else REGRESSIONS_LIST
+        cc = ", ".join([defaults.regressions, cc]) if cc else defaults.regressions
 
     if not email_args.yes:
         print("===================")

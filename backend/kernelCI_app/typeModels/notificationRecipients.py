@@ -2,7 +2,14 @@ import os
 from typing import Annotated, Optional
 
 import yaml
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+)
 
 DEFAULT_FILE = "default.yaml"
 HARDWARE_SUFFIX = "_hardware.yaml"
@@ -33,7 +40,9 @@ class RecipientEntry(BaseModel):
 class RecipientDefault(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    to: str
+    to: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    reply_to: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    regressions: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class RecipientFileError(ValueError):

@@ -130,17 +130,22 @@ stable:
 | `recipients` | addresses, at least one, sent as written | |
 | `issues` | `build` only | the issue kind |
 | `branch` | string or list | the branch printed in the report |
-| `architecture`, `config_name`, `compiler` | string or list | any build where the issue occurred |
+| `architecture`, `config_name`, `compiler` | string or list | a single build where the issue occurred |
 
+All build scope keys in an entry must match the same build.
 The Cc is the union of the matching entries, with repeated addresses dropped.
 Any other key, including `platform` and `origin`, fails `pytest -m unit` with
 the file, entry index, and key.
 
+Boot/test issue reports support branch and unscoped entries. Their incidents
+contain platform data rather than architecture, config, or compiler, so build
+scope entries do not apply. `issues: build` also excludes these reports.
 `test_report` only uses entries without scope keys.
 
-With `--add-mailing-lists`, regression reports are sent to the `to` address in
-[`regression/default.yaml`](../backend/data/notifications/regression/default.yaml).
-`[STATUS]` summaries keep the address in `common.py`.
+With `--add-mailing-lists`, all reports use the `to` and `reply_to` addresses in
+[`notifications/default.yaml`](../backend/data/notifications/default.yaml).
+Regression reports on regzbot trees also Cc the `regressions` address.
+All three addresses are required and must not be blank.
 
 
 ## Signup tree for checkout summary

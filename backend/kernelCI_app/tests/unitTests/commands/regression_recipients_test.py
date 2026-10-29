@@ -10,6 +10,7 @@ from kernelCI_app.management.commands.helpers.common import (
     REGRESSION_FOLDER,
     load_regression_files,
     resolve_regression_recipients,
+    send_email_report,
     unscoped_regression_recipients,
 )
 from kernelCI_app.management.commands.notifications import (
@@ -22,6 +23,7 @@ from kernelCI_app.tests.unitTests.commands.fixtures.report_notifications_data im
     make_test,
 )
 from kernelCI_app.typeModels.notificationRecipients import (
+    RecipientEntry,
     RecipientFileError,
     load_recipient_default,
 )
@@ -130,7 +132,9 @@ def test_committed_regression_files_are_valid():
     directory = os.path.join(settings.BACKEND_DATA_DIR, REGRESSION_FOLDER)
 
     assert load_regression_files(directory)
-    assert load_recipient_default(directory).to
+    assert load_recipient_default(
+        os.path.join(settings.BACKEND_DATA_DIR, "notifications")
+    ).to
 
 
 @pytest.fixture
@@ -270,3 +274,83 @@ def test_test_report_can_ignore_invalid_recipients(
                 generate_test_report(
                     service=None, test_id=test["id"], email_args=email_args
                 )
+
+
+@pytest.mark.parametrize(
+    ("incidents", "matches"),
+    [
+        (
+            [
+                {"architecture": "arm64", "compiler": "gcc"},
+                {"architecture": "x86_64", "compiler": "clang"},
+            ],
+            False,
+        ),
+        ([{"architecture": "arm64", "compiler": "clang"}], True),
+        ([], False),
+    ],
+)
+def test_build_scope_matches_one_incident(incidents, matches):
+    entry = RecipientEntry(
+        recipients=["a@example.org"], architecture="arm64", compiler="clang"
+    )
+    recipients = resolve_regression_recipients(
+        build_issue("main"), incidents, entries_by_url={STABLE_URL: [entry]}
+    )
+    assert recipients == (["a@example.org"] if matches else [])
+
+
+def test_test_issue_supports_branch_but_not_build_scope(entries_by_url):
+    issue = build_issue("linux-6.12.y") | {"build_id": None, "test_id": "test-1"}
+    assert resolve_regression_recipients(issue, [], entries_by_url=entries_by_url) == [
+        "list@example.org",
+        "branch@example.org",
+    ]
+
+
+@pytest.mark.parametrize("key", ["to", "reply_to", "regressions"])
+@pytest.mark.parametrize("value", [None, "", "   ", 42])
+def test_defaults_require_nonblank_addresses(tmp_path, key, value):
+    import yaml
+
+    defaults = dict(
+        to="a@example.org", reply_to="b@example.org", regressions="c@example.org"
+    )
+    if value is None:
+        del defaults[key]
+    else:
+        defaults[key] = value
+    (tmp_path / "default.yaml").write_text(yaml.safe_dump(defaults))
+    with pytest.raises(RecipientFileError, match=key):
+        load_recipient_default(str(tmp_path))
+
+
+@pytest.mark.parametrize("regression_report", [False, True])
+def test_reports_use_shared_defaults(tmp_path, monkeypatch, regression_report):
+    directory = tmp_path / "notifications"
+    directory.mkdir()
+    (directory / "default.yaml").write_text(
+        "to: results@example.org\nreply_to: reply@example.org\nregressions: regressions@example.org\n"
+    )
+    monkeypatch.setattr(settings, "BACKEND_DATA_DIR", str(tmp_path))
+    args = SimpleNamespace(
+        send=True,
+        add_mailing_lists=True,
+        regression_report=regression_report,
+        ignore_recipients=False,
+        cc=None,
+        yes=True,
+        tree_name="mainline",
+        in_reply_to=None,
+    )
+    with patch(
+        "kernelCI_app.management.commands.helpers.common.smtp_send_email"
+    ) as send:
+        send_email_report(
+            service=None, report={"title": "report", "content": "body"}, email_args=args
+        )
+    assert send.call_args.args[2] == "results@example.org"
+    assert send.call_args.args[6] == "reply@example.org"
+    assert send.call_args.args[5] == (
+        "regressions@example.org" if regression_report else ""
+    )

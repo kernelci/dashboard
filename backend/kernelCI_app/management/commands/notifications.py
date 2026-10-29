@@ -263,6 +263,8 @@ def generate_issue_report(
 
     email_args.tree_name = issue_tree_name
     email_args.regression_report = True
+    # Test incidents contain platform data, not build scope fields.
+    # Branch and unscoped entries still apply to these issue reports.
     recipients = (
         []
         if email_args.ignore_recipients

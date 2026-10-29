@@ -1,3 +1,0 @@
-# Replaces KERNELCI_RESULTS on the regression path only. The [STATUS] cron
-# keeps --add-mailing-lists and the constants in common.py.
-to: kernelci-results@groups.io
