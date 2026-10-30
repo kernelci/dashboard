@@ -1,0 +1,4 @@
+qcom:
+  - recipients:
+      - linux-arm-msm@vger.kernel.org
+      - Bjorn Andersson <andersson@kernel.org>
