@@ -6,6 +6,14 @@ from django.core.management.base import CommandError
 from kernelCI_app.management.commands.recompute_lab_daily import Command
 
 
+@pytest.fixture(autouse=True)
+def _dev_instance(monkeypatch):
+    monkeypatch.setattr(
+        "kernelCI_app.management.commands.recompute_lab_daily.get_running_instance",
+        lambda: None,
+    )
+
+
 def _run(days=1, day=None):
     cmd = Command()
     seen = []
