@@ -1,11 +1,7 @@
 def dict_fetchall(cursor) -> list[dict]:
-    """
-    Return all rows from a cursor as a dict.
-    Assume the column names are unique.
-    This has a performance cost so avoid using it in large unprocessed data.
-    """
+    """Return all rows from a cursor as dicts. Column names are unique."""
     columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]
+    return [dict(zip(columns, row, strict=False)) for row in cursor]
 
 
 def debug_query(cursor, query, params) -> tuple[str, str]:

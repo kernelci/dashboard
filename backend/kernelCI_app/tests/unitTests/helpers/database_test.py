@@ -8,11 +8,13 @@ class TestDictFetchall:
         """Test dict_fetchall with sample data."""
         mock_cursor = MagicMock()
         mock_cursor.description = [("id",), ("name",), ("status",)]
-        mock_cursor.fetchall.return_value = [
-            (1, "test1", "PASS"),
-            (2, "test2", "FAIL"),
-            (3, "test3", "SKIP"),
-        ]
+        mock_cursor.__iter__.return_value = iter(
+            [
+                (1, "test1", "PASS"),
+                (2, "test2", "FAIL"),
+                (3, "test3", "SKIP"),
+            ]
+        )
 
         result = dict_fetchall(mock_cursor)
 
@@ -27,7 +29,7 @@ class TestDictFetchall:
         """Test dict_fetchall with empty result set."""
         mock_cursor = MagicMock()
         mock_cursor.description = [("id",)]
-        mock_cursor.fetchall.return_value = []
+        mock_cursor.__iter__.return_value = iter([])
 
         result = dict_fetchall(mock_cursor)
 
@@ -37,7 +39,7 @@ class TestDictFetchall:
         """Test dict_fetchall with single column."""
         mock_cursor = MagicMock()
         mock_cursor.description = [("id",)]
-        mock_cursor.fetchall.return_value = [(1,), (2,), (3,)]
+        mock_cursor.__iter__.return_value = iter([(1,), (2,), (3,)])
 
         result = dict_fetchall(mock_cursor)
 

@@ -28,19 +28,21 @@ class TestGetBuildTests:
     @patch("kernelCI_app.queries.build.connections")
     def test_get_build_tests_success(self, mock_connections):
         mock_cursor = mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value
-        mock_cursor.fetchall.return_value = [
-            (
-                "test",
-                30,
-                "PASS",
-                "test.path",
-                "2024-01-15T10:00:00Z",
-                ["hardware1"],
-                {"platform": "x86_64"},
-                "PASS",
-                "lab-a",
-            )
-        ]
+        mock_cursor.__iter__.return_value = iter(
+            [
+                (
+                    "test",
+                    30,
+                    "PASS",
+                    "test.path",
+                    "2024-01-15T10:00:00Z",
+                    ["hardware1"],
+                    {"platform": "x86_64"},
+                    "PASS",
+                    "lab-a",
+                )
+            ]
+        )
         mock_cursor.description = [
             ("id",),
             ("duration",),
@@ -73,7 +75,7 @@ class TestGetBuildTests:
     @patch("kernelCI_app.queries.build.connections")
     def test_get_build_tests_empty_result(self, mock_connections):
         mock_cursor = mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value
-        mock_cursor.fetchall.return_value = []
+        mock_cursor.__iter__.return_value = iter([])
         mock_cursor.description = []
 
         result = get_build_tests("build")

@@ -49,7 +49,6 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
-                None,
                 "lab-a",
             )
         ]
@@ -104,7 +103,6 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 "maestro",
                 "build-1",
                 {"platform": "acer-cp514-2h-1160g7-volteer", "lab": "lab-a"},
-                None,
                 None,
                 None,
                 None,
@@ -175,7 +173,6 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
-                None,
                 "lab-a",
             ),
             (
@@ -199,7 +196,6 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 "maestro",
                 "lab-a",
                 "test-related",
-                None,
                 None,
                 None,
                 None,
@@ -255,7 +251,6 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 {"platform": "unknown"},
                 None,
                 "lab-a",
-                None,
                 None,
                 None,
                 None,
