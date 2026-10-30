@@ -241,12 +241,12 @@ class TestGetHardwareCommitHistory:
 
 
 class TestQueryRecords:
-    @patch("kernelCI_app.queries.hardware.dict_fetchall")
     @patch("kernelCI_app.queries.hardware.connection")
-    def test_query_records_success(self, mock_connection, mock_dict_fetchall):
+    def test_query_records_success(self, mock_connection):
         expected_result = [{"id": "test", "status": "PASS"}]
-        mock_dict_fetchall.return_value = expected_result
         mock_cursor = setup_mock_cursor(mock_connection)
+        mock_cursor.description = [("id",), ("status",)]
+        mock_cursor.__iter__.return_value = iter([("test", "PASS")])
 
         result = query_records(
             hardware_id="hardware",
@@ -268,3 +268,25 @@ class TestQueryRecords:
             "abc123",
             "maestro",
         ]
+        assert "tests.misc," in executed_query
+        assert "builds.misc AS build__misc" in executed_query
+        assert "tests.comment" not in executed_query
+        assert "incidents.id" not in executed_query
+        assert "git_commit_name" not in executed_query
+
+        query_records(
+            hardware_id="hardware",
+            origin="maestro",
+            trees=[TEST_TREE],
+            start_date=START_DATE,
+            end_date=END_DATE,
+            history_only=True,
+        )
+        history_query = mock_cursor.execute.call_args[0][0]
+        assert "tests.misc," not in history_query
+        assert "builds.misc" not in history_query
+        assert "tests.environment_misc" in history_query
+        assert "incidents.issue_id AS incidents__issue__id" in history_query
+        assert "incidents.test_id AS incidents__test_id" in history_query
+        assert "T7.issue_id AS build__incidents__issue__id" in history_query
+        assert "tests.misc->>'runtime'" in history_query
