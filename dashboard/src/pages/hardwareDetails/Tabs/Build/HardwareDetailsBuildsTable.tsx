@@ -50,9 +50,6 @@ export function HardwareDetailsBuildsTable({
         buildId: buildId,
         hardwareId: hardwareId,
       },
-      search: s => ({
-        origin: s.origin,
-      }),
     }),
     [hardwareId],
   );

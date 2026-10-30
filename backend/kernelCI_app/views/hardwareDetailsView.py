@@ -35,12 +35,14 @@ from kernelCI_app.helpers.hardwareDetails import (
     handle_tree_status_summary,
     is_issue_processed,
     is_test_processed,
+    listing_origin_args,
     mutate_properties_to_list,
     process_issue,
     set_trees_status_summary,
     unstable_parse_post_body,
 )
 from kernelCI_app.queries.hardware import (
+    get_hardware_build_data,
     get_hardware_details_data,
     get_hardware_trees_data,
     is_hardware_in_registry,
@@ -220,7 +222,12 @@ class HardwareDetails(APIView):
             self.processed_builds.add(build_id)
 
     def _sanitize_records(
-        self, records, trees: List[Tree], is_all_selected: bool
+        self,
+        records,
+        trees: List[Tree],
+        is_all_selected: bool,
+        *,
+        builds_only: bool = False,
     ) -> None:
         for record in records:
             current_tree = get_validated_current_tree(
@@ -236,12 +243,14 @@ class HardwareDetails(APIView):
 
             tree_index = current_tree.index
 
-            handle_tree_status_summary(
-                record=record,
-                tree_status_summary=self.tree_status_summary,
-                tree_index=tree_index,
-                processed_builds=self.processed_builds,
-            )
+            # Build-only rows have no test path. Status summary calls is_boot on it.
+            if not builds_only:
+                handle_tree_status_summary(
+                    record=record,
+                    tree_status_summary=self.tree_status_summary,
+                    tree_index=tree_index,
+                    processed_builds=self.processed_builds,
+                )
 
             is_record_filtered_out = decide_if_is_full_record_filtered_out(
                 instance=self,
@@ -252,7 +261,8 @@ class HardwareDetails(APIView):
             if is_record_filtered_out:
                 continue
 
-            self._process_test(record=record)
+            if not builds_only:
+                self._process_test(record=record)
 
             self._process_build(record, tree_index)
 
@@ -297,11 +307,12 @@ class HardwareDetails(APIView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        origins = listing_origin_args(self)
         trees = get_hardware_trees_data(
             hardware_id=hardware_id,
-            origin=self.origin,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            checkout_origins=origins["checkout_origins"],
         )
 
         if len(trees) == 0:
@@ -316,13 +327,20 @@ class HardwareDetails(APIView):
 
         records = get_hardware_details_data(
             hardware_id=hardware_id,
-            origin=self.origin,
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            test_origins=origins["test_origins"],
+        )
+        build_records = get_hardware_build_data(
+            hardware_id=hardware_id,
+            trees_with_selected_commits=trees_with_selected_commits,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            build_origins=origins["build_origins"],
         )
 
-        if len(records) == 0:
+        if len(records) == 0 and len(build_records) == 0:
             return create_api_error_response(
                 error_message=ClientStrings.HARDWARE_NOT_FOUND,
                 status_code=HTTPStatus.OK,
@@ -331,6 +349,12 @@ class HardwareDetails(APIView):
         is_all_selected = len(self.selected_commits) == 0
 
         self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
+        self._sanitize_records(
+            build_records,
+            trees_with_selected_commits,
+            is_all_selected,
+            builds_only=True,
+        )
 
         self.base_build_summary = create_details_build_summary(self.builds["items"])
         self._format_processing_for_response()

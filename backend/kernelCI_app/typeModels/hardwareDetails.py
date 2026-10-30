@@ -3,7 +3,6 @@ from typing import Annotated, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.commonDetails import (
@@ -35,8 +34,8 @@ class DefaultRecordValues(BaseModel):
 
 
 class HardwareDetailsPostBody(BaseModel):
-    origin: str = Field(
-        default=DEFAULT_ORIGIN,
+    origin: Optional[str] = Field(
+        default=None,
         description=DocStrings.HARDWARE_DETAILS_ORIGIN_DESCRIPTION,
     )
     startTimestampInSeconds: Union[str, int] = Field(  # noqa: N815

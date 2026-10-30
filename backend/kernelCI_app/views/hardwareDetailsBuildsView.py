@@ -21,10 +21,11 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build_history,
+    listing_origin_args,
     unstable_parse_post_body,
 )
 from kernelCI_app.queries.hardware import (
-    get_hardware_details_data,
+    get_hardware_build_data,
     get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.commonOpenApiParameters import (
@@ -122,11 +123,12 @@ class HardwareDetailsBuilds(APIView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        origins = listing_origin_args(self)
         trees = get_hardware_trees_data(
             hardware_id=hardware_id,
-            origin=self.origin,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            checkout_origins=origins["checkout_origins"],
         )
 
         if len(trees) == 0:
@@ -139,12 +141,12 @@ class HardwareDetailsBuilds(APIView):
             trees=trees, selected_commits=self.selected_commits
         )
 
-        records = get_hardware_details_data(
+        records = get_hardware_build_data(
             hardware_id=hardware_id,
-            origin=self.origin,
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
+            build_origins=origins["build_origins"],
         )
 
         if len(records) == 0:

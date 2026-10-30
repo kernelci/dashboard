@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from rest_framework.test import APIRequestFactory
 
 from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.typeModels.hardwareDetails import HardwareTestHistoryItem
 from kernelCI_app.views.hardwareDetailsBootsView import HardwareDetailsBoots
 
@@ -15,6 +16,7 @@ class TestHardwareDetailsBootsView(SimpleTestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.view = HardwareDetailsBoots()
+        self.view.filters = FilterParams({}, process_body=True)
         self.url = "/hardware/hardware_id/boots"
         self.hardware_id = "test_hardware_id"
 

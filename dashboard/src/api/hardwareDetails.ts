@@ -51,7 +51,6 @@ type HardwareDetailsVariants =
 type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
-  origin: string;
   selectedCommits: Record<string, string>;
   filter?: Record<string, string[]>;
 };
@@ -96,7 +95,6 @@ export type UseHardwareDetailsWithoutVariant = {
   hardwareId: string;
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
-  origin: string;
   filter: TFilter;
   selectedIndexes: string[] | null;
   treeCommits: TTreeCommits;
@@ -112,7 +110,6 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
   hardwareId,
   startTimestampInSeconds,
   endTimestampInSeconds,
-  origin,
   filter,
   selectedIndexes,
   treeCommits,
@@ -139,7 +136,6 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
   );
 
   const body: fetchHardwareDetailsBody = {
-    origin,
     // URL rewrite flips string vs number; coerce so the query key stays stable.
     startTimestampInSeconds: Number(startTimestampInSeconds),
     endTimestampInSeconds: Number(endTimestampInSeconds),
@@ -157,7 +153,6 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
 };
 
 type FetchHardwareDetailsCommitHistoryBody = {
-  origin: string;
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
   commitHeads: CommitHead[];
@@ -178,13 +173,11 @@ const fetchCommitHistory = async (
 export const useHardwareDetailsCommitHistory = (
   {
     hardwareId,
-    origin,
     startTimestampInSeconds,
     endTimestampInSeconds,
     commitHeads,
   }: {
     hardwareId: string;
-    origin: string;
     startTimestampInSeconds: number;
     endTimestampInSeconds: number;
     commitHeads: CommitHead[];
@@ -192,7 +185,6 @@ export const useHardwareDetailsCommitHistory = (
   { enabled } = { enabled: true },
 ): UseQueryResult<CommitHistoryResponse> => {
   const body: FetchHardwareDetailsCommitHistoryBody = {
-    origin,
     startTimestampInSeconds: Number(startTimestampInSeconds),
     endTimestampInSeconds: Number(endTimestampInSeconds),
     commitHeads,
