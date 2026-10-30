@@ -11,6 +11,7 @@ from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.queries.tree import get_tree_listing_query
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.metrics_notifications import (
@@ -1190,6 +1191,10 @@ def get_metrics_data(
 
 
 def warm_metrics_cache() -> None:
+    if get_running_instance() == "staging":
+        out("This command only runs on production or dev environments.")
+        return
+
     today = datetime.now(timezone.utc).date()
     end_days_ago = (today - last_saturday(today)).days
     for period_days in METRICS_CACHE_WARM_PERIODS:

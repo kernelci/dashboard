@@ -8,6 +8,7 @@ from django.utils import timezone
 from kernelCI_app.cache import clear_cache
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.helpers.system import get_running_instance
 
 _DUMMY_LIKE = MAESTRO_DUMMY_BUILD_PREFIX.replace("_", "\\_")
 
@@ -107,6 +108,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if get_running_instance() == "staging":
+            print("This command only runs on production or dev environments.")
+            return
+
         if options["days"] < 1:
             raise CommandError("--days must be >= 1")
 
