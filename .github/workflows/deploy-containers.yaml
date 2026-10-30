@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - staging
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +25,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Compute image prefix
         id: meta
@@ -46,9 +47,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-backend:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ github.sha }}
 
   build-and-push-dashboard:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
@@ -56,7 +55,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -87,9 +86,7 @@ jobs:
           push: true
           build-args: |
             DASHBOARD_VERSION=${{ steps.dashboard_version.outputs.dashboard_version }}
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-frontend:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ github.sha }}
 
   build-and-push-proxy:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
@@ -97,7 +94,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Compute image prefix
         id: meta
@@ -119,9 +116,7 @@ jobs:
         with:
           context: ./proxy
           push: true
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-proxy:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ github.sha }}
 
   verify:
     if: always()
@@ -134,6 +129,10 @@ jobs:
       - name: Image publish summary
         run: |
           echo "### Published GHCR Images" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Ref: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit SHA: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Image | Digest |" >> "$GITHUB_STEP_SUMMARY"
           echo "| ----- | ------ |" >> "$GITHUB_STEP_SUMMARY"
