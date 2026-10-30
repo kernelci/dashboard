@@ -1,12 +1,14 @@
 import json
+import os
 import sys
 from collections import defaultdict
 from datetime import datetime, time, timedelta, timezone
-from email.utils import make_msgid
+from email.utils import make_msgid, parseaddr
 from types import SimpleNamespace
 from typing import Optional
 from urllib.parse import quote_plus
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from kernelCI_app.helpers.email import smtp_setup_connection
@@ -16,8 +18,10 @@ from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
     is_regzbot_tree,
+    resolve_regression_recipients,
     send_email_report,
     setup_jinja_template,
+    unscoped_regression_recipients,
 )
 from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
@@ -52,6 +56,11 @@ from kernelCI_app.queries.test import get_test_details_data, get_test_status_his
 from kernelCI_app.typeModels.metrics_notifications import (
     LabMetricsData,
     MetricsReportData,
+)
+from kernelCI_app.typeModels.notificationRecipients import (
+    NEW_ISSUES_FOLDER,
+    RecipientEntry,
+    load_new_issue_files,
 )
 from kernelCI_app.utils import group_status, is_boot
 from kernelCI_cache.queries.issues import (
@@ -100,12 +109,7 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     return new_issues
 
 
-def look_for_new_issues(*, service, signup_folder, email_args):
-    if get_running_instance() == "staging":
-        print("This command only runs on production or dev environments.")
-        return
-
-    issues = kcidb_new_issues()
+def _tag_build_and_boot(issues: list[dict]) -> tuple[list[dict], list[dict]]:
     build_issues = []
     boot_issues = []
     for issue in issues:
@@ -115,38 +119,182 @@ def look_for_new_issues(*, service, signup_folder, email_args):
         elif issue["test_id"]:
             issue["type"] = "boot"
             boot_issues.append(issue)
+    return build_issues, boot_issues
+
+
+def _tag_other_tests(issues: list[dict], known_ids: set[str]) -> list[dict]:
+    """Test rows are incidents with a test id and no build id.
+
+    Ids already returned by the build/boot query are skipped, so a build
+    incident is never mailed as a test.
+    """
+    test_issues = []
+    for issue in issues:
+        if issue["id"] in known_ids or issue["build_id"] or not issue["test_id"]:
+            continue
+        issue["type"] = "test"
+        known_ids.add(issue["id"])
+        test_issues.append(issue)
+    return test_issues
+
+
+def _new_issue_matches(entry: RecipientEntry, issue: dict) -> bool:
+    if entry.tree_url is not None and issue.get("git_repository_url") != entry.tree_url:
+        return False
+    # Build rows carry a NULL platform and never match a platform scope.
+    if issue["type"] == "build" and (entry.hardware_platform or entry.platform):
+        return False
+    if (
+        entry.hardware_platform is not None
+        and issue.get("platform") != entry.hardware_platform
+    ):
+        return False
+    if entry.issues and issue["type"] not in entry.issues:
+        return False
+    if entry.branch and issue.get("git_repository_branch") not in entry.branch:
+        return False
+    if entry.origin and issue.get("origin") not in entry.origin:
+        return False
+    if entry.platform and issue.get("platform") not in entry.platform:
+        return False
+    return True
+
+
+def _copies_by_address(entries: list[RecipientEntry], issues: list[dict]) -> list[dict]:
+    """One bucket per address: the union of rows from every matching entry."""
+    deliveries: dict[str, dict] = {}
+    for entry in entries:
+        matched = [issue for issue in issues if _new_issue_matches(entry, issue)]
+        if not matched:
+            continue
+        for recipient in entry.recipients:
+            key = parseaddr(recipient)[1].lower() or recipient
+            bucket = deliveries.get(key)
+            if bucket is None:
+                bucket = {"to": recipient, "issues": [], "seen": set(), "files": []}
+                deliveries[key] = bucket
+            for issue in matched:
+                if issue["id"] in bucket["seen"]:
+                    continue
+                bucket["seen"].add(issue["id"])
+                bucket["issues"].append(issue)
+            if entry.source_file not in bucket["files"]:
+                bucket["files"].append(entry.source_file)
+    return list(deliveries.values())
+
+
+def _summary_report(
+    template, when, *, build_issues, boot_issues, test_issues, copy_from=""
+):
+    return {
+        "content": template.render(
+            build_issues=build_issues,
+            boot_issues=boot_issues,
+            test_issues=test_issues,
+            copy_from=copy_from,
+        ),
+        "title": f"new issues summary - {when.strftime('%Y-%m-%d %H:%M %Z')}",
+    }
+
+
+def _show_new_issue_delivery(email_args, to: str, issues: list[dict]) -> None:
+    if email_args.send:
+        return
+    print(f"To: {to}")
+    print("issues: " + ", ".join(issue["id"] for issue in issues))
+
+
+def _of_type(issues: list[dict], issue_type: str) -> list[dict]:
+    return [issue for issue in issues if issue["type"] == issue_type]
+
+
+def look_for_new_issues(*, service, email_args, directory: Optional[str] = None):
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
+        return
+
+    if directory is None:
+        directory = os.path.join(settings.BACKEND_DATA_DIR, NEW_ISSUES_FOLDER)
+    default, entries = load_new_issue_files(
+        directory, ignore_recipients=email_args.ignore_recipients
+    )
+    if not email_args.to:
+        email_args.to = default.to
+
+    wants_test = "test" in default.issues or any(
+        not entry.issues or "test" in entry.issues for entry in entries
+    )
+    build_issues, boot_issues = _tag_build_and_boot(kcidb_new_issues())
+    known_ids = {issue["id"] for issue in build_issues + boot_issues}
+    test_issues = (
+        _tag_other_tests(kcidb_new_issues(include_other_tests=True), known_ids)
+        if wants_test
+        else []
+    )
 
     new_build_issues = exclude_already_found_and_store(build_issues)
     new_boot_issues = exclude_already_found_and_store(boot_issues)
-    if not new_build_issues and not new_boot_issues:
+    new_test_issues = exclude_already_found_and_store(test_issues)
+    if not new_build_issues and not new_boot_issues and not new_test_issues:
         print("No new issues")
         return
 
+    kinds = set(default.issues)
+    community_build = new_build_issues if "build" in kinds else []
+    community_boot = new_boot_issues if "boot" in kinds else []
+    community_test = new_test_issues if "test" in kinds else []
+    community_rows = community_build + community_boot + community_test
+    copies = _copies_by_address(
+        entries, new_build_issues + new_boot_issues + new_test_issues
+    )
+
     template = setup_jinja_template("issues.txt.j2")
-    report = {}
     now = datetime.now(timezone.utc)
-    report["content"] = template.render(
-        build_issues=new_build_issues, boot_issues=new_boot_issues
-    )
-    report["title"] = f"new issues summary - {now.strftime('%Y-%m-%d %H:%M %Z')}"
+    if community_rows:
+        _show_new_issue_delivery(email_args, email_args.to, community_rows)
+        send_email_report(
+            service=service,
+            report=_summary_report(
+                template,
+                now,
+                build_issues=community_build,
+                boot_issues=community_boot,
+                test_issues=community_test,
+            ),
+            email_args=email_args,
+        )
+    for copy in copies:
+        copy_args = SimpleNamespace(**vars(email_args))
+        copy_args.to = copy["to"]
+        copy_args.cc = None
+        copy_args.add_mailing_lists = False
+        copy_args.ignore_recipients = True
+        _show_new_issue_delivery(copy_args, copy["to"], copy["issues"])
+        send_email_report(
+            service=service,
+            report=_summary_report(
+                template,
+                now,
+                build_issues=_of_type(copy["issues"], "build"),
+                boot_issues=_of_type(copy["issues"], "boot"),
+                test_issues=_of_type(copy["issues"], "test"),
+                copy_from=", ".join(f"new_issues/{name}" for name in copy["files"]),
+            ),
+            email_args=copy_args,
+        )
+    if not community_rows and not copies:
+        print("No new issues")
 
-    send_email_report(
-        service=service,
-        report=report,
-        email_args=email_args,
-        signup_folder=signup_folder,
-    )
-
-    email_args.add_mailing_lists = True
-    email_args.update = True
-    for issue in new_build_issues:
-        if issue["origin"] == "maestro":
-            generate_issue_report(
-                service=service,
-                issue_id=issue["id"],
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
+    if new_build_issues or new_boot_issues:
+        email_args.add_mailing_lists = True
+        email_args.update = True
+        for issue in new_build_issues:
+            if issue["origin"] == "maestro":
+                generate_issue_report(
+                    service=service,
+                    issue_id=issue["id"],
+                    email_args=email_args,
+                )
 
 
 def ask_ignore_issue():
@@ -208,7 +356,6 @@ def generate_issue_report(
     issue_id,
     email_args,
     ask_ignore=False,
-    signup_folder,
 ):
     result = kcidb_issue_details(issue_id)
     if not result:
@@ -264,12 +411,18 @@ def generate_issue_report(
 
     email_args.tree_name = issue_tree_name
     email_args.regression_report = True
+    recipients = (
+        []
+        if email_args.ignore_recipients
+        else resolve_regression_recipients(
+            issue, incidents if issue_type == "build" else []
+        )
+    )
     msg_id = send_email_report(
         service=service,
         report=report,
         email_args=email_args,
-        signup_folder=signup_folder,
-        git_url=issue["git_repository_url"],
+        recipients=recipients,
         message_id=message_id,
     )
 
@@ -549,7 +702,7 @@ def run_checkout_summary(
                 )
 
 
-def create_and_send_issue_reports(*, service, email_args, signup_folder):
+def create_and_send_issue_reports(*, service, email_args):
     unsent_issues = get_unsent_issues()
     for issue in unsent_issues:
         if issue.issue_type != "build":
@@ -560,11 +713,10 @@ def create_and_send_issue_reports(*, service, email_args, signup_folder):
             issue_id=issue.issue_id,
             email_args=email_args,
             ask_ignore=True,
-            signup_folder=signup_folder,
         )
 
 
-def generate_test_report(*, service, test_id, email_args, signup_folder):
+def generate_test_report(*, service, test_id, email_args):
     """Generate a test regression report for a specific test ID."""
 
     test_data = get_test_details_data(test_id=test_id)
@@ -660,8 +812,11 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
         service=service,
         report=report,
         email_args=email_args,
-        git_url=test["git_repository_url"],
-        signup_folder=signup_folder,
+        recipients=(
+            []
+            if email_args.ignore_recipients
+            else unscoped_regression_recipients(test["git_repository_url"])
+        ),
         message_id=message_id,
     )
 
@@ -785,7 +940,6 @@ def generate_hardware_summary_report(
             service=service,
             report=report,
             email_args=email_args,
-            signup_folder=signup_folder,
             recipients=recipients,
         )
 
@@ -1070,7 +1224,6 @@ class Command(BaseCommand):
                 look_for_new_issues(
                     service=service,
                     email_args=email_args,
-                    signup_folder=signup_folder,
                 )
 
             case "issue_report":
@@ -1079,7 +1232,6 @@ class Command(BaseCommand):
                     create_and_send_issue_reports(
                         service=service,
                         email_args=email_args,
-                        signup_folder=signup_folder,
                     )
                 else:
                     issue_id = options.get("id")
@@ -1094,7 +1246,6 @@ class Command(BaseCommand):
                         service=service,
                         issue_id=issue_id,
                         email_args=email_args,
-                        signup_folder=signup_folder,
                     )
                     self.stdout.write(
                         self.style.SUCCESS(
@@ -1131,7 +1282,6 @@ class Command(BaseCommand):
                     service=service,
                     test_id=test_id,
                     email_args=email_args,
-                    signup_folder=signup_folder,
                 )
                 self.stdout.write(
                     self.style.SUCCESS(f"Test report generated for test {test_id}")
