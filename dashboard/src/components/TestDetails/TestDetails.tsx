@@ -77,6 +77,8 @@ import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
 
 import CopyButton from '@/components/Button/CopyButton';
 
+import { HardwareRegistryCard } from '@/components/HardwareRegistry/HardwareRegistry';
+
 import { StatusHistoryItem } from './StatusHistoryItem';
 
 const TestDetailsSections = ({
@@ -171,6 +173,8 @@ const TestDetailsSections = ({
       </div>
     );
   }, [searchParams, test.environment_compatible]);
+
+  const registryInfo = test.registry;
 
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),
@@ -435,6 +439,7 @@ const TestDetailsSections = ({
                       },
                     ]}
                   />
+                  <HardwareRegistryCard info={registryInfo} />
                 </div>
               ),
             },
@@ -449,6 +454,7 @@ const TestDetailsSections = ({
     hardwareDetailsLink,
     buildDetailsLink,
     compatiblesLink,
+    registryInfo,
   ]);
 
   const miscSection: ISection | undefined = useMemo(():
