@@ -611,6 +611,7 @@ def get_hardware_details_data(
     start_datetime: datetime,
     end_datetime: datetime,
     test_origins: Optional[list[str]] = None,
+    history_only: bool = False,
 ):
     cache_key = "hardwareDetailsFullDataByCheckout"
 
@@ -620,6 +621,7 @@ def get_hardware_details_data(
         "trees": trees_with_selected_commits,
         "start_date": start_datetime,
         "end_date": end_datetime,
+        "history_only": history_only,
     }
 
     records = get_query_cache(cache_key, tests_cache_params)
@@ -631,6 +633,7 @@ def get_hardware_details_data(
             trees=trees_with_selected_commits,
             start_date=start_datetime,
             end_date=end_datetime,
+            history_only=history_only,
         )
         set_query_cache(
             key=cache_key, params=tests_cache_params, rows=records, compress=True
@@ -898,29 +901,38 @@ def _checkout_rows(trees: list[Tree]) -> list[tuple]:
     ]
 
 
-def query_records(
-    *,
-    hardware_id: str,
-    trees: list[Tree],
-    start_date: int,
-    end_date: int,
-    test_origins: Optional[list[str]] = None,
-) -> list[dict] | None:
-    checkouts = _checkout_rows(trees)
-    if not checkouts:
-        return []
-
-    test_origin_sql, test_origin_params = _positional_origin_sql(
-        "tests.origin", test_origins
-    )
-
-    query = """
-            SELECT
+_HISTORY_RECORD_COLUMNS = """
                 tests.id,
                 tests.origin AS test_origin,
                 tests.environment_misc,
                 tests.path,
-                tests.comment,
+                tests.log_url,
+                tests.status,
+                tests.start_time,
+                tests.duration,
+                tests.environment_compatible,
+                builds.architecture AS build__architecture,
+                builds.config_name AS build__config_name,
+                builds.compiler AS build__compiler,
+                builds.status AS build__status,
+                checkouts.git_repository_url AS build__checkout__git_repository_url,
+                checkouts.git_repository_branch AS build__checkout__git_repository_branch,
+                checkouts.git_commit_hash AS build__checkout__git_commit_hash,
+                checkouts.tree_name AS build__checkout__tree_name,
+                checkouts.origin AS build__checkout__origin,
+                incidents.issue_id AS incidents__issue__id,
+                issues.version AS incidents__issue__version,
+                incidents.test_id AS incidents__test_id,
+                T7.issue_id AS build__incidents__issue__id,
+                T8.version AS build__incidents__issue__version,
+                COALESCE(tl.name, tests.misc->>'runtime') AS lab
+"""
+
+_FULL_RECORD_COLUMNS = """
+                tests.id,
+                tests.origin AS test_origin,
+                tests.environment_misc,
+                tests.path,
                 tests.log_url,
                 tests.status,
                 tests.start_time,
@@ -940,11 +952,9 @@ def query_records(
                 builds.origin AS build__origin,
                 checkouts.git_repository_url AS build__checkout__git_repository_url,
                 checkouts.git_repository_branch AS build__checkout__git_repository_branch,
-                checkouts.git_commit_name AS build__checkout__git_commit_name,
                 checkouts.git_commit_hash AS build__checkout__git_commit_hash,
                 checkouts.tree_name AS build__checkout__tree_name,
                 checkouts.origin AS build__checkout__origin,
-                incidents.id AS incidents__id,
                 incidents.issue_id AS incidents__issue__id,
                 issues.version AS incidents__issue__version,
                 issues.comment AS incidents__issue__comment,
@@ -952,10 +962,31 @@ def query_records(
                 incidents.test_id AS incidents__test_id,
                 T7.issue_id AS build__incidents__issue__id,
                 T8.version AS build__incidents__issue__version,
-                -- TODO remove misc->>'runtime' fallback after lab backfill
                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
-                -- TODO remove misc->>'lab' fallback after lab backfill
                 COALESCE(bl.name, builds.misc->>'lab') AS build_lab
+"""
+
+
+def query_records(
+    *,
+    hardware_id: str,
+    trees: list[Tree],
+    start_date: int,
+    end_date: int,
+    test_origins: Optional[list[str]] = None,
+    history_only: bool = False,
+) -> list[dict] | None:
+    checkouts = _checkout_rows(trees)
+    if not checkouts:
+        return []
+
+    test_origin_sql, test_origin_params = _positional_origin_sql(
+        "tests.origin", test_origins
+    )
+    columns_sql = _HISTORY_RECORD_COLUMNS if history_only else _FULL_RECORD_COLUMNS
+    query = """
+            SELECT
+                {columns}
             FROM
                 tests
             INNER JOIN builds ON
@@ -992,6 +1023,7 @@ def query_records(
             ORDER BY
                 issues."_timestamp" DESC
             """.format(
+        columns=columns_sql,
         test_origin_sql=test_origin_sql,
         checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
     )
@@ -1006,8 +1038,7 @@ def query_records(
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        query_rows = dict_fetchall(cursor)
-        return query_rows
+        return dict_fetchall(cursor)
 
 
 def query_build_records(
