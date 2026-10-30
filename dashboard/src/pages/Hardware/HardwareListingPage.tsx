@@ -32,6 +32,8 @@ import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing
 import type { SearchIntent } from '@/lib/intent';
 
 import { HardwareRegistrySync } from './HardwareRegistrySync';
+import HardwareRegistryFilters from './HardwareRegistryFilters';
+import { hasRegistryFilter } from './registryFilters';
 import { HardwareTable } from './HardwareTable';
 import {
   decodeBranchValue,
@@ -62,6 +64,7 @@ const HardwareListingPage = ({
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
+    registryFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -310,7 +313,10 @@ const HardwareListingPage = ({
       activeListing.data.hardware.length > 0,
   );
   const tableEmptyMessageId =
-    hasSelection && !hasListingRows && inputFilter.length === 0
+    hasSelection &&
+    !hasListingRows &&
+    inputFilter.length === 0 &&
+    !hasRegistryFilter(registryFilter)
       ? 'hardwareListing.revisionEmpty'
       : 'hardwareListing.notFound';
 
@@ -325,7 +331,14 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          {kcidevComponent}
+          <div className="flex items-center gap-4">
+            <HardwareRegistryFilters
+              endTimestampInSeconds={endTimestampInSeconds}
+              startTimestampInSeconds={startTimestampInSeconds}
+              urlFromMap={urlFromMap}
+            />
+            {kcidevComponent}
+          </div>
         </div>
 
         <HardwareTable

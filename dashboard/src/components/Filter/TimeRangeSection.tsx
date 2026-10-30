@@ -8,7 +8,6 @@ import { FilterTypeIcon } from './Drawer';
 
 interface TimeRangeSection {
   title: string;
-  subtitle: string;
   min: number | undefined;
   max: number | undefined;
   isGlobal?: boolean;
@@ -16,12 +15,10 @@ interface TimeRangeSection {
   onMaxChange: (e: React.FormEvent<HTMLInputElement>) => void;
 }
 
-const inputContainerClass = 'flex gap-x-4 items-center';
-const inputClass = 'max-w-20';
+const inputClass = 'h-8 max-w-20';
 
 const TimeRangeSection = ({
   title,
-  subtitle,
   min,
   max,
   isGlobal = false,
@@ -29,37 +26,36 @@ const TimeRangeSection = ({
   onMaxChange,
 }: TimeRangeSection): JSX.Element => {
   return (
-    <div className="text-dim-gray flex flex-col gap-y-2">
-      <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-xl font-semibold">
+    <div className="text-dim-gray">
+      <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-base font-semibold">
         <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
         <span>{title}</span>
       </h3>
-      <h4 className="text-s mb-6">{subtitle}</h4>
-      <div className={inputContainerClass}>
-        <span className="w-8">
-          <FormattedMessage id="filter.min" />:
-        </span>
-        <Input
-          className={inputClass}
-          onChange={onMinChange}
-          value={min ?? ''}
-          min={0}
-          type="number"
-        />
-      </div>
-
-      <div className={inputContainerClass}>
-        <span className="w-8">
-          <FormattedMessage id="filter.max" />:
-        </span>
-
-        <Input
-          className={inputClass}
-          onChange={onMaxChange}
-          value={max ?? ''}
-          min={0}
-          type="number"
-        />
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <label className="flex items-center gap-2">
+          <span>
+            <FormattedMessage id="filter.min" />:
+          </span>
+          <Input
+            className={inputClass}
+            onChange={onMinChange}
+            value={min ?? ''}
+            min={0}
+            type="number"
+          />
+        </label>
+        <label className="flex items-center gap-2">
+          <span>
+            <FormattedMessage id="filter.max" />:
+          </span>
+          <Input
+            className={inputClass}
+            onChange={onMaxChange}
+            value={max ?? ''}
+            min={0}
+            type="number"
+          />
+        </label>
       </div>
     </div>
   );

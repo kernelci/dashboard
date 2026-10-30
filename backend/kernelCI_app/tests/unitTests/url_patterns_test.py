@@ -141,3 +141,11 @@ class TestURLPatterns:
         assert url == "/api/hardware/selectors/"
         assert resolved.url_name == "hardwareSelectors"
         assert "hardware_id" not in resolved.kwargs
+
+    def test_hardware_registry_filters_route(self):
+        url = reverse("hardwareRegistryFilters")
+        resolved = resolve(url)
+
+        assert url == "/api/hardware/registry-filters/"
+        assert resolved.url_name == "hardwareRegistryFilters"
+        assert "hardware_id" not in resolved.kwargs
