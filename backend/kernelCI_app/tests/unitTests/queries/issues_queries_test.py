@@ -1,6 +1,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.queries.issues import (
     get_build_issues,
     get_issue_builds,
@@ -51,6 +52,21 @@ class TestGetIssueBuilds:
         query = execute_call[0][0]
         assert "%(issue_version)s" not in query
 
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_builds_applies_lab_filter(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        mock_dict_fetchall.return_value = []
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        get_issue_builds(issue_id="issue", version=1, labs={"lava", UNKNOWN_STRING})
+
+        query, params = mock_cursor.execute.call_args[0]
+        assert "issue_labs_row" in query
+        assert "B.lab_id IS NULL" in query
+        assert params["issue_labs"] == ["lava"]
+
 
 class TestGetIssueTests:
     @patch("kernelCI_app.queries.issues.dict_fetchall")
@@ -80,6 +96,21 @@ class TestGetIssueTests:
         execute_call = mock_cursor.execute.call_args
         query = execute_call[0][0]
         assert "%(issue_version)s" not in query
+
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_tests_applies_lab_filter(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        mock_dict_fetchall.return_value = []
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        get_issue_tests(issue_id="issue", version=None, labs={"lava"})
+
+        query, params = mock_cursor.execute.call_args[0]
+        assert "issue_labs_row" in query
+        assert "T.lab_id" in query
+        assert params["issue_labs"] == ["lava"]
 
 
 class TestGetIssueListingData:
@@ -123,6 +154,35 @@ class TestGetIssueListingData:
         assert result == expected_result
         mock_set_cache.assert_called_once()
         mock_get_cache.assert_called_once()
+
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_listing_data_applies_lab_filter(
+        self,
+        mock_connection,
+        mock_dict_fetchall,
+        mock_set_cache,
+        mock_get_cache,
+    ):
+        mock_get_cache.return_value = None
+        mock_dict_fetchall.return_value = []
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        get_issue_listing_data(
+            start_date=datetime(2025, 11, 4),
+            end_date=datetime(2025, 11, 11),
+            labs={"lava"},
+        )
+
+        query, params = mock_cursor.execute.call_args[0]
+        assert "inc_b" in query
+        assert "inc_t" in query
+        assert "issue_labs_row" in query
+        assert params["issue_labs"] == ["lava"]
+        cache_params = mock_set_cache.call_args.kwargs["params"]
+        assert cache_params["issue_labs"] == ["lava"]
 
 
 class TestGetLatestIssueVersion:

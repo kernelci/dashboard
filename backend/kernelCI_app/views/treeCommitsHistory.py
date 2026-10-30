@@ -21,6 +21,7 @@ from kernelCI_app.helpers.filters import (
     is_filtered_out,
 )
 from kernelCI_app.helpers.issueExtras import parse_issue
+from kernelCI_app.helpers.labFilter import lab_for_filter
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     handle_misc,
@@ -112,6 +113,8 @@ class BaseTreeCommitsHistory(APIView):
                     "issue_id": row[22],
                     "issue_version": row[23],
                     "build_lab": build_lab,
+                    "build_lab_id": row[25] if len(row) > 26 else None,
+                    "test_lab_id": row[26] if len(row) > 26 else None,
                 }
             )
 
@@ -279,7 +282,11 @@ class BaseTreeCommitsHistory(APIView):
                 incident_test_id=row["incidents_test_id"],
                 key=key,
                 build_origin=build_origin,
-                lab=row["build_lab"],
+                lab=(
+                    lab_for_filter(row["build_lab_id"], row["build_lab"])
+                    if "build_lab_id" in row
+                    else row["build_lab"]
+                ),
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:
@@ -306,6 +313,11 @@ class BaseTreeCommitsHistory(APIView):
         ):
             issue_id = UNCATEGORIZED_STRING
 
+        test_lab = (
+            lab_for_filter(row.get("test_lab_id"), row.get("test_lab"))
+            if "test_lab_id" in row
+            else row["test_lab"]
+        )
         if is_boot(test_path):
             return self.filterParams.is_boot_filtered_out(
                 duration=test_duration,
@@ -315,7 +327,7 @@ class BaseTreeCommitsHistory(APIView):
                 status=test_status,
                 incident_test_id=incident_test_id,
                 origin=test_origin,
-                lab=row["test_lab"],
+                lab=test_lab,
             )
 
         return self.filterParams.is_test_filtered_out(
@@ -326,7 +338,7 @@ class BaseTreeCommitsHistory(APIView):
             status=test_status,
             incident_test_id=incident_test_id,
             origin=test_origin,
-            lab=row["test_lab"],
+            lab=test_lab,
         )
 
     def _process_rows(self, rows: dict, requested_types: list[TreeEntityTypes]) -> None:
@@ -453,6 +465,9 @@ class BaseTreeCommitsHistory(APIView):
             git_branch=params.git_branch or git_branch,
             tree_name=tree_name,
             include_types=include_types,
+            build_labs=self.filterParams.filter_labs["build"],
+            boot_labs=self.filterParams.filter_labs["boot"],
+            test_labs=self.filterParams.filter_labs["test"],
         )
 
         if not rows:
@@ -584,8 +599,6 @@ class TreeCommitsHistoryList(BaseTreeCommitsHistory):
         if is_filtered_out(compiler, filters.filterCompiler):
             return True
         if is_filtered_out(config, filters.filterConfigs):
-            return True
-        if is_filtered_out(lab, filters.filter_labs[filter_type]):
             return True
         if is_filtered_out(architecture, filters.filterArchitecture):
             return True
@@ -720,6 +733,9 @@ class TreeCommitsHistoryList(BaseTreeCommitsHistory):
             tree_name=params.tree_name,
             include_types=include_types,
             platform_filter=list(self.filterParams.filterHardware),
+            build_labs=self.filterParams.filter_labs["build"],
+            boot_labs=self.filterParams.filter_labs["boot"],
+            test_labs=self.filterParams.filter_labs["test"],
             builds_duration=(
                 self.filterParams.filterBuildDurationMin,
                 self.filterParams.filterBuildDurationMax,

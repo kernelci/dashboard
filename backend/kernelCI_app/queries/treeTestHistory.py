@@ -8,12 +8,13 @@ from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.filters import FilterParams
+from kernelCI_app.helpers.labFilter import lab_filter_sql
 from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.typeModels.commonDetails import TestHistoryItem
 
 
-def _filter_clauses(
+def _filter_clauses(  # noqa: C901 - maps FilterParams fields to SQL AND clauses
     filters: FilterParams, data_type: Literal["boots", "tests"]
 ) -> tuple[str, str, dict[str, Any]]:
     tab = "boot" if data_type == "boots" else "test"
@@ -58,15 +59,16 @@ def _filter_clauses(
             getattr(filters, f"filter{prefix}Status"),
         ),
         ("origins", "t.origin", getattr(filters, f"filter_{tab}_origin")),
-        (
-            "labs",
-            "COALESCE(NULLIF(COALESCE(tl.name, t.misc->>'runtime'), ''), %(unknown)s)",
-            filters.filter_labs[tab],
-        ),
     ):
         if values:
             params[name] = sorted(values)
             clauses.append(f"({column}) = ANY(%({name})s)")
+    lab_sql, lab_params = lab_filter_sql(
+        filters.filter_labs[tab], lab_id_column="t.lab_id", param="labs"
+    )
+    if lab_sql:
+        clauses.append(lab_sql)
+        params.update(lab_params)
     if getattr(filters, f"filter{prefix}Path"):
         params["path"] = getattr(filters, f"filter{prefix}Path")
         clauses.append("strpos(t.path, %(path)s) > 0")
@@ -124,7 +126,7 @@ def get_tree_test_history_response(
         tree_name=tree_name,
         full_environment_misc=full_environment_misc,
     )
-    cache_key = f"tree{data_type.capitalize()}ResponseV1"
+    cache_key = f"tree{data_type.capitalize()}ResponseV2"
     response = get_query_cache(cache_key, params)
     if response is not None:
         return response

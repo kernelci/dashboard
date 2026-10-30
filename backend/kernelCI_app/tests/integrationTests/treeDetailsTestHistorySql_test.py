@@ -71,6 +71,12 @@ def legacy_response(filters, data_type, full_environment_misc=False, **identity)
     instance = SimpleNamespace(filters=filters)
     for row in rows:
         data = get_current_row_data(row, full_environment_misc=full_environment_misc)
+        if data["test_id"]:
+            data["test_lab_id"] = (
+                Results.objects.filter(id=data["test_id"])
+                .values_list("lab_id", flat=True)
+                .first()
+            )
         if (
             decide_if_is_full_row_filtered_out(instance, data)
             or data["test_id"] is None
@@ -313,9 +319,6 @@ def test_filters_match_legacy(dataset, data_type, attributes, issues, full):
 @pytest.mark.parametrize(
     "field,values",
     [
-        ("filter_labs", {"registered-lab"}),
-        ("filter_labs", {"runtime-lab"}),
-        ("filter_labs", {UNKNOWN_STRING}),
         ("filterPlatforms", {"env-board"}),
         ("filterPlatforms", {UNKNOWN_STRING}),
     ],
@@ -326,6 +329,25 @@ def test_lab_and_platform_filter_behavior(dataset, data_type, field, values):
     assert canonical(
         get_tree_test_history_response(data_type=data_type, filters=filters, **IDENTITY)
     ) == canonical(legacy_response(filters, data_type, **IDENTITY))
+
+
+def test_lab_filter_uses_lab_id_not_misc(dataset, data_type):
+    tab = "boot" if data_type == "boots" else "test"
+    filters = FilterParams(RequestFactory().get("/"))
+
+    def ids(labs):
+        filters.filter_labs[tab] = labs
+        response = get_tree_test_history_response(
+            data_type=data_type, filters=filters, **IDENTITY
+        )
+        return {item["id"] for item in response[data_type]}
+
+    assert ids({"registered-lab"}) == {"result-0"}
+    assert "result-0" not in ids({"runtime-lab"})
+    assert "result-1" not in ids({"runtime-lab"})
+    unknown = ids({UNKNOWN_STRING})
+    assert "result-0" not in unknown
+    assert "result-1" in unknown
 
 
 def test_cache_contains_final_response_and_separates_full_misc(

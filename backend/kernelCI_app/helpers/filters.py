@@ -300,6 +300,7 @@ type FilterFields = Literal[
     "issue.culprit",
     "issue.categories",
     "issue.options",
+    "issue.lab",
 ]
 type FilterHandlers = dict[FilterFields, Callable]
 
@@ -378,6 +379,7 @@ class FilterParams:
         self.filter_origins: set[str] = set()
         self.filter_issue_categories: set[str] = set()
         self.filter_issue_options: set[IssueFilterOptions] = set()
+        self.filter_issue_labs: set[str] = set()
 
         self.filter_build_origin: set[str] = set()
         self.filter_boot_origin: set[str] = set()
@@ -409,6 +411,7 @@ class FilterParams:
             "issue.culprit": self._handle_issue_culprits,
             "issue.categories": self._handle_issue_categories,
             "issue.options": self._handle_issue_options,
+            "issue.lab": self._handle_issue_labs,
             "build.origin": self._handle_build_origin,
             "boot.origin": self._handle_boot_origin,
             "test.origin": self._handle_test_origin,
@@ -522,6 +525,9 @@ class FilterParams:
 
     def _handle_issue_categories(self, current_filter: ParsedFilter) -> None:
         self.filter_issue_categories.add(current_filter["value"])
+
+    def _handle_issue_labs(self, current_filter: ParsedFilter) -> None:
+        self.filter_issue_labs.add(current_filter["value"])
 
     def _handle_issue_options(self, current_filter: ParsedFilter) -> None:
         filter_value = current_filter["value"]

@@ -141,9 +141,11 @@ class IssueView(APIView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
+        self.filters = FilterParams(_request)
         issue_records: list[dict] = get_issue_listing_data(
             start_date=start_date,
             end_date=end_date,
+            labs=self.filters.filter_issue_labs,
         )
 
         if len(issue_records) == 0:
@@ -151,7 +153,6 @@ class IssueView(APIView):
                 error_message=ClientStrings.NO_ISSUE_FOUND, status_code=HTTPStatus.OK
             )
 
-        self.filters = FilterParams(_request)
         filtered_records = self._filter_records(issue_records=issue_records)
 
         issue_key_list = [(issue["id"], issue["version"]) for issue in filtered_records]

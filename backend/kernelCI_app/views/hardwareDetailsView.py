@@ -213,6 +213,8 @@ class HardwareDetails(APIView):
             build=build,
             processed_builds=self.processed_builds,
             incident_test_id=record["incidents__test_id"],
+            lab_id=record.get("build_lab_id"),
+            use_lab_id="build_lab_id" in record,
         )
 
         if should_process_build:
@@ -317,6 +319,10 @@ class HardwareDetails(APIView):
         records = get_hardware_details_data(
             hardware_id=hardware_id,
             origin=self.origin,
+            lab_scope="all",
+            build_labs=self.filters.filter_labs["build"],
+            boot_labs=self.filters.filter_labs["boot"],
+            test_labs=self.filters.filter_labs["test"],
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,

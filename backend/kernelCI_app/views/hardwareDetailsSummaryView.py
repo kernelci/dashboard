@@ -121,8 +121,6 @@ class HardwareDetailsSummary(APIView):
             return True
         if is_filtered_out(config, filters.filterConfigs):
             return True
-        if is_filtered_out(lab, filters.filter_labs[filter_type]):
-            return True
         if is_filtered_out(architecture, filters.filterArchitecture):
             return True
 
@@ -564,6 +562,9 @@ class HardwareDetailsSummary(APIView):
                 checkouts=selected_checkouts,
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
+                build_labs=filters.filter_labs["build"],
+                boot_labs=filters.filter_labs["boot"],
+                test_labs=filters.filter_labs["test"],
                 builds_duration=(
                     filters.filterBuildDurationMin,
                     filters.filterBuildDurationMax,
