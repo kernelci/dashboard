@@ -1343,9 +1343,7 @@ def get_hardware_trees_data(
                 )
             )
 
-        set_query_cache(
-            key=cache_key, params=cache_params, rows=trees, compress=True
-        )
+        set_query_cache(key=cache_key, params=cache_params, rows=trees, compress=True)
 
     return trees
 

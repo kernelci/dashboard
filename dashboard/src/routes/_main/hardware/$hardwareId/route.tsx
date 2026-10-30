@@ -69,6 +69,7 @@ export const Route = createFileRoute('/_main/hardware/$hardwareId')({
     middlewares: [
       stripSearchParams(defaultValues),
       // Drop `o` after mapping it, or clearing the filter leaves it and the next load restores it.
+      // @ts-expect-error origin is required on the root schema, so it is not an optional details param
       stripSearchParams(['origin']),
     ],
   },
