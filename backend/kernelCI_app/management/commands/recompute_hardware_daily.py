@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.helpers.system import get_running_instance
 
 
 def lock_key(table: str) -> int:
@@ -148,6 +149,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if get_running_instance() == "staging":
+            print("This command only runs on production or dev environments.")
+            return
+
         today = timezone.now().date()
         days = (
             [options["day"]]
