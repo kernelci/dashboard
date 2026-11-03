@@ -650,7 +650,6 @@ class TestFetchGuards:
 
 
 class TestSyncCommitCommands:
-    @pytest.mark.parametrize("instance", ["production", None])
     @pytest.mark.parametrize(
         ("command", "work"),
         [
@@ -659,9 +658,7 @@ class TestSyncCommitCommands:
             ("sync_commit_gc", "gc_mirror"),
         ],
     )
-    def test_commands_run_on_production_and_development(
-        self, monkeypatch, tmp_path, instance, command, work
-    ):
+    def test_commands_run(self, monkeypatch, tmp_path, command, work):
         calls = []
         stats = dict.fromkeys(
             [
@@ -682,7 +679,6 @@ class TestSyncCommitCommands:
 
         module = f"kernelCI_app.management.commands.{command}"
         monkeypatch.setattr(f"{module}.{work}", fake)
-        monkeypatch.setattr(f"{module}.get_running_instance", lambda: instance)
         call_command(command, mirror_dir=str(tmp_path / "mirror"))
         assert len(calls) == 1
 
@@ -704,10 +700,6 @@ class TestSyncCommitCommands:
         monkeypatch.setattr(
             "kernelCI_app.management.commands.sync_commit_mirror.sync_commit_metadata",
             fake_sync,
-        )
-        monkeypatch.setattr(
-            "kernelCI_app.management.commands.sync_commit_mirror.get_running_instance",
-            lambda: "production",
         )
         with override_settings(GIT_MIRROR_DIR="/tmp/mirror"):
             call_command("sync_commit_mirror", "--dry-run")
@@ -734,36 +726,11 @@ class TestSyncCommitCommands:
             "kernelCI_app.management.commands.sync_commit_ingest.sync_commit_metadata",
             fake_sync,
         )
-        monkeypatch.setattr(
-            "kernelCI_app.management.commands.sync_commit_ingest.get_running_instance",
-            lambda: "production",
-        )
         with override_settings(GIT_MIRROR_DIR="/tmp/mirror"):
             call_command("sync_commit_ingest", "--fill-gaps")
         assert seen["skip_fetch"] is True
         assert seen["fill_gaps"] is True
         assert "skip_ingest" not in seen or seen.get("skip_ingest") is False
-
-    @pytest.mark.parametrize(
-        ("command", "work"),
-        [
-            ("sync_commit_mirror", "sync_commit_metadata"),
-            ("sync_commit_ingest", "sync_commit_metadata"),
-            ("sync_commit_gc", "gc_mirror"),
-        ],
-    )
-    def test_commands_skip_staging(self, monkeypatch, command, work):
-        called = False
-
-        def fake(*args, **kwargs):
-            nonlocal called
-            called = True
-
-        module = f"kernelCI_app.management.commands.{command}"
-        monkeypatch.setattr(f"{module}.{work}", fake)
-        monkeypatch.setattr(f"{module}.get_running_instance", lambda: "staging")
-        call_command(command)
-        assert called is False
 
 
 class TestShallowMirror:
