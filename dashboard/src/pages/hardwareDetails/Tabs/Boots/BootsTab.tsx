@@ -56,16 +56,10 @@ const BootsTab = ({
   bootsSummary,
   fullDataResult,
 }: IBootsTab): JSX.Element => {
-  const {
-    tableFilter,
-    diffFilter,
-    origin,
-    treeIndexes,
-    treeCommits,
-    hardwareSearch,
-  } = useSearch({
-    from: '/_main/hardware/$hardwareId',
-  });
+  const { tableFilter, diffFilter, treeIndexes, treeCommits, hardwareSearch } =
+    useSearch({
+      from: '/_main/hardware/$hardwareId',
+    });
 
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
@@ -78,9 +72,6 @@ const BootsTab = ({
         testId: bootId,
         hardwareId: hardwareId,
       },
-      search: s => ({
-        origin: s.origin,
-      }),
     }),
     [hardwareId],
   );
@@ -152,7 +143,6 @@ const BootsTab = ({
       <MemoizedKcidevCommandButton
         command={createHardwareResultsCommand('boots', {
           name: hardwareId,
-          origin,
           filters: {
             ...dashboardFiltersFromDiffFilter(diffFilter, 'boots'),
             hasHardwareDateWindow: true,
@@ -164,7 +154,7 @@ const BootsTab = ({
         })}
       />
     ),
-    [diffFilter, hardwareId, hardwareSearch, origin, treeCommits, treeIndexes],
+    [diffFilter, hardwareId, hardwareSearch, treeCommits, treeIndexes],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {

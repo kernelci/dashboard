@@ -22,6 +22,7 @@ type DashboardFilters = {
   compilers?: readonly string[];
   hardware?: readonly string[];
   testPaths?: readonly string[];
+  checkoutOrigins?: readonly string[];
   buildOrigins?: readonly string[];
   bootOrigins?: readonly string[];
   testOrigins?: readonly string[];
@@ -163,6 +164,7 @@ export const dashboardFiltersFromDiffFilter = (
     testPaths: enabledValues(
       result === 'boots' ? record.bootPath : record.testPath,
     ),
+    checkoutOrigins: enabledValues(record.checkoutOrigins),
     buildOrigins: enabledValues(record.buildOrigin),
     bootOrigins: enabledValues(record.bootOrigin),
     testOrigins: enabledValues(record.testOrigin),
@@ -191,7 +193,6 @@ type TreeResultsOptions = CommonOptions & {
 
 type HardwareResultsOptions = CommonOptions & {
   name?: string;
-  origin?: string;
 };
 
 type IssueListingOptions = CommonOptions & {
@@ -497,16 +498,21 @@ export const createHardwareListingCommand = ({
 
 export const createHardwareResultsCommand = (
   result: 'builds' | 'boots' | 'tests',
-  { name, origin, omittedFilters, filters }: HardwareResultsOptions,
+  { name, omittedFilters, filters }: HardwareResultsOptions,
 ): KcidevCommand | undefined => {
+  // kci-dev's single --origin is the test origin; without one, use the checkout origin.
+  const single = (values?: readonly string[]): string | undefined =>
+    values?.length === 1 ? values[0] : undefined;
+  const testOrigin = single(filters?.testOrigins);
+  const origin = testOrigin ?? single(filters?.checkoutOrigins);
   if (!hasRequiredValue(name) || !hasRequiredValue(origin)) {
     return undefined;
   }
 
-  const translated = translateDashboardFilters(filters ?? {}, {
-    family: 'hardware',
-    result,
-  });
+  const translated = translateDashboardFilters(
+    { ...filters, testOrigins: testOrigin ? [] : filters?.testOrigins },
+    { family: 'hardware', result },
+  );
   return command(
     `hardware-${result}`,
     `Hardware ${result}`,

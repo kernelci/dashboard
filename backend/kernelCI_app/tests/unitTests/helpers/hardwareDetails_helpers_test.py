@@ -33,6 +33,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     is_issue_processed,
     is_record_tree_selected,
     is_test_processed,
+    listing_origin_args,
     mutate_properties_to_list,
     process_filters,
     process_issue,
@@ -91,6 +92,40 @@ class TestUnstableParsePostBody:
         assert isinstance(mock_instance.start_datetime, datetime)
         assert mock_instance.selected_commits == {"1": "abc123"}
         mock_filter_params.assert_called_once()
+
+
+class TestListingOriginArgs:
+    @staticmethod
+    def _instance(*, origin=None, test=(), build=(), checkout=()):
+        instance = MagicMock()
+        instance.origin = origin
+        instance.filters.filter_test_origin = set(test)
+        instance.filters.filter_build_origin = set(build)
+        instance.filters.filter_checkout_origin = set(checkout)
+        return instance
+
+    def test_body_origin_is_test_origin_without_filters(self):
+        assert listing_origin_args(self._instance(origin="microsoft")) == {
+            "test_origins": ["microsoft"],
+            "build_origins": None,
+            "checkout_origins": None,
+        }
+
+    def test_filters_win_over_body_origin(self):
+        assert listing_origin_args(
+            self._instance(origin="microsoft", checkout=["maestro"])
+        ) == {
+            "test_origins": None,
+            "build_origins": None,
+            "checkout_origins": ["maestro"],
+        }
+
+    def test_no_origin_means_all_origins(self):
+        assert listing_origin_args(self._instance()) == {
+            "test_origins": None,
+            "build_origins": None,
+            "checkout_origins": None,
+        }
 
 
 class TestSetTreesStatusSummary:

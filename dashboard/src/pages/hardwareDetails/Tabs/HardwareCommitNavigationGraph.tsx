@@ -20,10 +20,9 @@ const HardwareCommitNavigationGraph = ({
   trees,
   hardwareId,
 }: HardwareCommitNavigationGraphProps): React.ReactNode => {
-  const { diffFilter, treeIndexes, currentPageTab, treeCommits, origin } =
-    useSearch({
-      from: '/_main/hardware/$hardwareId',
-    });
+  const { diffFilter, treeIndexes, currentPageTab, treeCommits } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareDetailsTimeRange();
 
@@ -56,7 +55,6 @@ const HardwareCommitNavigationGraph = ({
 
   const { data: commitHistoryData } = useHardwareDetailsCommitHistory(
     {
-      origin,
       hardwareId,
       endTimestampInSeconds,
       startTimestampInSeconds,

@@ -6,6 +6,7 @@ from django.test import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
 from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.typeModels.hardwareDetails import HardwareTestHistoryItem
 from kernelCI_app.views.hardwareDetailsTestsView import HardwareDetailsTests
 
@@ -14,6 +15,7 @@ class TestHardwareDetailsTestsView(SimpleTestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.view = HardwareDetailsTests()
+        self.view.filters = FilterParams({}, process_body=True)
         self.url = "/hardware/1/tests"
 
     @patch("kernelCI_app.views.hardwareDetailsTestsView.get_hardware_trees_data")

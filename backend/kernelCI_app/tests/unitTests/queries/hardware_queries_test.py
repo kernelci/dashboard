@@ -2,7 +2,9 @@ from datetime import datetime
 from unittest.mock import patch
 
 from kernelCI_app.queries.hardware import (
+    _and_origin_clause,
     _generate_query_params,
+    _origin_clause,
     get_hardware_commit_history,
     get_hardware_details_data,
     get_hardware_details_summary,
@@ -27,7 +29,6 @@ class TestGetHardwareDetailsData:
 
         result = get_hardware_details_data(
             hardware_id="hardware",
-            origin="maestro",
             trees_with_selected_commits=[TEST_TREE],
             start_datetime=START_DATE,
             end_datetime=END_DATE,
@@ -47,7 +48,6 @@ class TestGetHardwareDetailsData:
 
         result = get_hardware_details_data(
             hardware_id="hardware",
-            origin="maestro",
             trees_with_selected_commits=[TEST_TREE],
             start_datetime=START_DATE,
             end_datetime=END_DATE,
@@ -66,7 +66,6 @@ class TestGetHardwareTreesData:
 
         result = get_hardware_trees_data(
             hardware_id="hardware",
-            origin="maestro",
             start_datetime=START_DATE,
             end_datetime=END_DATE,
         )
@@ -93,17 +92,18 @@ class TestGetHardwareTreesData:
         ]
         mock_get_cache.return_value = None
         mock_dict_fetchall.return_value = tree_records
-        setup_mock_cursor(mock_connections.__getitem__.return_value)
+        mock_cursor = setup_mock_cursor(mock_connections.__getitem__.return_value)
 
         result = get_hardware_trees_data(
             hardware_id="hardware",
-            origin="maestro",
             start_datetime=START_DATE,
             end_datetime=END_DATE,
         )
 
         assert len(result) == 1
         assert result[0].tree_name == "mainline"
+        executed_query = mock_cursor.execute.call_args[0][0]
+        assert "HS.test_origin" not in executed_query
         mock_set_cache.assert_called_once()
         mock_connections.__getitem__.assert_called_with("default")
 
@@ -120,7 +120,6 @@ class TestGetHardwareDetailsSummary:
 
         get_hardware_details_summary(
             hardware_id="hardware",
-            origin="maestro",
             checkouts=[
                 ("mainline", "https://git.kernel.org", "master", "abc123", "maestro"),
                 ("mainline", "https://git.kernel.org", "for-next", "abc123", "broonie"),
@@ -142,12 +141,58 @@ class TestGetHardwareDetailsSummary:
         assert params["checkout_origin0"] == "maestro"
         assert params["git_repository_branch1"] == "for-next"
         assert params["checkout_origin1"] == "broonie"
+        assert "tests.origin" not in executed_query
+        assert "builds.origin" not in executed_query
+
+    @patch("kernelCI_app.queries.hardware.get_query_cache", return_value=None)
+    @patch("kernelCI_app.queries.hardware.set_query_cache")
+    @patch("kernelCI_app.queries.hardware.dict_fetchall", return_value=[])
+    @patch("kernelCI_app.queries.hardware.connection")
+    def test_one_selected_origin_stays_an_equality(
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
+    ):
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        get_hardware_details_summary(
+            hardware_id="hardware",
+            test_origins=["ti"],
+            build_origins=["maestro"],
+            checkouts=[
+                ("mainline", "https://git.kernel.org", "master", "abc123", "maestro"),
+            ],
+            start_datetime=START_DATE,
+            end_datetime=END_DATE,
+        )
+
+        executed_query, params = mock_cursor.execute.call_args[0]
+        assert "tests.origin = %(test_origins)s" in executed_query
+        assert "builds.origin = %(build_origins)s" in executed_query
+        assert "ANY" not in executed_query
+        assert params["test_origins"] == "ti"
+        assert params["build_origins"] == "maestro"
+
+    def test_absent_origin_adds_no_predicate(self):
+        clause, params = _and_origin_clause("C.origin", None, "checkout_origins")
+        assert clause == ""
+        assert params == {}
+
+        clause, params = _and_origin_clause(
+            "C.origin", ["linaro_pull_labs"], "checkout_origins"
+        )
+        assert clause == "AND C.origin = %(checkout_origins)s"
+        assert params == {"checkout_origins": "linaro_pull_labs"}
+
+    def test_origin_clause_uses_any_for_several_values(self):
+        clause, params = _origin_clause(
+            "tests.origin", ["maestro", "ti"], "test_origins"
+        )
+        assert clause == "tests.origin = ANY(%(test_origins)s)"
+        assert params == {"test_origins": ["maestro", "ti"]}
 
     @patch("kernelCI_app.queries.hardware.connection")
     def test_skips_query_without_checkouts(self, mock_connection):
         result = get_hardware_details_summary(
             hardware_id="hardware",
-            origin="maestro",
             checkouts=[],
             start_datetime=START_DATE,
             end_datetime=END_DATE,
@@ -250,7 +295,6 @@ class TestQueryRecords:
 
         result = query_records(
             hardware_id="hardware",
-            origin="maestro",
             trees=[TEST_TREE],
             start_date=START_DATE,
             end_date=END_DATE,
@@ -261,6 +305,7 @@ class TestQueryRecords:
         assert "checkouts.tree_name" in executed_query
         assert "checkouts.git_commit_hash" in executed_query
         assert "git_commit_hash IN" not in executed_query
+        assert "AND tests.origin" not in executed_query
         assert params[-5:] == [
             "mainline",
             "https://my_url.com",

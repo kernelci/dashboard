@@ -53,10 +53,9 @@ const BuildTab = ({
     from: '/hardware/$hardwareId',
   });
 
-  const { diffFilter, origin, treeIndexes, treeCommits, hardwareSearch } =
-    useSearch({
-      from: '/_main/hardware/$hardwareId',
-    });
+  const { diffFilter, treeIndexes, treeCommits, hardwareSearch } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -95,7 +94,6 @@ const BuildTab = ({
       <MemoizedKcidevCommandButton
         command={createHardwareResultsCommand('builds', {
           name: hardwareId,
-          origin,
           filters: {
             ...dashboardFiltersFromDiffFilter(diffFilter, 'builds'),
             hasHardwareDateWindow: true,
@@ -107,7 +105,7 @@ const BuildTab = ({
         })}
       />
     ),
-    [diffFilter, hardwareId, hardwareSearch, origin, treeCommits, treeIndexes],
+    [diffFilter, hardwareId, hardwareSearch, treeCommits, treeIndexes],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {

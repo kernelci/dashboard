@@ -24,6 +24,7 @@ from kernelCI_app.helpers.filters import (
 from kernelCI_app.helpers.hardwareDetails import (
     generate_build_summary_typed,
     generate_test_summary_typed,
+    listing_origin_args,
     unstable_parse_post_body,
 )
 from kernelCI_app.helpers.issueExtras import parse_issue
@@ -542,11 +543,12 @@ class HardwareDetailsSummary(APIView):
             return validation_error
 
         try:
+            origins = listing_origin_args(self)
             tree_heads = get_hardware_trees_head_commits(
                 hardware_id=hardware_id,
-                origin=self.origin,
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
+                checkout_origins=origins["checkout_origins"],
             )
 
             if not tree_heads:
@@ -560,10 +562,11 @@ class HardwareDetailsSummary(APIView):
 
             summary: list[dict] = get_hardware_details_summary(
                 hardware_id=hardware_id,
-                origin=self.origin,
                 checkouts=selected_checkouts,
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
+                test_origins=origins["test_origins"],
+                build_origins=origins["build_origins"],
                 builds_duration=(
                     filters.filterBuildDurationMin,
                     filters.filterBuildDurationMax,
@@ -597,10 +600,11 @@ class HardwareDetailsSummary(APIView):
             else:
                 unfiltered_summary = get_hardware_details_summary(
                     hardware_id=hardware_id,
-                    origin=self.origin,
                     checkouts=head_checkouts,
                     start_datetime=self.start_datetime,
                     end_datetime=self.end_datetime,
+                    test_origins=origins["test_origins"],
+                    build_origins=origins["build_origins"],
                 )
 
             if not unfiltered_summary:

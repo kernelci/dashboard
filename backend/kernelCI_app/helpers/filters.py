@@ -290,6 +290,7 @@ type FilterFields = Literal[
     "test.lab",
     "boot.lab",
     "build.lab",
+    "checkout.origin",
     "test.path",
     "boot.path",
     "build.issue",
@@ -382,6 +383,7 @@ class FilterParams:
         self.filter_build_origin: set[str] = set()
         self.filter_boot_origin: set[str] = set()
         self.filter_test_origin: set[str] = set()
+        self.filter_checkout_origin: set[str] = set()
 
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
@@ -412,6 +414,7 @@ class FilterParams:
             "build.origin": self._handle_build_origin,
             "boot.origin": self._handle_boot_origin,
             "test.origin": self._handle_test_origin,
+            "checkout.origin": self._handle_checkout_origin,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -538,6 +541,9 @@ class FilterParams:
 
     def _handle_test_origin(self, current_filter: ParsedFilter) -> None:
         self.filter_test_origin.add(current_filter["value"])
+
+    def _handle_checkout_origin(self, current_filter: ParsedFilter) -> None:
+        self.filter_checkout_origin.add(current_filter["value"])
 
     def _process_filters(self):
         try:

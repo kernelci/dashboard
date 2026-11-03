@@ -12,6 +12,9 @@ import type {
 } from '@/types/hardware';
 
 import {
+  buildOriginForSelectors,
+  hardwareListingParams,
+  useHardwareFilters,
   useHardwareListing,
   useHardwareListingByRevision,
   useHardwareRegistrySync,
@@ -31,6 +34,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import type { SearchIntent } from '@/lib/intent';
 
+import { HardwareListingFilter } from './HardwareListingFilter';
 import { HardwareRegistrySync } from './HardwareRegistrySync';
 import { HardwareTable } from './HardwareTable';
 import {
@@ -56,12 +60,12 @@ const HardwareListingPage = ({
 }: HardwareListingPageProps): JSX.Element => {
   const navigate = useNavigate({ from: urlFromMap.navigate });
   const {
-    origin,
     intervalInDays,
     treeName,
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
+    diffFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -83,9 +87,10 @@ const HardwareListingPage = ({
     treeName || gitRepositoryUrl || gitBranch || gitCommitHash,
   );
 
-  const { data: selectorsData, status: selectorsStatus } = useHardwareSelectors(
-    urlFromMap.search,
-  );
+  const buildOrigin = buildOriginForSelectors(diffFilter);
+
+  const { data: selectorsData, status: selectorsStatus } =
+    useHardwareSelectors(buildOrigin);
   const { data: registrySync } = useHardwareRegistrySync();
 
   const trees = Array.isArray(selectorsData?.trees)
@@ -161,17 +166,24 @@ const HardwareListingPage = ({
     return getBranchBySelection(selectedTree, gitRepositoryUrl, gitBranch);
   }, [selectedTree, gitRepositoryUrl, gitBranch]);
 
+  const filters = useMemo(
+    () => hardwareListingParams(diffFilter),
+    [diffFilter],
+  );
+
+  const { data: filterOptions } = useHardwareFilters(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+  );
+
   const defaultListing = useHardwareListing(
     startTimestampInSeconds,
     endTimestampInSeconds,
-    urlFromMap.search,
+    filters,
     intentCommits,
     !hasSelection,
   );
-  const revisionListing = useHardwareListingByRevision(
-    selection,
-    urlFromMap.search,
-  );
+  const revisionListing = useHardwareListingByRevision(selection, filters);
   const activeListing = hasSelection ? revisionListing : defaultListing;
 
   const listItems: HardwareItem[] = useMemo(() => {
@@ -191,15 +203,7 @@ const HardwareListingPage = ({
           includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
         );
       })
-      .map((hardware): HardwareItem => {
-        return {
-          hardware: hardware.hardware,
-          platform: hardware.platform,
-          build_status_summary: hardware.build_status_summary,
-          test_status_summary: hardware.test_status_summary,
-          boot_status_summary: hardware.boot_status_summary,
-        };
-      });
+      .sort((a, b) => a.platform.localeCompare(b.platform));
   }, [activeListing.data, activeListing.error, inputFilter]);
 
   const selectedRevision =
@@ -217,16 +221,16 @@ const HardwareListingPage = ({
 
   const tableStartTimestampInSeconds = hasSelection
     ? revisionStartTimestampInSeconds
-    : undefined;
+    : startTimestampInSeconds;
   const tableEndTimestampInSeconds = hasSelection
     ? revisionEndTimestampInSeconds
-    : undefined;
+    : endTimestampInSeconds;
 
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevCommandButton
         command={createHardwareListingCommand({
-          origin,
+          ...(buildOrigin ? { origin: buildOrigin } : {}),
           filters: {
             hasHardwareDateWindow: true,
             hasTextSearch: inputFilter.trim() !== '',
@@ -235,7 +239,7 @@ const HardwareListingPage = ({
         })}
       />
     ),
-    [hasSelection, inputFilter, origin],
+    [buildOrigin, hasSelection, inputFilter],
   );
 
   const onTreeChange = ({
@@ -325,7 +329,11 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          {kcidevComponent}
+          <HardwareListingFilter
+            data={filterOptions}
+            navigateFrom={urlFromMap.navigate}
+            paramFilter={diffFilter}
+          />
         </div>
 
         <HardwareTable
@@ -351,6 +359,7 @@ const HardwareListingPage = ({
           <HardwareRegistrySync sync={registrySync} />
         ) : null}
       </div>
+      {kcidevComponent}
     </>
   );
 };

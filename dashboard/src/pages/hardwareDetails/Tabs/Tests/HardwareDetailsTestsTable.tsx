@@ -100,9 +100,6 @@ const HardwareDetailsTestTable = ({
         testId: bootId,
         hardwareId: hardwareId,
       },
-      search: s => ({
-        origin: s.origin,
-      }),
     }),
     [hardwareId],
   );

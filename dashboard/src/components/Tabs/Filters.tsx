@@ -28,6 +28,21 @@ import { version_prefix } from '@/utils/utils';
 
 export const NO_VALID_INDEX = -1;
 
+// The listing drawer uses its own keys. Details already filters boots by
+// bootOrigin and tests/boots by labs, so copy the listing values across.
+export const withHardwareListingFilters = (filter: TFilter): TFilter => {
+  const testOrigin = filter.testOrigin;
+  const testLabs = filter.testLabs;
+  if (!testOrigin && !testLabs) {
+    return filter;
+  }
+  return {
+    ...filter,
+    ...(testOrigin && !filter.bootOrigin ? { bootOrigin: testOrigin } : {}),
+    ...(testLabs ? { labs: { ...filter.labs, ...testLabs } } : {}),
+  };
+};
+
 // TODO: We can improve this idea and replace mapFilterToReq entirely
 export const mapFilterToReq = (filter: TFilter): TFilter => {
   const filterMapped: { [key: string]: string[] } = {};

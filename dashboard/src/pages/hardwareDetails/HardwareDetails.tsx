@@ -36,7 +36,10 @@ import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
 
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import { mapFilterToReq } from '@/components/Tabs/Filters';
+import {
+  mapFilterToReq,
+  withHardwareListingFilters,
+} from '@/components/Tabs/Filters';
 
 import DetailsFilterList, {
   createFlatFilter,
@@ -153,10 +156,9 @@ const prepareTreeItems = ({
   });
 
 function HardwareDetails(): JSX.Element {
-  const { treeIndexes, treeCommits, diffFilter, origin, hardwareSearch } =
-    useSearch({
-      from: '/_main/hardware/$hardwareId',
-    });
+  const { treeIndexes, treeCommits, diffFilter, hardwareSearch } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareDetailsTimeRange();
 
@@ -173,7 +175,7 @@ function HardwareDetails(): JSX.Element {
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
-  const reqFilter = mapFilterToReq(diffFilter);
+  const reqFilter = mapFilterToReq(withHardwareListingFilters(diffFilter));
 
   const inconsistencyNavigateParams = useMemo(
     () => ({ hardwareId }),
@@ -224,7 +226,6 @@ function HardwareDetails(): JSX.Element {
       hardwareId: hardwareId,
       startTimestampInSeconds: startTimestampInSeconds,
       endTimestampInSeconds: endTimestampInSeconds,
-      origin: origin,
       filter: reqFilter,
       selectedIndexes: treeIndexes,
       treeCommits: treeCommits,
@@ -316,7 +317,6 @@ function HardwareDetails(): JSX.Element {
   const { isLoading: commitHistoryIsLoading, data: commitHistoryData } =
     useHardwareDetailsCommitHistory(
       {
-        origin,
         hardwareId,
         endTimestampInSeconds,
         startTimestampInSeconds,
@@ -567,7 +567,6 @@ function HardwareDetails(): JSX.Element {
                     search={previousParams => {
                       return {
                         intervalInDays: previousParams.intervalInDays,
-                        origin: previousParams.origin,
                         hardwareSearch: previousParams.hardwareSearch,
                       };
                     }}

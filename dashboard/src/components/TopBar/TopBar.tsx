@@ -17,7 +17,7 @@ import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
 import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
 
-type OriginSource = 'checkout' | 'test' | 'lab';
+type OriginSource = 'checkout' | 'lab';
 
 const OriginSelect = ({
   originSource,
@@ -52,12 +52,8 @@ const OriginSelect = ({
     if (!originData) {
       return [];
     }
-    return (
-      (originSource === 'test'
-        ? originData.test_origins
-        : originData.checkout_origins) ?? []
-    );
-  }, [isLabSource, labOriginData, originData, originSource]);
+    return originData.checkout_origins ?? [];
+  }, [isLabSource, labOriginData, originData]);
 
   const selectItems = useMemo(() => {
     return pageOrigins.map(option => (
@@ -150,9 +146,9 @@ const TopBar = (): JSX.Element => {
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
-      isHardwarePage: cleanFullPath.includes('hardware'),
       isLabsPage: isLabsListing,
       isListingPage: isListingPage,
+      showOriginSelect: isTreeListing || isLabsListing,
     };
   }, [matches]);
 
@@ -173,17 +169,9 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing ||
-              routeInfo.isHardwarePage ||
-              routeInfo.isLabsPage) && (
+            {routeInfo.showOriginSelect && (
               <OriginSelect
-                originSource={
-                  routeInfo.isLabsPage
-                    ? 'lab'
-                    : routeInfo.isHardwarePage
-                      ? 'test'
-                      : 'checkout'
-                }
+                originSource={routeInfo.isLabsPage ? 'lab' : 'checkout'}
               />
             )}
             <span className="ml-0 flex w-full px-6 lg:ml-14">
