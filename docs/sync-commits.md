@@ -185,7 +185,6 @@ written and the mirror grows. The mirror config sets the same option. It
 does not pass `--aggressive` or `gc.repackFilter`. Promisor packs stay
 promisor packs, so the omitted trees are not downloaded.
 
-The commands run on production and development; staging skips them.
 The low-speed fetch timeout is five minutes to tolerate slow servers.
 Aggressive GC is left disabled because its long runtime makes it unsuitable
 for the scheduled job.

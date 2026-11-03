@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand
 
 from kernelCI_app.helpers.commitSync import sync_commit_metadata
 from kernelCI_app.helpers.logger import out
-from kernelCI_app.helpers.system import get_running_instance
 
 
 class Command(BaseCommand):
@@ -38,10 +37,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if get_running_instance() == "staging":
-            print("This command only runs on production or development.")
-            return
-
         mirror_dir = options["mirror_dir"] or settings.GIT_MIRROR_DIR
         stats = sync_commit_metadata(
             mirror_dir=Path(mirror_dir),
