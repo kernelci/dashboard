@@ -1099,13 +1099,17 @@ def query_records(
     else:
         query = query.replace("__LAB_CLAUSE__", f"AND {lab_sql}" if lab_sql else "")
 
-    params = [
-        hardware_id,
-        hardware_id,
-        *test_origin_params,
-        start_date,
-        end_date,
-    ] + [value for checkout in checkouts for value in checkout] + lab_values
+    params = (
+        [
+            hardware_id,
+            hardware_id,
+            *test_origin_params,
+            start_date,
+            end_date,
+        ]
+        + [value for checkout in checkouts for value in checkout]
+        + lab_values
+    )
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
@@ -1213,15 +1217,19 @@ def query_build_records(
         build_lab_clause=build_lab_clause,
         checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
     )
-    params = [
-        hardware_id,
-        hardware_id,
-        *build_origin_params,
-        start_date,
-        end_date,
-        start_date,
-        end_date,
-    ] + [value for checkout in checkouts for value in checkout] + build_lab_values
+    params = (
+        [
+            hardware_id,
+            hardware_id,
+            *build_origin_params,
+            start_date,
+            end_date,
+            start_date,
+            end_date,
+        ]
+        + [value for checkout in checkouts for value in checkout]
+        + build_lab_values
+    )
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return dict_fetchall(cursor)

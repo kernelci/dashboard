@@ -272,7 +272,7 @@ def test_query_records_applies_the_same_window(rows):
     def found(**labs):
         records = query_records(
             hardware_id="board",
-            origin="maestro",
+            test_origins=["maestro"],
             trees=[tree],
             start_date=START,
             end_date=END,

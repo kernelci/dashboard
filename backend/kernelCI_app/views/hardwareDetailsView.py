@@ -344,6 +344,7 @@ class HardwareDetails(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             build_origins=origins["build_origins"],
+            build_labs=self.filters.filter_labs["build"],
         )
 
         if len(records) == 0 and len(build_records) == 0:
