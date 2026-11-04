@@ -169,7 +169,12 @@ A run passes the flag in two cases:
 
 Otherwise the fetch is unchanged. A populated mirror that has never been
 ingested, and a mirror whose last ingest failed, keep their current history.
-A failed or rejected fetch restores the previous `shallow` file.
+A failed or rejected fetch restores the previous `shallow` file and the
+previous `objects/info/commit-graphs` directory, and deletes `tmp_pack_*`.
+The mirror sets `core.commitGraph=false`, so a graph left behind by an
+older run is not read. A graph that names a commit whose pack was deleted
+makes later fetches try to download that commit and leave another temporary
+pack on disk. `fetch.writeCommitGraph` and `gc.writeCommitGraph` stay off.
 
 After the boundary moves, `rev-list --ignore-missing` skips stored tips gc
 already deleted, and does not ask the promisor remote to send them back. The
