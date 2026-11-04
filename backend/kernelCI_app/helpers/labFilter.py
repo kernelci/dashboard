@@ -94,11 +94,7 @@ def hardware_details_lab_sql(
     test_labs: Optional[set[str]],
     build_labs: Optional[set[str]],
 ) -> tuple[str, dict]:
-    """Lab predicate for one hardware details tab (build, boot, or test).
-
-    The full page does not use this. It filters with full_page_lab_sql so the
-    row kept for a build is one of the rows already in the hardware window.
-    """
+    """Lab predicate for one hardware details tab (build, boot, or test)."""
     boot_sql, boot_params = lab_filter_sql(
         boot_labs, lab_id_column="tests.lab_id", param="boot_labs"
     )
@@ -120,42 +116,6 @@ def hardware_details_lab_sql(
             return "", {}
         return f"(NOT {is_boot} AND {test_sql})", test_params
 
-    # build.lab alone stays per tab on the shared query: filtering it here
-    # would drop tests. The full page applies test.lab in full_page_lab_sql.
+    # The full page also returns the status summary and filter options, so it
+    # loads every row and filters labs in Python.
     return "", {}
-
-
-def full_page_lab_sql(
-    *,
-    boot_labs: Optional[set[str]],
-    test_labs: Optional[set[str]],
-    build_labs: Optional[set[str]],
-) -> tuple[str, dict]:
-    """Keep matching tests, plus one hardware_rows row per build."""
-    boot_sql, boot_params = lab_filter_sql(
-        boot_labs, lab_id_column="lab_id", param="boot_labs"
-    )
-    test_sql, test_params = lab_filter_sql(
-        test_labs, lab_id_column="lab_id", param="test_labs"
-    )
-    build_sql, build_params = lab_filter_sql(
-        build_labs, lab_id_column="build_lab_id", param="build_labs"
-    )
-    if not boot_sql and not test_sql:
-        return "", {}
-    is_boot = _boot_path("path")
-    path_ok = (
-        f"(({is_boot} AND ({boot_sql or 'TRUE'})) "
-        f"OR (NOT {is_boot} AND ({test_sql or 'TRUE'})))"
-    )
-    representative = (
-        "id = (SELECT MIN(rep.id) FROM hardware_rows rep "
-        "WHERE rep.build_id = hardware_rows.build_id)"
-    )
-    params = {**boot_params, **test_params}
-    if build_sql:
-        return (
-            f"({path_ok} OR ({build_sql} AND {representative}))",
-            {**params, **build_params},
-        )
-    return f"({path_ok} OR {representative})", params

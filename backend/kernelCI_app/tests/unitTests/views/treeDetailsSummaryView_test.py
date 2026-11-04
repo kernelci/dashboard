@@ -174,6 +174,33 @@ class TestTreeDetailsSummaryRollupFallback(SimpleTestCase):
         builds_filter = response.data["filters"]["builds"]
         self.assertFalse(builds_filter["has_unknown_issue"])
 
+    @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_builds")
+    @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_rollup")
+    def test_build_lab_filter_keeps_options_and_tests(
+        self, mock_get_rollup, mock_get_builds
+    ):
+        mock_get_rollup.return_value = [BASE_ROLLUP_ROW]
+        mock_get_builds.return_value = [
+            {**BASE_BUILD_ROW, "build_lab": "lab-a", "build_lab_id": 1}
+        ]
+
+        response = self.view.get(
+            self._make_request({"filter_build.lab": "lab-b"}),
+            commit_hash=COMMIT_HASH,
+        )
+
+        self.assertNotIn("error", response.data)
+        mock_get_builds.assert_called_once_with(
+            origin_param="maestro",
+            git_url_param="https://git.kernel.org",
+            git_branch_param="for-kernelci",
+            commit_hash=COMMIT_HASH,
+            tree_name=None,
+        )
+        self.assertEqual(response.data["filters"]["builds"]["labs"], ["lab-a"])
+        self.assertEqual(sum(response.data["summary"]["builds"]["status"].values()), 0)
+        self.assertEqual(response.data["summary"]["tests"]["status"]["PASS"], 1)
+
     @patch("kernelCI_app.views.treeDetailsSummaryView.out")
     @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_data")
     @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_builds")

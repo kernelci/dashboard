@@ -513,7 +513,7 @@ def process_filters(instance, row_data: dict, skip_build_filters: bool = False) 
         instance.global_compilers.add(row_data["build_compiler"])
         instance.unfiltered_origins["build"].add(row_data["build_origin"])
         instance.unfiltered_labs["build"].add(
-            row_data.get("build_lab") or UNKNOWN_STRING
+            lab_for_filter(row_data.get("build_lab_id"), row_data.get("build_lab"))
         )
 
         build_issue_id, build_issue_version, is_build_issue = (
@@ -567,4 +567,6 @@ def process_filters(instance, row_data: dict, skip_build_filters: bool = False) 
 
         origin_set.add(row_data["test_origin"])
         if (history_item := row_data.get("history_item")) is not None:
-            lab_set.add(history_item.get("lab", UNKNOWN_STRING))
+            lab_set.add(
+                lab_for_filter(row_data.get("test_lab_id"), history_item.get("lab"))
+            )

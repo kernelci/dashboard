@@ -7,7 +7,6 @@ from django.db import connection
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.labFilter import (
-    full_page_lab_sql,
     hardware_details_lab_sql,
     lab_filter_sql,
 )
@@ -220,36 +219,7 @@ def test_hardware_tab_scopes_drop_the_other_tab(rows):
     assert ids("all", test={"lava"}) == {row.id for row in Tests.objects.all()}
 
 
-def test_full_page_keeps_one_in_window_row_per_build(rows):
-    sql, params = full_page_lab_sql(
-        boot_labs={"broonie"}, test_labs={"lava"}, build_labs=None
-    )
-    query = f"""
-        WITH hardware_rows AS (
-            SELECT
-                tests.id,
-                tests.path,
-                tests.lab_id,
-                builds.lab_id AS build_lab_id,
-                tests.build_id
-            FROM tests
-            JOIN builds ON builds.id = tests.build_id
-            WHERE tests.environment_compatible @> ARRAY['board']::text[]
-        )
-        SELECT id FROM hardware_rows WHERE {sql}
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        found = {row[0] for row in cursor.fetchall()}
-
-    assert "0-outside" not in found
-    assert "a-miss" in found
-    assert "b-boot-lava" not in found
-    assert {"c-boot-broonie", "d-loader", "e-suite", "f-null"} <= found
-    assert "suite-misc" not in found
-
-
-def test_query_records_applies_the_same_window(rows):
+def test_query_records_full_page_ignores_labs(rows):
     tree = Tree(
         index="0",
         origin="maestro",
@@ -280,15 +250,10 @@ def test_query_records_applies_the_same_window(rows):
         )
         return {row["id"] for row in records}
 
-    assert "0-outside" not in found()
-    assert {"a-miss", "f-null", "bootloader"} <= found()
-
-    filtered = found(boot_labs={"broonie"}, test_labs={"lava"})
-    assert "0-outside" not in filtered
-    assert "a-miss" in filtered
-    assert "b-boot-lava" not in filtered
-    assert {"c-boot-broonie", "d-loader", "e-suite", "f-null"} <= filtered
-
-    build_only = found(build_labs={"broonie"})
-    assert "a-miss" in build_only
-    assert "c-boot-broonie" in build_only
+    unfiltered = found()
+    assert "0-outside" not in unfiltered
+    assert {"a-miss", "f-null", "bootloader"} <= unfiltered
+    assert (
+        found(boot_labs={"broonie"}, test_labs={"lava"}, build_labs={"broonie"})
+        == unfiltered
+    )

@@ -8,7 +8,6 @@ from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.labFilter import (
     as_positional,
-    full_page_lab_sql,
     hardware_details_lab_sql,
     lab_filter_sql,
     test_side_lab_sql,
@@ -746,7 +745,7 @@ def get_hardware_details_summary(
     if tests_duration is None:
         tests_duration = (None, None)
 
-    cache_key = "hardwareDetailsSummaryByCheckoutV2"
+    cache_key = "hardwareDetailsSummaryByCheckoutV3"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -794,8 +793,7 @@ def get_hardware_details_summary(
                      AS known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 -- TODO remove misc->>'lab' fallback after lab backfill
-                 COALESCE(bl.name, builds.misc->>'lab') AS lab,
+                 bl.name AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
                  checkouts.tree_name,
@@ -844,8 +842,7 @@ def get_hardware_details_summary(
                      as known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 -- TODO remove misc->>'runtime' fallback after lab backfill
-                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
+                 tl.name AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
                  checkouts.tree_name,
@@ -1002,8 +999,7 @@ _FULL_RECORD_COLUMNS = """
                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
                 COALESCE(bl.name, builds.misc->>'lab') AS build_lab,
                 tests.lab_id AS lab_id,
-                builds.lab_id AS build_lab_id,
-                issues."_timestamp" AS issue_timestamp
+                builds.lab_id AS build_lab_id
 """
 
 
@@ -1073,31 +1069,14 @@ def query_records(
         checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
     )
 
-    if lab_scope == "all":
-        lab_sql, lab_params = full_page_lab_sql(
-            boot_labs=boot_labs, test_labs=test_labs, build_labs=build_labs
-        )
-    else:
-        lab_sql, lab_params = hardware_details_lab_sql(
-            scope=lab_scope,
-            boot_labs=boot_labs,
-            test_labs=test_labs,
-            build_labs=build_labs,
-        )
+    lab_sql, lab_params = hardware_details_lab_sql(
+        scope=lab_scope,
+        boot_labs=boot_labs,
+        test_labs=test_labs,
+        build_labs=build_labs,
+    )
     lab_sql, lab_values = as_positional(lab_sql, lab_params)
-    if lab_scope == "all" and lab_sql:
-        inner = query.replace("__LAB_CLAUSE__", "").replace(
-            'ORDER BY\n                issues."_timestamp" DESC', ""
-        )
-        query = (
-            "WITH hardware_rows AS ("
-            + inner
-            + ") SELECT * FROM hardware_rows WHERE "
-            + lab_sql
-            + " ORDER BY issue_timestamp DESC"
-        )
-    else:
-        query = query.replace("__LAB_CLAUSE__", f"AND {lab_sql}" if lab_sql else "")
+    query = query.replace("__LAB_CLAUSE__", f"AND {lab_sql}" if lab_sql else "")
 
     params = (
         [
@@ -1177,7 +1156,8 @@ def query_build_records(
                 T7.issue_id AS build__incidents__issue__id,
                 T8.version AS build__incidents__issue__version,
                 NULL::text AS lab,
-                COALESCE(bl.name, builds.misc->>'lab') AS build_lab
+                COALESCE(bl.name, builds.misc->>'lab') AS build_lab,
+                builds.lab_id AS build_lab_id
             FROM
                 checkouts
             INNER JOIN builds ON

@@ -329,10 +329,6 @@ class HardwareDetails(APIView):
 
         records = get_hardware_details_data(
             hardware_id=hardware_id,
-            lab_scope="all",
-            build_labs=self.filters.filter_labs["build"],
-            boot_labs=self.filters.filter_labs["boot"],
-            test_labs=self.filters.filter_labs["test"],
             trees_with_selected_commits=trees_with_selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
@@ -344,7 +340,6 @@ class HardwareDetails(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             build_origins=origins["build_origins"],
-            build_labs=self.filters.filter_labs["build"],
         )
 
         if len(records) == 0 and len(build_records) == 0:

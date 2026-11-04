@@ -296,9 +296,7 @@ class BaseTreeDetailsSummary(APIView):
             "tree_name": tree_name,
         }
 
-        builds_rows = get_tree_details_builds(
-            **query_params, build_labs=self.filters.filter_labs["build"]
-        )
+        builds_rows = get_tree_details_builds(**query_params)
         rollup_rows = get_tree_details_rollup(**query_params)
 
         if not builds_rows and not rollup_rows:
@@ -344,9 +342,6 @@ class BaseTreeDetailsSummary(APIView):
                 tree_name=tree_name,
                 git_branch_param=git_branch_param,
                 commit_hash=commit_hash,
-                build_labs=self.filters.filter_labs["build"],
-                boot_labs=self.filters.filter_labs["boot"],
-                test_labs=self.filters.filter_labs["test"],
             )
             if legacy_rows:
                 self._sanitize_test_rows_legacy(legacy_rows)

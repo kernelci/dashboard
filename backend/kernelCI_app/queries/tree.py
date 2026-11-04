@@ -184,9 +184,6 @@ def get_tree_details_data(
     git_branch_param: Optional[str],
     commit_hash: Optional[str],
     tree_name: Optional[str] = None,
-    build_labs: Optional[set[str]] = None,
-    boot_labs: Optional[set[str]] = None,
-    test_labs: Optional[set[str]] = None,
 ) -> Optional[list[tuple]]:
     cache_key = "treeDetailsV2"
 
@@ -196,21 +193,7 @@ def get_tree_details_data(
         "origin_param": origin_param,
         "git_url_param": git_url_param,
         "git_branch_param": git_branch_param,
-        "build_labs_key": sorted(build_labs or []),
-        "boot_labs_key": sorted(boot_labs or []),
-        "test_labs_key": sorted(test_labs or []),
     }
-    test_on, test_params = test_side_lab_sql(boot_labs, test_labs)
-    build_lab_id = (
-        "(SELECT b.lab_id FROM builds b WHERE b.id = builds_filter.builds_id)"
-    )
-    build_sql, build_params = lab_filter_sql(
-        build_labs, lab_id_column=build_lab_id, param="build_labs"
-    )
-    params.update(test_params)
-    params.update(build_params)
-    test_on_sql = f" AND {test_on}" if test_on else ""
-    build_where = f"WHERE tests.id IS NOT NULL OR {build_sql}" if build_sql else ""
 
     rows = get_query_cache(cache_key, params)
     if rows is None:
@@ -265,7 +248,8 @@ def get_tree_details_data(
                 issues.comment AS issues_comment,
                 issues.report_url AS issues_report_url,
                 tests.lab_id AS test_lab_id,
-                {build_lab_id} AS build_lab_id
+                (SELECT b.lab_id FROM builds b WHERE b.id = builds_filter.builds_id)
+                    AS build_lab_id
         FROM
             (
                 SELECT
@@ -309,7 +293,7 @@ def get_tree_details_data(
                     ON builds.lab_id = build_labs.id
             ) AS builds_filter
         LEFT JOIN tests
-            ON builds_filter.builds_id = tests.build_id{test_on_sql}
+            ON builds_filter.builds_id = tests.build_id
         LEFT JOIN labs AS test_labs
             ON tests.lab_id = test_labs.id
         LEFT JOIN incidents
@@ -318,7 +302,6 @@ def get_tree_details_data(
         LEFT JOIN issues
             ON incidents.issue_id = issues.id
             AND incidents.issue_version = issues.version
-        {build_where}
         ORDER BY
             issues."_timestamp" DESC
         """
@@ -346,7 +329,7 @@ def get_tree_details_rollup(
     test results by various dimensions (path_group, config, arch, compiler,
     hardware, platform, lab, origin, and issue).
     """
-    cache_key = "treeDetailsRollup"
+    cache_key = "treeDetailsRollupV2"
 
     params = {
         "commit_hash": commit_hash,
@@ -419,7 +402,10 @@ def get_tree_details_rollup(
             tr.null_tests,
             tr.total_tests,
             i.comment AS issue_comment,
-            i.report_url AS issue_report_url
+            i.report_url AS issue_report_url,
+            -- ponytail: rollup keeps only the lab name; a misc-only name that
+            -- matches a labs row counts as that lab here but Unknown in the filter.
+            rl.id AS test_lab_id
         FROM
             tree_tests_rollup tr
         INNER JOIN RELEVANT_CHECKOUTS rc ON (
@@ -431,6 +417,8 @@ def get_tree_details_rollup(
         )
         LEFT JOIN issues i
             ON tr.issue_id = i.id AND tr.issue_version = i.version
+        LEFT JOIN labs rl
+            ON rl.name = tr.test_lab
         ORDER BY
             tr.total_tests DESC
         """
@@ -633,15 +621,11 @@ def get_tree_details_builds(
     git_branch_param: Optional[str],
     commit_hash: Optional[str],
     tree_name: Optional[str] = None,
-    build_labs: Optional[set[str]] = None,
 ) -> Optional[list[dict]]:
     """
     Fetch builds for a given tree commit.
     """
     cache_key = "treeDetailsBuildsDataV2"
-    build_sql, build_params = lab_filter_sql(
-        build_labs, lab_id_column="b.lab_id", param="build_labs"
-    )
 
     params = {
         "commit_hash": commit_hash,
@@ -649,8 +633,6 @@ def get_tree_details_builds(
         "origin_param": origin_param,
         "git_url_param": git_url_param,
         "git_branch_param": git_branch_param,
-        "build_labs_key": sorted(build_labs or []),
-        **build_params,
     }
 
     rows = get_query_cache(cache_key, params)
@@ -726,7 +708,6 @@ def get_tree_details_builds(
             ON inc.build_id = b.id AND inc.test_id IS NULL
         LEFT JOIN issues iss
             ON inc.issue_id = iss.id AND inc.issue_version = iss.version
-        {"WHERE " + build_sql if build_sql else ""}
         ORDER BY
             iss."_timestamp" DESC NULLS LAST,
             b.start_time DESC

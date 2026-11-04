@@ -736,8 +736,9 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
-        if record.get("build_lab"):
-            instance.unfiltered_labs["build"].add(record["build_lab"])
+        instance.unfiltered_labs["build"].add(
+            lab_for_filter(record.get("build_lab_id"), record.get("build_lab"))
+        )
 
     if record["id"] is not None:
         if is_boot(record["path"]):
@@ -775,8 +776,9 @@ def process_filters(*, instance, record: Dict) -> None:
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 
-        if record.get("lab"):
-            instance.unfiltered_labs[flag_tab].add(record["lab"])
+        instance.unfiltered_labs[flag_tab].add(
+            lab_for_filter(record.get("lab_id"), record.get("lab"))
+        )
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

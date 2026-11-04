@@ -7,6 +7,7 @@ from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
 )
+from kernelCI_app.helpers.labFilter import lab_for_filter
 from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
@@ -55,7 +56,9 @@ def process_build_filters(instance, row_data: dict) -> None:
     instance.global_architectures.add(row_data["build_architecture"])
     instance.global_compilers.add(row_data["build_compiler"])
     instance.unfiltered_origins["build"].add(row_data["build_origin"])
-    instance.unfiltered_labs["build"].add(row_data.get("build_lab") or UNKNOWN_STRING)
+    instance.unfiltered_labs["build"].add(
+        lab_for_filter(row_data.get("build_lab_id"), row_data.get("build_lab"))
+    )
 
     build_issue_id, build_issue_version, is_build_issue = should_increment_build_issue(
         issue_id=issue_id,
@@ -112,9 +115,8 @@ def process_rollup_filters(instance, row_dict: dict) -> None:
     )
 
     test_origin = row_dict.get("test_origin", UNKNOWN_STRING) or UNKNOWN_STRING
-    test_lab = row_dict.get("test_lab", UNKNOWN_STRING) or UNKNOWN_STRING
     origin_set.add(test_origin)
-    lab_set.add(test_lab)
+    lab_set.add(lab_for_filter(row_dict.get("test_lab_id"), row_dict.get("test_lab")))
 
 
 def rollup_test_or_boot_filtered_out(

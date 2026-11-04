@@ -240,9 +240,6 @@ class BaseTreeDetails(APIView):
             tree_name=tree_name,
             git_branch_param=git_branch_param,
             commit_hash=commit_hash,
-            build_labs=self.filters.filter_labs["build"],
-            boot_labs=self.filters.filter_labs["boot"],
-            test_labs=self.filters.filter_labs["test"],
         )
 
         if len(rows) == 0:

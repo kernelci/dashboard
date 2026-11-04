@@ -5,7 +5,6 @@ from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.labFilter import (
     as_positional,
-    full_page_lab_sql,
     hardware_details_lab_sql,
     lab_filter_sql,
     lab_for_filter,
@@ -41,28 +40,12 @@ def test_issue_lab_filter_is_separate_from_tabs():
     assert filters.filter_labs["test"] == set()
 
 
-def test_full_page_representative_stays_inside_the_hardware_window():
-    sql, params = full_page_lab_sql(
-        boot_labs=None, test_labs={"lava"}, build_labs={"lava"}
-    )
-    assert "FROM hardware_rows rep" in sql
-    assert "FROM tests rep" not in sql
-    assert params == {"test_labs": ["lava"], "build_labs": ["lava"]}
-
-
-def test_full_page_build_lab_alone_stays_out_of_sql():
-    assert full_page_lab_sql(boot_labs=None, test_labs=None, build_labs={"lava"}) == (
-        "",
-        {},
-    )
-
-
-def test_hardware_tab_scopes_do_not_use_the_full_page_predicate():
+def test_hardware_full_page_has_no_lab_sql():
     assert hardware_details_lab_sql(
         scope="all",
-        boot_labs=None,
+        boot_labs={"lava"},
         test_labs={"lava"},
-        build_labs=None,
+        build_labs={"lava"},
     ) == ("", {})
     boot_sql, _ = hardware_details_lab_sql(
         scope="boot",
@@ -72,7 +55,6 @@ def test_hardware_tab_scopes_do_not_use_the_full_page_predicate():
     )
     assert "tests.path" in boot_sql
     assert "COALESCE(tests.path, '')" in boot_sql
-    assert "hardware_rows" not in boot_sql
 
 
 def test_null_and_bootloader_paths_are_not_boots():
@@ -86,8 +68,6 @@ def test_null_and_bootloader_paths_are_not_boots():
     )
     assert "COALESCE(tests.path, '')" in boot_sql
     assert "NOT" in test_sql
-    full_sql, _ = full_page_lab_sql(boot_labs=None, test_labs={"lava"}, build_labs=None)
-    assert "COALESCE(path, '')" in full_sql
 
 
 def test_lab_filter_edges():
