@@ -4,6 +4,7 @@ from unittest.mock import patch
 from django.test.testcases import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
+from kernelCI_app.queries.hardwareRegistryFilters import HardwareRegistryFilter
 from kernelCI_app.views.hardwareByRevisionView import HardwareByRevisionView
 
 
@@ -42,6 +43,7 @@ class TestHardwareByRevisionView(SimpleTestCase):
             git_repository_url="https://example.com/linux.git",
             git_repository_branch="main",
             git_commit_hash="a" * 40,
+            registry_filter=HardwareRegistryFilter(),
         )
 
     @patch(

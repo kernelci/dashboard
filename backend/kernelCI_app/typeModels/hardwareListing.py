@@ -199,7 +199,10 @@ class HardwareRegistryFilterOptionsDocumentationOnly(BaseModel):
         str,
         Field(
             default=DEFAULT_ORIGIN,
-            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
+            description=(
+                "Test origin used to list the registry filter choices. "
+                "Defaults to maestro."
+            ),
         ),
     ]
     startTimestampInSeconds: str = Field(  # noqa: N815
