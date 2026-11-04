@@ -216,7 +216,8 @@ def get_tree_details_data(
                 checkouts c
             WHERE
                 c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags)
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[]
             ORDER BY
                 c._timestamp DESC
             LIMIT 1
@@ -360,7 +361,8 @@ def get_tree_details_rollup(
                 checkouts c
             WHERE
                 (c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
                 {git_url_full_clause}
                 {tree_name_full_clause}
                 AND {git_branch_clause}
@@ -525,7 +527,8 @@ def get_tree_data(
                 checkouts c
             WHERE
                 c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags)
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[]
             ORDER BY
                 c._timestamp DESC
             LIMIT 1
@@ -649,7 +652,8 @@ def get_tree_details_builds(
                 checkouts c
             WHERE
                 (c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
                 {git_url_full_clause}
                 {tree_name_full_clause}
                 AND {git_branch_clause}
@@ -1308,7 +1312,8 @@ def get_tree_commit_history(
             checkouts
         WHERE
             (git_commit_hash = %(commit_hash)s
-            OR %(commit_hash)s = ANY(checkouts.git_commit_tags))
+            -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+            OR checkouts.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
             AND origin = %(origin_param)s
             AND {git_branch_clause}
             {git_url_full_clause}
