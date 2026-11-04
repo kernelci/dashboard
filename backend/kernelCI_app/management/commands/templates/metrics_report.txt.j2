@@ -7,6 +7,7 @@ KernelCI Metrics Summary
 ========================
 Period: {{ start_datetime }} to {{ end_datetime }}
 
+  Trees monitored, Checkouts, Builds, and Tests are project-wide.
 
   COVERAGE
   --------
@@ -117,10 +118,11 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
   Labs marked with an asterisk (*) are new.
 
-{% if n_labs and lab_maps -%}
+{% if lab_maps or deltas.extinct_lab_keys -%}
 {#- Compute the text spacing in jinja instead of python to consider the `fmt` macro -#}
 {%- set static_spacing = 3 -%}
-{%- set lab_names_len = lab_maps.keys() | map('length') | max -%}
+{%- set lab_name_lengths = (lab_maps.keys() | list) + (deltas.extinct_lab_keys | list) -%}
+{%- set lab_names_len = lab_name_lengths | map('length') | max -%}
 {%- set lab_names_space = [lab_names_len, "Lab"|length ] | max + static_spacing + 2 -%} {#- +2 for the possible ` *` -#}
 
 {#- a namespace is required to store the values outside of the loop -#}
