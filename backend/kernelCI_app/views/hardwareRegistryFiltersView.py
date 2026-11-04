@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.queries.hardwareRegistryFilters import (
     get_hardware_registry_filter_options,
 )
@@ -26,13 +27,12 @@ class HardwareRegistryFiltersView(APIView):
             query_params = HardwareQueryParams(
                 start_date=request.GET.get("startTimestampInSeconds"),
                 end_date=request.GET.get("endTimestampInSeconds"),
-                origin=request.GET.get("origin"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         options = get_hardware_registry_filter_options(
-            origin=query_params.origin,
+            origin=request.GET.get("origin") or DEFAULT_ORIGIN,
             start_date=query_params.start_date,
             end_date=query_params.end_date,
             tree_name=request.GET.get("tree_name"),

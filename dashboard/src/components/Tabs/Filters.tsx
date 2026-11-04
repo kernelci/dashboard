@@ -185,6 +185,9 @@ const CheckboxSection = ({
     () =>
       sections.map(section => ({
         title: intl.formatMessage({ id: section.title }),
+        subtitle: section.subtitle
+          ? intl.formatMessage({ id: section.subtitle })
+          : undefined,
         items: parsedFilter[section.sectionKey],
         isGlobal: section.isGlobal,
         showIcon: showAllIcons,

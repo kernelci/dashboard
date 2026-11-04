@@ -107,11 +107,11 @@ class TestHardwareView(SimpleTestCase):
             registry_filter=HardwareRegistryFilter(),
         )
 
-    @patch("kernelCI_app.views.hardwareView.get_hardware_daily_listing")
+    @patch("kernelCI_app.views.hardwareView.get_hardware_listing_data")
     def test_get_hardware_listing_passes_registry_filters(
-        self, mock_get_status_table_data
+        self, mock_get_hardware_listing
     ):
-        mock_get_status_table_data.return_value = [
+        mock_get_hardware_listing.return_value = [
             ("platform1", "hardware1", *range(9)),
         ]
 
@@ -128,8 +128,12 @@ class TestHardwareView(SimpleTestCase):
         response = self.view.get(request)
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        mock_get_status_table_data.assert_called_once_with(
-            origin="origin1",
+        mock_get_hardware_listing.assert_called_once_with(
+            checkout_origin=["origin1"],
+            build_origin=["origin1"],
+            test_origin=None,
+            build_lab=None,
+            test_lab=None,
             start_date=ANY,
             end_date=ANY,
             commits_list=None,
