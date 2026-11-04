@@ -9,10 +9,14 @@ from kernelCI_app.views.hardwareByRevisionView import HardwareByRevisionView
 
 class TestHardwareByRevisionView(SimpleTestCase):
     @patch(
+        "kernelCI_app.views.hardwareByRevisionView.get_hardware_registry_by_ids",
+        return_value={},
+    )
+    @patch(
         "kernelCI_app.views.hardwareByRevisionView."
         "get_hardware_listing_data_by_revision"
     )
-    def test_get_passes_independent_filters(self, mock_get_listing):
+    def test_get_passes_independent_filters(self, mock_get_listing, _mock_registry):
         mock_get_listing.return_value = [("platform1", ["hardware1"], *range(9))]
         request = APIRequestFactory().get(
             "/hardware-by-revision/",
@@ -32,6 +36,7 @@ class TestHardwareByRevisionView(SimpleTestCase):
         response = HardwareByRevisionView().get(request)
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(response.data["hardware"][0]["registry"])
         mock_get_listing.assert_called_once_with(
             checkout_origin=["checkout-origin"],
             build_origin=["build-origin"],
