@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
@@ -21,6 +22,7 @@ from kernelCI_app.helpers.gitCommit import (
     parse_commit,
     parse_commit_object,
     resolve_checkout_git_url,
+    run_git,
     sanitize_git_url,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.git_commit_data import (
@@ -253,3 +255,58 @@ class TestFetchCommitMetadata:
         )
         with pytest.raises(UnexpectedFetchObjectsError):
             assert_single_commit_fetch(repo)
+
+
+class TestRunGit:
+    def test_failed_git_kills_child_still_in_the_session(self, tmp_path, monkeypatch):
+        child_pid_file = tmp_path / "child.pid"
+        fake_git = tmp_path / "git"
+        fake_git.write_text(
+            "\n".join(
+                (
+                    "#!/usr/bin/env python3",
+                    "import os",
+                    "import time",
+                    "pid = os.fork()",
+                    "if pid == 0:",
+                    "    os.closerange(0, 3)",
+                    "    time.sleep(30)",
+                    "    os._exit(0)",
+                    "open(os.environ['CHILD_PID_FILE'], 'w').write(str(pid))",
+                    "os._exit(1)",
+                    "",
+                )
+            )
+        )
+        fake_git.chmod(0o755)
+        monkeypatch.setenv("CHILD_PID_FILE", str(child_pid_file))
+        monkeypatch.setattr(
+            "kernelCI_app.helpers.gitCommit._git_executable", lambda: str(fake_git)
+        )
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        child_pid = 0
+        try:
+            with pytest.raises(FetchFailedError):
+                run_git(repo, "fetch")
+            child_pid = int(child_pid_file.read_text())
+            for _ in range(20):
+                try:
+                    state = (
+                        Path(f"/proc/{child_pid}/status")
+                        .read_text()
+                        .split("State:\t", 1)[1][0]
+                    )
+                except FileNotFoundError:
+                    break
+                if state in "ZX":
+                    break
+                time.sleep(0.05)
+            else:
+                raise AssertionError(f"child {child_pid} still running")
+        finally:
+            if child_pid:
+                try:
+                    os.kill(child_pid, 9)
+                except ProcessLookupError:
+                    pass

@@ -828,6 +828,7 @@ class TestShallowMirror:
             packs_before=set(),
             refs_before={},
             shallow_before=b"kept\n",
+            graphs_before=(set(), None),
         )
         assert shallow.read_bytes() == b"kept\n"
 
@@ -837,8 +838,58 @@ class TestShallowMirror:
             packs_before=set(),
             refs_before={},
             shallow_before=None,
+            graphs_before=(set(), None),
         )
         assert not shallow.exists()
+
+    def test_rollback_drops_graph_written_by_failed_fetch(self, tmp_path):
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        graphs = mirror / "objects" / "info" / "commit-graphs"
+        graphs.mkdir(parents=True)
+        (graphs / "graph-old").write_bytes(b"old")
+        (graphs / "commit-graph-chain").write_bytes(b"old\n")
+        before = commitSync._graph_snapshot(mirror)
+        (graphs / "graph-new").write_bytes(b"new")
+        (graphs / "commit-graph-chain").write_bytes(b"old\nnew\n")
+        pack_dir = mirror / "objects" / "pack"
+        pack_dir.mkdir(parents=True, exist_ok=True)
+        kept = pack_dir / "pack-kept.pack"
+        kept.write_bytes(b"pack")
+        temporary = pack_dir / "tmp_pack_dead"
+        temporary.write_bytes(b"tmp")
+
+        commitSync._rollback_fetch(
+            mirror,
+            name="origin",
+            packs_before={kept},
+            refs_before={},
+            shallow_before=None,
+            graphs_before=before,
+            keep_packs=True,
+        )
+
+        assert (graphs / "graph-old").read_bytes() == b"old"
+        assert not (graphs / "graph-new").exists()
+        assert (graphs / "commit-graph-chain").read_bytes() == b"old\n"
+        assert kept.is_file()
+        assert not temporary.exists()
+
+    def test_ensure_mirror_drops_incomplete_packs_and_ignores_commit_graph(
+        self, tmp_path
+    ):
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        temporary = mirror / "objects" / "pack" / "tmp_pack_left"
+        temporary.parent.mkdir(parents=True, exist_ok=True)
+        temporary.write_bytes(b"x")
+
+        ensure_mirror(mirror)
+
+        assert not temporary.exists()
+        assert _run_git(mirror, "config", "--get", "core.commitGraph") == "false"
+        assert _run_git(mirror, "config", "--get", "fetch.writeCommitGraph") == "false"
+        assert _run_git(mirror, "config", "--get", "gc.writeCommitGraph") == "false"
 
 
 class TestMirrorGc:

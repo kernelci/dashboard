@@ -333,6 +333,19 @@ def _git_executable() -> str:
     return git
 
 
+def _kill_process_group(pid: int) -> None:
+    """Stop git and the pack-objects it leaves running after a failed fetch.
+
+    The parent exits and closes its pipes, so communicate() returns, but the
+    child keeps writing tmp_pack_* in the same session. SIGKILL on the group
+    is what actually stops the write.
+    """
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        return
+
+
 def run_git(
     repo_dir: Path,
     *args: str,
@@ -349,9 +362,10 @@ def run_git(
         env.update(extra_env)
     command = [_git_executable(), "-C", str(repo_dir), *args]
     pipe = None if stream else subprocess.PIPE
-    # Own session so the timeout kills git *and* the curl/remote-https children it
-    # spawned. subprocess.run only signals git itself, and a child still holding the
-    # pipes blocks the read forever - a stalled fetch then hangs the whole job.
+    # Own session so a timeout or a failed fetch kills git *and* the
+    # curl/pack-objects children it spawned. subprocess.run only signals git
+    # itself. A child that still holds the pipes blocks the read forever, and
+    # one that already closed them keeps filling the mirror with tmp_pack_*.
     process = subprocess.Popen(  # noqa: S603
         command,
         stdin=subprocess.PIPE if stdin is not None else None,
@@ -363,11 +377,12 @@ def run_git(
     try:
         stdout, stderr_bytes = process.communicate(input=stdin, timeout=timeout)
     except subprocess.TimeoutExpired as exc:
-        os.killpg(process.pid, signal.SIGKILL)
-        process.communicate()
+        _kill_process_group(process.pid)
+        process.wait()
         raise FetchFailedError(f"git {' '.join(args)} timed out") from exc
 
     if process.returncode != 0:
+        _kill_process_group(process.pid)
         stderr = (stderr_bytes or b"").decode("utf-8", errors="replace").strip()
         raise FetchFailedError(f"git {' '.join(args)} failed: {stderr}")
     return stdout or b""
