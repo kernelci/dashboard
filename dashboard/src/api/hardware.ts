@@ -1,7 +1,9 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
+import { useSearch } from '@tanstack/react-router';
 
 import type { TFilter } from '@/types/general';
+import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import { HARDWARE_LISTING_FILTER_SECTIONS } from '@/utils/constants/hardwareListingFilters';
 
 import type {

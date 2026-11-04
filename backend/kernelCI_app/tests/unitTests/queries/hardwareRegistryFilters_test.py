@@ -1,8 +1,11 @@
 from datetime import datetime
+from http import HTTPStatus
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
+from rest_framework.test import APIRequestFactory
 
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.queries.hardwareRegistryFilters import (
     HardwareRegistryFilter,
     get_hardware_daily_listing,
@@ -12,6 +15,7 @@ from kernelCI_app.queries.hardwareRegistryFilters import (
     registry_filter_predicate,
 )
 from kernelCI_app.tests.unitTests.queries.conftest import setup_mock_cursor
+from kernelCI_app.views.hardwareRegistryFiltersView import HardwareRegistryFiltersView
 
 
 class TestRegistryFilterPredicate(SimpleTestCase):
@@ -148,3 +152,51 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         self.assertEqual(normalize_csv(" arm64, ,arm "), ("arm64", "arm"))
         self.assertEqual(normalize_csv(None), ())
         self.assertEqual(normalize_csv(""), ())
+
+
+_EMPTY_OPTIONS = {
+    "architecture": [],
+    "processor": [],
+    "platform_vendor": [],
+    "silicon_vendor": [],
+    "platform": [],
+    "system_module": [],
+    "form_factor": [],
+    "board_type": [],
+}
+
+
+class TestHardwareRegistryFiltersView(SimpleTestCase):
+    @patch(
+        "kernelCI_app.views.hardwareRegistryFiltersView."
+        "get_hardware_registry_filter_options"
+    )
+    def test_origin_stays_on_the_options_query(self, mock_options):
+        mock_options.return_value = _EMPTY_OPTIONS
+        view = HardwareRegistryFiltersView()
+        factory = APIRequestFactory()
+
+        response = view.get(
+            factory.get(
+                "/api/hardware/registry-filters/",
+                {
+                    "startTimestampInSeconds": "1741192200",
+                    "endTimestampInSeconds": "1741624200",
+                    "origin": "broonie",
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(mock_options.call_args.kwargs["origin"], "broonie")
+
+        view.get(
+            factory.get(
+                "/api/hardware/registry-filters/",
+                {
+                    "startTimestampInSeconds": "1741192200",
+                    "endTimestampInSeconds": "1741624200",
+                },
+            )
+        )
+        self.assertEqual(mock_options.call_args.kwargs["origin"], DEFAULT_ORIGIN)

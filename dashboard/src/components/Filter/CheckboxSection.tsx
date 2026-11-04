@@ -56,6 +56,7 @@ interface ICheckboxSubsection {
 export interface ICheckboxSection {
   items?: TItems;
   title: string;
+  subtitle?: string;
   isGlobal?: boolean;
   subsections?: ICheckboxSubsection[];
   onClickItem: TOnClickItem;
@@ -65,6 +66,7 @@ export interface ICheckboxSection {
 
 export interface ISectionItem {
   title: MessageDescriptor['id'];
+  subtitle?: MessageDescriptor['id'];
   sectionKey: TFilterObjectsKeys;
   isGlobal?: boolean;
 }
@@ -270,6 +272,7 @@ const CheckboxSubsection = ({
 const CheckboxSection = ({
   items,
   title,
+  subtitle,
   onClickItem,
   subsections,
   isGlobal = false,
@@ -295,6 +298,7 @@ const CheckboxSection = ({
         {showIcon && <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />}
         <span>{title}</span>
       </h3>
+      {subtitle && <h4 className="text-dim-gray mb-2 text-sm">{subtitle}</h4>}
       {items && <CheckboxList items={items} onClickItem={onClickItem} />}
       {subsectionComponents}
     </div>
