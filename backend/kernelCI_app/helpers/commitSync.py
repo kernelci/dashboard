@@ -67,6 +67,11 @@ MIRROR_GIT_CONFIG = {
     # A treeless pack has no full closure, so the bitmap bare repos write by
     # default aborts repack after the new pack is on disk.
     "repack.writeBitmaps": "false",
+    # A graph that names a commit whose pack was rolled back makes the next
+    # fetch download that commit into another tmp_pack. Ignore and don't write.
+    "core.commitGraph": "false",
+    "fetch.writeCommitGraph": "false",
+    "gc.writeCommitGraph": "false",
 }
 SHALLOW_FILENAME = "shallow"
 # A multi-GB repack can take hours. Killing it mid-write leaves the new pack
@@ -109,12 +114,26 @@ def remote_name_for_url(url: str) -> str:
     return "r" + hashlib.sha256(url.encode()).hexdigest()[:16]
 
 
+def _drop_incomplete_packs(repo_dir: Path) -> None:
+    """Delete tmp_pack_* left by a fetch that died mid-write.
+
+    Those files are not packs git will use. A previous run's pack-objects can
+    leave hundreds of them, each a full copy of the mirror.
+    """
+    pack_dir = repo_dir / "objects" / "pack"
+    if not pack_dir.is_dir():
+        return
+    for path in pack_dir.glob("tmp_pack_*"):
+        path.unlink(missing_ok=True)
+
+
 def ensure_mirror(repo_dir: Path) -> None:
     repo_dir.mkdir(parents=True, exist_ok=True)
     if not (repo_dir / "HEAD").exists():
         run_git(repo_dir, "init", "--bare")
     for key, value in MIRROR_GIT_CONFIG.items():
         run_git(repo_dir, "config", key, value)
+    _drop_incomplete_packs(repo_dir)
 
 
 def list_tips(repo_dir: Path) -> tuple[str, ...]:
@@ -667,6 +686,7 @@ def _fetch_refspecs_or_rollback(
     packs_before = _pack_paths(repo_dir)
     refs_before = _remote_refs(repo_dir, name)
     shallow_before = _read_shallow(repo_dir)
+    graphs_before = _graph_snapshot(repo_dir)
     try:
         run_git(
             repo_dir,
@@ -689,6 +709,7 @@ def _fetch_refspecs_or_rollback(
             packs_before=packs_before,
             refs_before=refs_before,
             shallow_before=shallow_before,
+            graphs_before=graphs_before,
             keep_packs=True,
         )
         return FetchOutcome.FAILED
@@ -704,6 +725,7 @@ def _fetch_refspecs_or_rollback(
         packs_before=packs_before,
         refs_before=refs_before,
         shallow_before=shallow_before,
+        graphs_before=graphs_before,
     )
     return FetchOutcome.REJECTED
 
@@ -748,6 +770,44 @@ def _restore_shallow(repo_dir: Path, previous: bytes | None) -> None:
     path.write_bytes(previous)
 
 
+def _graph_dir(repo_dir: Path) -> Path:
+    return repo_dir / "objects" / "info" / "commit-graphs"
+
+
+def _graph_snapshot(repo_dir: Path) -> tuple[set[str], bytes | None]:
+    directory = _graph_dir(repo_dir)
+    if not directory.is_dir():
+        return set(), None
+    names = {path.name for path in directory.iterdir() if path.is_file()}
+    chain = directory / "commit-graph-chain"
+    return names, chain.read_bytes() if chain.is_file() else None
+
+
+def _restore_commit_graphs(
+    repo_dir: Path, snapshot: tuple[set[str], bytes | None]
+) -> None:
+    """Drop graph files this fetch added and put the chain back.
+
+    The chain is the only small file git rewrites. New graph-<hash> files are
+    the ones that name commits from a pack this rollback is about to delete.
+    """
+    names, chain_bytes = snapshot
+    directory = _graph_dir(repo_dir)
+    try:
+        if not directory.is_dir():
+            return
+        for path in directory.iterdir():
+            if path.is_file() and path.name not in names:
+                path.unlink(missing_ok=True)
+        chain = directory / "commit-graph-chain"
+        if chain_bytes is None:
+            chain.unlink(missing_ok=True)
+            return
+        chain.write_bytes(chain_bytes)
+    except OSError as exc:
+        logger.warning("could not restore commit-graphs: %s", exc)
+
+
 def _rollback_fetch(
     repo_dir: Path,
     *,
@@ -755,6 +815,7 @@ def _rollback_fetch(
     packs_before: set[Path],
     refs_before: dict[str, str],
     shallow_before: bytes | None,
+    graphs_before: tuple[set[str], bytes | None],
     keep_packs: bool = False,
 ) -> None:
     """Restore refs, and drop the new packs unless the caller wants to keep them.
@@ -762,6 +823,8 @@ def _rollback_fetch(
     A pack that finished writing holds valid objects even when the fetch died
     afterwards, and git shares them with every other remote. Deleting it means
     paying for the same download again; only the unfinished `tmp_pack_*` is junk.
+    The commit-graph from this attempt is always restored: a graph that outlives
+    the pack it describes makes the next fetch write another tmp_pack.
     """
     current_refs = _remote_refs(repo_dir, name)
     for ref in current_refs:
@@ -780,6 +843,8 @@ def _rollback_fetch(
         _restore_shallow(repo_dir, shallow_before)
     except OSError as exc:
         logger.warning("could not restore %s: %s", SHALLOW_FILENAME, exc)
+
+    _restore_commit_graphs(repo_dir, graphs_before)
 
     for path in _pack_paths(repo_dir) - packs_before:
         if keep_packs and not path.name.startswith("tmp_pack"):
