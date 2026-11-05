@@ -1,0 +1,4 @@
+clk:
+  - recipients:
+      - linux-clk@vger.kernel.org
+      - sboyd@kernel.org

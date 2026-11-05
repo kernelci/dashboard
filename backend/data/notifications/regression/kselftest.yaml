@@ -1,0 +1,3 @@
+kselftest:
+  - recipients:
+      - shuah@kernel.org

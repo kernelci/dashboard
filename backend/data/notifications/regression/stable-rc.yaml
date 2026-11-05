@@ -1,0 +1,3 @@
+stable-rc:
+  - recipients:
+      - stable@vger.kernel.org

@@ -1,3 +1,5 @@
+Cc from: regression/mainline.yaml
+
 New boot regression found on mainline/master:
 
 ---

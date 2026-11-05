@@ -1,0 +1,3 @@
+renesas:
+  - recipients:
+      - linux-renesas-soc@vger.kernel.org

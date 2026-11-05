@@ -1,0 +1,6 @@
+chromiumos:
+  - recipients:
+      - laura.nao@collabora.com
+      - vignesh.raman@collabora.com
+      - arnaud.ferraris@collabora.com
+      - mhiramat@google.com

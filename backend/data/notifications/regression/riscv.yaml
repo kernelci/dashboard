@@ -1,0 +1,3 @@
+riscv:
+  - recipients:
+      - linux-riscv@lists.infradead.org
