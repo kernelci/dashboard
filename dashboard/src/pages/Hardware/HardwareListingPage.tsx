@@ -329,11 +329,14 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          <HardwareListingFilter
-            data={filterOptions}
-            navigateFrom={urlFromMap.navigate}
-            paramFilter={diffFilter}
-          />
+          <div className="flex flex-wrap items-center gap-4">
+            <HardwareListingFilter
+              data={filterOptions}
+              navigateFrom={urlFromMap.navigate}
+              paramFilter={diffFilter}
+            />
+            {kcidevComponent}
+          </div>
         </div>
 
         <HardwareTable
@@ -359,7 +362,6 @@ const HardwareListingPage = ({
           <HardwareRegistrySync sync={registrySync} />
         ) : null}
       </div>
-      {kcidevComponent}
     </>
   );
 };
