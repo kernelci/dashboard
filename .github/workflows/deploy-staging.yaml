@@ -58,8 +58,14 @@ jobs:
         with:
           args: "New Django migrations detected in this staging deployment: `${{ needs.check-migrations.outputs.migration_list }}`"
 
+  publish:
+    uses: ./.github/workflows/deploy-containers.yaml
+    permissions:
+      contents: read
+      packages: write
+
   deploy-staging:
-    needs: check-migrations
+    needs: [check-migrations, publish]
     runs-on: ubuntu-latest
     steps:
       - &ssh-host-auth
@@ -88,18 +94,7 @@ jobs:
             git checkout --detach "${IMAGE_TAG}"
             export IMAGE_TAG=${IMAGE_TAG}
             export DASHBOARD_VERSION=${DASHBOARD_VERSION}
-            # Retry: Publish GHCR Images runs in parallel with CI and may not have pushed this SHA yet.
-            attempt=1
-            max_attempts=30
-            until docker compose pull --policy=always; do
-              if [ "\$attempt" -ge "\$max_attempts" ]; then
-                echo "Timed out waiting for GHCR images with IMAGE_TAG=${IMAGE_TAG}"
-                exit 1
-              fi
-              echo "Images for IMAGE_TAG=${IMAGE_TAG} not ready yet (attempt \$attempt/\$max_attempts); retrying in 20s"
-              attempt=\$((attempt + 1))
-              sleep 20
-            done
+            docker compose pull --policy=always
             docker compose up -d --remove-orphans --no-build
           EOF
         env:

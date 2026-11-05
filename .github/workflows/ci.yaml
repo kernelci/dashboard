@@ -223,4 +223,7 @@ jobs:
     needs: [pre-commit-checks, build-front, unit-test-django, integration-test-django]
     if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     uses: ./.github/workflows/deploy-staging.yaml
+    permissions:
+      contents: read
+      packages: write
     secrets: inherit
