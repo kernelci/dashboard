@@ -61,10 +61,15 @@ const applyFilters = async (page: Page): Promise<void> => {
 
 // Diff filters are flattened as df|<section>|<value>. The browser encodes "|"
 // as %7C, so match the decoded search keys.
-const diffFilterKeys = (page: Page): string[] =>
-  [...new URL(page.url()).searchParams.keys()].filter(key =>
-    key.startsWith('df|'),
-  );
+const diffFilterKeys = (page: Page): string[] => {
+  const keys: string[] = [];
+  new URL(page.url()).searchParams.forEach((value, key) => {
+    if (value === 'true' && key.startsWith('df|')) {
+      keys.push(key);
+    }
+  });
+  return keys;
+};
 
 test.describe('Hardware Listing Page Tests', () => {
   test.beforeEach(async ({ page }) => {
