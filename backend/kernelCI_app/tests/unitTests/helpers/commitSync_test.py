@@ -501,12 +501,30 @@ class TestFetchGuards:
         def fail_verify_pack(*_args, **_kwargs):
             raise commitSync.FetchFailedError("verify-pack failed")
 
-        monkeypatch.setattr(commitSync, "run_git", fail_verify_pack)
+        monkeypatch.setattr(commitSync, "stream_git_lines", fail_verify_pack)
 
         assert (
             commitSync._pack_rejection_reason(mirror, pack, expect_treeless=True)
             == "could not inspect pack-test.pack"
         )
+
+    def test_pack_object_types_reads_streamed_verify_pack(self, tmp_path, monkeypatch):
+        fake_git = tmp_path / "git"
+        fake_git.write_text(
+            "#!/usr/bin/env python3\n"
+            "print('a1 commit 10 20 12')\n"
+            "print('b2 tree 30 40 32')\n"
+            "print('c3 blob 5 6 72')\n"
+            "print('not an object line')\n"
+        )
+        fake_git.chmod(0o755)
+        monkeypatch.setattr(
+            "kernelCI_app.helpers.gitCommit._git_executable", lambda: str(fake_git)
+        )
+
+        types = commitSync._pack_object_types(tmp_path, tmp_path / "pack-test.idx")
+
+        assert types == {"commit", "tree", "blob"}
 
     def test_does_not_fetch_unlisted_topic_branch(self, tmp_path, monkeypatch):
         repo, hashes = _linear_repo(tmp_path)
