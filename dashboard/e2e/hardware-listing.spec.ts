@@ -56,7 +56,15 @@ const openFilterDrawer = async (page: Page): Promise<void> => {
 
 const applyFilters = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  await expect(page.getByText('Test lab', { exact: true })).toBeHidden();
 };
+
+// Diff filters are flattened as df|<section>|<value>. The browser encodes "|"
+// as %7C, so match the decoded search keys.
+const diffFilterKeys = (page: Page): string[] =>
+  [...new URL(page.url()).searchParams.keys()].filter(key =>
+    key.startsWith('df|'),
+  );
 
 test.describe('Hardware Listing Page Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -211,28 +219,31 @@ test.describe('Hardware Listing Page Tests', () => {
     await labCheckbox.click();
     await applyFilters(page);
 
-    await expect(page).toHaveURL(/[?&]df=/);
-    await expect(page).toHaveURL(new RegExp(encodeURIComponent(lab)));
+    await expect
+      .poll(() => diffFilterKeys(page).includes(`df|tl|${lab}`))
+      .toBe(true);
   });
 
-  test('clearing the checkout origin keeps every origin in the URL', async ({
+  test('clearing the checkout origin drops it without restoring the default', async ({
     page,
   }) => {
     await openFilterDrawer(page);
-    await page
+    const maestro = page
       .locator('h3', { hasText: 'Checkout origin' })
       .locator('..')
-      .getByRole('checkbox', { name: 'maestro', exact: true })
-      .click();
+      .getByRole('checkbox', { name: 'maestro', exact: true });
+    await maestro.click();
     await applyFilters(page);
 
-    await expect(page).toHaveURL(/[?&]df=/);
-    await expect(
-      page
-        .locator('h3', { hasText: 'Checkout origin' })
-        .locator('..')
-        .getByRole('checkbox', { name: 'maestro', exact: true }),
-    ).not.toBeChecked();
+    await expect
+      .poll(() => diffFilterKeys(page).includes('df|buo|maestro'))
+      .toBe(true);
+    await expect
+      .poll(() => diffFilterKeys(page).some(key => key.startsWith('df|co|')))
+      .toBe(false);
+
+    await openFilterDrawer(page);
+    await expect(maestro).not.toBeChecked();
   });
 
   test('loading URL with revision does not show filter label', async ({
