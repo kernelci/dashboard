@@ -111,8 +111,8 @@ class BaseTreeCommitsHistory(APIView):
                     "issue_id": row[21],
                     "issue_version": row[22],
                     "build_lab": row[23] or UNKNOWN_STRING,
-                    "build_lab_id": row[24],
-                    "test_lab_id": row[25],
+                    "build_lab_id": row[24] if len(row) > 24 else None,
+                    "test_lab_id": row[25] if len(row) > 25 else None,
                 }
             )
 
