@@ -2,7 +2,6 @@ name: Deploy Staging and E2E
 
 on:
   workflow_call:
-  workflow_dispatch:
 
 # Staging shares one remote checkout dir, so deploys must not overlap
 concurrency:
