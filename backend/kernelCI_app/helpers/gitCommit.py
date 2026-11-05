@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+import resource
 import shutil
 import signal
 import subprocess
@@ -348,6 +349,18 @@ def _kill_process_group(pid: int) -> None:
         return
 
 
+# ponytail: RLIMIT_DATA caps heap, not the read-only mmap of packs, so git dies
+# at the allocation that would otherwise push the host into swap. Measured: a
+# fetch's index-pack peaks near 1 GB on a 3.7 GB pack, so 2 GB leaves margin.
+GIT_MEMORY_LIMIT_BYTES = 2 * 1024**3
+
+
+def _limit_git_memory() -> None:
+    resource.setrlimit(
+        resource.RLIMIT_DATA, (GIT_MEMORY_LIMIT_BYTES, GIT_MEMORY_LIMIT_BYTES)
+    )
+
+
 def stream_git_lines(repo_dir: Path, *args: str, timeout: int) -> Iterator[str]:
     """Yield git stdout line by line. Output can be millions of lines, so it is
     never buffered. Same session, memory cap and kill as run_git."""
@@ -359,6 +372,7 @@ def stream_git_lines(repo_dir: Path, *args: str, timeout: int) -> Iterator[str]:
         stderr=subprocess.DEVNULL,
         env=env,
         start_new_session=True,
+        preexec_fn=_limit_git_memory,
     )
     watchdog = threading.Timer(timeout, _kill_process_group, (process.pid,))
     watchdog.start()
@@ -402,6 +416,7 @@ def run_git(
         stderr=pipe,
         env=env,
         start_new_session=True,
+        preexec_fn=_limit_git_memory,
     )
     try:
         stdout, stderr_bytes = process.communicate(input=stdin, timeout=timeout)

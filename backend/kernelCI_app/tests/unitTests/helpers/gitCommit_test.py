@@ -312,6 +312,24 @@ class TestRunGit:
                 except ProcessLookupError:
                     pass
 
+    def test_git_memory_is_capped(self, tmp_path, monkeypatch):
+        fake_git = tmp_path / "git"
+        fake_git.write_text(
+            "#!/usr/bin/env python3\n"
+            "try:\n"
+            "    bytearray(3 * 1024**3)\n"
+            "except MemoryError:\n"
+            "    raise SystemExit(0)\n"
+            "raise SystemExit(1)\n"
+        )
+        fake_git.chmod(0o755)
+        monkeypatch.setattr(
+            "kernelCI_app.helpers.gitCommit._git_executable", lambda: str(fake_git)
+        )
+
+        # Exit 1 (allocation succeeded) makes run_git raise.
+        run_git(tmp_path, "fetch")
+
     def test_stream_git_lines_kills_git_on_timeout(self, tmp_path, monkeypatch):
         fake_git = tmp_path / "git"
         fake_git.write_text(
