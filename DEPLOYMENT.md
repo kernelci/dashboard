@@ -171,8 +171,8 @@ stored in the GitHub Container Registry (GHCR).
 
 Images are built by [Publish GHCR Images](.github/workflows/deploy-containers.yaml)
 and tagged with the commit's full SHA. Deployment pulls that SHA and never
-rebuilds the images. Pushes to `staging` publish images and, after CI passes,
-deploy staging ([deploy-staging](.github/workflows/deploy-staging.yaml)).
+rebuilds the images. After CI passes on a push to `staging`, images are published
+and staging is deployed ([deploy-staging](.github/workflows/deploy-staging.yaml)).
 Pushing a `release/*` tag that points to a commit on `main` publishes images
 from that tag and deploys production
 ([deploy-production](.github/workflows/deploy-production.yaml); see the
@@ -261,7 +261,7 @@ the path to follow so a step is not skipped. Production is never deployed by mer
 ### Tagging a release
 
 Production is never deployed by merging. Pushes to `staging` run [ci.yaml](.github/workflows/ci.yaml),
-deploy staging, and publish GHCR images. Production deploys when a `release/*` tag
+then publish GHCR images and deploy staging. Production deploys when a `release/*` tag
 is pushed, and the workflow fails if the tagged commit is not on `main`.
 
 Every production deployment must be preceded by a release tag.
