@@ -233,6 +233,7 @@ class BaseTreeDetails(APIView):
         # However, since the tree_name should be tied to the git_url,
         # filtering just by tree_name and branch in those cases should be enough.
 
+        self.filters = FilterParams(request)
         rows = get_tree_details_data(
             origin_param=origin_param,
             git_url_param=git_url_param,
@@ -259,8 +260,6 @@ class BaseTreeDetails(APIView):
                     error_message=ClientStrings.TREE_BUILDS_NO_RESULTS,
                     status_code=HTTPStatus.OK,
                 )
-
-        self.filters = FilterParams(request)
 
         self._sanitize_rows(rows)
 

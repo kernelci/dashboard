@@ -65,6 +65,8 @@ class HardwareDetailsBuilds(APIView):
             build=build,
             processed_builds=self.processed_builds,
             incident_test_id=record["incidents__test_id"],
+            lab_id=record.get("build_lab_id"),
+            use_lab_id="build_lab_id" in record,
         )
 
         if should_process_build:
@@ -147,6 +149,7 @@ class HardwareDetailsBuilds(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             build_origins=origins["build_origins"],
+            build_labs=self.filters.filter_labs["build"],
         )
 
         if len(records) == 0:

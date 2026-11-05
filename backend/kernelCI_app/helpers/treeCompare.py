@@ -4,6 +4,7 @@ from typing import Literal, Optional
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.constants.process_pending import ROLLUP_STATUS_FIELDS
 from kernelCI_app.helpers.filters import FilterParams
+from kernelCI_app.helpers.labFilter import lab_filter_sql
 from kernelCI_app.typeModels.databases import NULL_STATUS
 from kernelCI_app.typeModels.treeCompare import (
     CompareChangeCounts,
@@ -103,13 +104,12 @@ def build_build_compare_filter_clauses(  # noqa: C901 - maps FilterParams fields
         params["compilers"] = list(filters.filterCompiler)
         params["unknown_string"] = UNKNOWN_STRING
 
-    if filters.filter_labs["build"]:
-        pre_join.append(
-            "AND COALESCE(NULLIF(b.misc->>'lab', ''), %(unknown_string)s)"
-            " = ANY(%(labs)s)"
-        )
-        params["labs"] = list(filters.filter_labs["build"])
-        params["unknown_string"] = UNKNOWN_STRING
+    lab_sql, lab_params = lab_filter_sql(
+        filters.filter_labs["build"], lab_id_column="b.lab_id", param="build_labs"
+    )
+    if lab_sql:
+        pre_join.append(f"AND {lab_sql}")
+        params.update(lab_params)
 
     if filters.filterHardware:
         # Keep hardware filter as EXISTS so we don't multiply build rows by tests
@@ -210,13 +210,12 @@ def build_boot_test_compare_filter_clauses(  # noqa: C901 - maps FilterParams fi
         params["compilers"] = list(filters.filterCompiler)
         params["unknown_string"] = UNKNOWN_STRING
 
-    if filters.filter_labs[tab]:
-        pre_join.append(
-            "AND COALESCE(NULLIF(t.misc->>'runtime', ''), %(unknown_string)s)"
-            " = ANY(%(labs)s)"
-        )
-        params["labs"] = list(filters.filter_labs[tab])
-        params["unknown_string"] = UNKNOWN_STRING
+    lab_sql, lab_params = lab_filter_sql(
+        filters.filter_labs[tab], lab_id_column="t.lab_id", param=f"{tab}_labs"
+    )
+    if lab_sql:
+        pre_join.append(f"AND {lab_sql}")
+        params.update(lab_params)
 
     if filters.filterHardware:
         pre_join.append(

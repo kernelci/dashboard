@@ -27,6 +27,7 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.tree_details_data import (
     base_row_data,
     build_only_row_data,
     combined_row_data,
+    create_filter_row_data,
     current_row_with_fail_status,
     current_row_with_none_values,
     row_data_with_unknown_compatible,
@@ -878,6 +879,21 @@ class TestProcessFilters:
         assert "build_origin" in instance.unfiltered_origins["build"]
         assert "test_origin" in instance.unfiltered_origins["test"]
         assert mock_add_unfiltered_issue.call_count == 2
+
+    @patch("kernelCI_app.helpers.treeDetails.add_unfiltered_issue")
+    def test_lab_options_use_the_filter_value(self, _mock_add_unfiltered_issue):
+        instance = MagicMock()
+        instance.unfiltered_labs = {"build": set(), "test": set()}
+        row = create_filter_row_data(
+            build_lab="maestro",
+            build_lab_id=None,
+            test_lab_id=3,
+            history_item={"lab": "lava"},
+        )
+
+        process_filters(instance, row)
+
+        assert instance.unfiltered_labs == {"build": {UNKNOWN_STRING}, "test": {"lava"}}
 
     @patch("kernelCI_app.helpers.treeDetails.should_increment_build_issue")
     @patch("kernelCI_app.helpers.treeDetails.add_unfiltered_issue")

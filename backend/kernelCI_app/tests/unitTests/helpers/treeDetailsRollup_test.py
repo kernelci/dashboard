@@ -148,6 +148,7 @@ class TestProcessBuildFilters:
             "build_compiler": "clang",
             "build_origin": "maestro",
             "build_lab": "l1",
+            "build_lab_id": 1,
             "issue_id": "issue123",
             "issue_version": 2,
             "incident_test_id": None,
@@ -190,11 +191,15 @@ class TestProcessRollupFilters:
             "issue_uncategorized": False,
             "test_origin": "origin1",
             "test_lab": "lab1",
+            "test_lab_id": 1,
         }
         process_rollup_filters(inst, row)
+        process_rollup_filters(
+            inst, {**row, "test_lab": "origin1", "test_lab_id": None}
+        )
 
         assert inst.unfiltered_origins["boot"] == {"origin1"}
-        assert inst.unfiltered_labs["boot"] == {"lab1"}
+        assert inst.unfiltered_labs["boot"] == {"lab1", UNKNOWN_STRING}
         assert ("issue123", 1) in inst.unfiltered_boot_issues
 
     def test_test_row_updates_test_sets(self):

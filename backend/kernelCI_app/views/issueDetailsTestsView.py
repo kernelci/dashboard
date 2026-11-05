@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.queries.issues import get_issue_tests
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
@@ -36,8 +37,11 @@ class IssueDetailsTests(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
+        filters = FilterParams(_request)
         tests_data = get_issue_tests(
-            issue_id=path_params.issue_id, version=query_params.version
+            issue_id=path_params.issue_id,
+            version=query_params.version,
+            labs=filters.filter_issue_labs,
         )
 
         if not tests_data or len(tests_data) == 1 and tests_data[0].get("id") is None:

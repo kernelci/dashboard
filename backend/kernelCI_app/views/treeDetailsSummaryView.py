@@ -269,7 +269,12 @@ class BaseTreeDetailsSummary(APIView):
         tree_tests_rollup stores only `path_group` (first path segment). When a
         path filter is present, summary correctness requires raw test rows.
         """
-        return bool(self.filters.filterTestPath or self.filters.filterBootPath)
+        return bool(
+            self.filters.filterTestPath
+            or self.filters.filterBootPath
+            or self.filters.filter_labs["boot"]
+            or self.filters.filter_labs["test"]
+        )
 
     def get(
         self,
@@ -282,6 +287,7 @@ class BaseTreeDetailsSummary(APIView):
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch", git_branch)
 
+        self.filters = FilterParams(request)
         query_params = {
             "origin_param": origin_param,
             "git_url_param": git_url_param,
@@ -309,8 +315,6 @@ class BaseTreeDetailsSummary(APIView):
                 error_message=ClientStrings.TREE_BUILDS_NO_RESULTS,
                 status_code=HTTPStatus.OK,
             )
-
-        self.filters = FilterParams(request)
 
         self._sanitize_builds_rows(builds_rows)
 

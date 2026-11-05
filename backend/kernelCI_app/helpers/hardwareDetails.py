@@ -19,6 +19,7 @@ from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
 )
+from kernelCI_app.helpers.labFilter import lab_for_filter
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     get_environment_misc_value,
@@ -595,9 +596,12 @@ def decide_if_is_build_in_filter(
     build: HardwareBuildHistoryItem,
     processed_builds: Set[str],
     incident_test_id: Optional[str],
+    lab_id=None,
+    use_lab_id: bool = False,
 ) -> bool:
     is_build_not_processed = build.id not in processed_builds
     is_build_dummy = build.id.startswith(MAESTRO_DUMMY_BUILD_PREFIX)
+    lab = lab_for_filter(lab_id, build.lab) if use_lab_id else build.lab
     is_build_filtered_out_result = instance.filters.is_build_filtered_out(
         build_status=build.status,
         duration=build.duration,
@@ -605,7 +609,7 @@ def decide_if_is_build_in_filter(
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
         build_origin=build.origin,
-        lab=build.lab,
+        lab=lab,
     )
     return (
         is_build_not_processed
@@ -649,6 +653,8 @@ def decide_if_is_test_in_filter(
     incidents_test_id = record["incidents__test_id"]
     origin = record["test_origin"]
     lab = record.get("lab")
+    if "lab_id" in record:
+        lab = lab_for_filter(record.get("lab_id"), lab)
     platform = sanitize_dict(record.get("environment_misc", {})).get(
         "platform", UNKNOWN_STRING
     )
@@ -730,8 +736,9 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
-        if record.get("build_lab"):
-            instance.unfiltered_labs["build"].add(record["build_lab"])
+        instance.unfiltered_labs["build"].add(
+            lab_for_filter(record.get("build_lab_id"), record.get("build_lab"))
+        )
 
     if record["id"] is not None:
         if is_boot(record["path"]):
@@ -769,8 +776,9 @@ def process_filters(*, instance, record: Dict) -> None:
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 
-        if record.get("lab"):
-            instance.unfiltered_labs[flag_tab].add(record["lab"])
+        instance.unfiltered_labs[flag_tab].add(
+            lab_for_filter(record.get("lab_id"), record.get("lab"))
+        )
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

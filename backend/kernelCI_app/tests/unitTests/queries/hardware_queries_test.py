@@ -318,6 +318,7 @@ class TestQueryRecords:
         assert "tests.comment" not in executed_query
         assert "incidents.id" not in executed_query
         assert "git_commit_name" not in executed_query
+        assert "WITH hardware_rows" not in executed_query
 
         query_records(
             hardware_id="hardware",

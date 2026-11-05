@@ -5,6 +5,7 @@ from django.db import connection, connections
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.labFilter import lab_filter_sql
 from kernelCI_app.models import Issues
 
 
@@ -23,12 +24,23 @@ def _get_issue_version_clause(*, version: Optional[int]) -> str:
     return version_clause
 
 
-def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
+def _lab_clause(labs: Optional[set[str]], *, lab_id_column: str) -> tuple[str, dict]:
+    sql, params = lab_filter_sql(labs, lab_id_column=lab_id_column, param="issue_labs")
+    if not sql:
+        return "", {}
+    return f"AND {sql}", params
+
+
+def get_issue_builds(
+    *, issue_id: str, version: Optional[int], labs: Optional[set[str]] = None
+) -> list[dict]:
     version_clause = _get_issue_version_clause(version=version)
 
+    lab_sql, lab_params = _lab_clause(labs, lab_id_column="B.lab_id")
     params = {
         "issue_id": issue_id,
         "issue_version": version,
+        **lab_params,
     }
 
     query = f"""
@@ -52,6 +64,7 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
         WHERE
             INC.ISSUE_ID = %(issue_id)s
             AND {version_clause}
+            {lab_sql}
     """
 
     with connection.cursor() as cursor:
@@ -59,12 +72,16 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
         return dict_fetchall(cursor)
 
 
-def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
+def get_issue_tests(
+    *, issue_id: str, version: Optional[int], labs: Optional[set[str]] = None
+) -> list[dict]:
     version_clause = _get_issue_version_clause(version=version)
 
+    lab_sql, lab_params = _lab_clause(labs, lab_id_column="T.lab_id")
     params = {
         "issue_id": issue_id,
         "issue_version": version,
+        **lab_params,
     }
 
     query = f"""
@@ -93,6 +110,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
                 AND {version_clause}
             )
             AND INC.TEST_ID IS NOT NULL
+            {lab_sql}
         ORDER BY INC.TEST_ID
     """
 
@@ -105,18 +123,45 @@ def get_issue_listing_data(
     *,
     start_date: datetime,
     end_date: datetime,
+    labs: Optional[set[str]] = None,
 ) -> list[dict]:
     """Queries the list of all issues whose timestamp falls within [start_date, end_date].
 
     Returns the list of issue records (dict) with no other filter."""
 
+    build_sql, lab_params = lab_filter_sql(
+        labs, lab_id_column="b.lab_id", param="issue_labs"
+    )
+    test_sql, _ = lab_filter_sql(labs, lab_id_column="t.lab_id", param="issue_labs")
+    lab_sql = ""
+    if build_sql:
+        lab_sql = f"""
+        AND (
+            EXISTS (
+                SELECT 1 FROM incidents inc_b
+                JOIN builds b ON b.id = inc_b.build_id
+                WHERE inc_b.issue_id = i.id
+                  AND inc_b.issue_version = i.version
+                  AND {build_sql}
+            )
+            OR EXISTS (
+                SELECT 1 FROM incidents inc_t
+                JOIN tests t ON t.id = inc_t.test_id
+                WHERE inc_t.issue_id = i.id
+                  AND inc_t.issue_version = i.version
+                  AND {test_sql}
+            )
+        )
+        """
     params = {
         "start_date": start_date,
         "end_date": end_date,
+        **lab_params,
     }
     cache_params = {
         "start_date": int(start_date.timestamp()),
         "end_date": int(end_date.timestamp()),
+        "issue_labs": sorted(labs or []),
     }
     cache_key = "issueList"
 
@@ -126,7 +171,7 @@ def get_issue_listing_data(
 
     # Note that an issue with timestamp younger than x days ago
     # can still have incidents in tests older than x days ago
-    query = """
+    query = f"""
     SELECT
         i.id,
         i._timestamp AS field_timestamp,
@@ -147,6 +192,7 @@ def get_issue_listing_data(
     WHERE
         i._timestamp >= %(start_date)s
         AND i._timestamp <= %(end_date)s
+        {lab_sql}
     """
 
     with connection.cursor() as cursor:

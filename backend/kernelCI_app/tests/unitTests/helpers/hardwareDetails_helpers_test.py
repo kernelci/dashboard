@@ -46,6 +46,8 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.hardware_details_data import 
     DIFF_TREE_KEY,
     base_tree,
     base_tree_status_summary,
+    create_process_filters_instance,
+    create_process_filters_record,
     create_test_summary,
     create_tree,
     handle_test_summary_record_new_config,
@@ -1607,6 +1609,19 @@ class TestProcessFilters:
                 assert "x86_64" in instance.global_architectures
                 assert "gcc" in instance.global_compilers
                 assert "test" in instance.unfiltered_origins["build"]
+
+    def test_lab_options_use_the_filter_value(self):
+        instance = create_process_filters_instance(
+            unfiltered_labs={"build": set(), "test": set()}
+        )
+        record = create_process_filters_record(
+            build_lab="maestro", build_lab_id=None, lab="lava", lab_id=3
+        )
+
+        with patch("kernelCI_app.helpers.hardwareDetails.add_unfiltered_issue"):
+            process_filters(instance=instance, record=record)
+
+        assert instance.unfiltered_labs == {"build": {UNKNOWN_STRING}, "test": {"lava"}}
 
     def test_process_filters_without_build_id(self):
         """Test process_filters without build_id."""

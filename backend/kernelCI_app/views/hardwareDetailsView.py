@@ -215,6 +215,8 @@ class HardwareDetails(APIView):
             build=build,
             processed_builds=self.processed_builds,
             incident_test_id=record["incidents__test_id"],
+            lab_id=record.get("build_lab_id"),
+            use_lab_id="build_lab_id" in record,
         )
 
         if should_process_build:

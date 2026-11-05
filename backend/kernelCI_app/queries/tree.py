@@ -6,6 +6,7 @@ from django.db.models import Q
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.labFilter import lab_filter_sql, test_side_lab_sql
 from kernelCI_app.helpers.treeCompare import (
     build_boot_test_compare_filter_clauses,
     build_build_compare_filter_clauses,
@@ -184,7 +185,7 @@ def get_tree_details_data(
     commit_hash: Optional[str],
     tree_name: Optional[str] = None,
 ) -> Optional[list[tuple]]:
-    cache_key = "treeDetails"
+    cache_key = "treeDetailsV2"
 
     params = {
         "commit_hash": commit_hash,
@@ -245,7 +246,10 @@ def get_tree_details_data(
                 issues.id AS issues_id,
                 issues.version AS issues_version,
                 issues.comment AS issues_comment,
-                issues.report_url AS issues_report_url
+                issues.report_url AS issues_report_url,
+                tests.lab_id AS test_lab_id,
+                (SELECT b.lab_id FROM builds b WHERE b.id = builds_filter.builds_id)
+                    AS build_lab_id
         FROM
             (
                 SELECT
@@ -325,7 +329,7 @@ def get_tree_details_rollup(
     test results by various dimensions (path_group, config, arch, compiler,
     hardware, platform, lab, origin, and issue).
     """
-    cache_key = "treeDetailsRollup"
+    cache_key = "treeDetailsRollupV2"
 
     params = {
         "commit_hash": commit_hash,
@@ -398,7 +402,10 @@ def get_tree_details_rollup(
             tr.null_tests,
             tr.total_tests,
             i.comment AS issue_comment,
-            i.report_url AS issue_report_url
+            i.report_url AS issue_report_url,
+            -- ponytail: rollup keeps only the lab name; a misc-only name that
+            -- matches a labs row counts as that lab here but Unknown in the filter.
+            rl.id AS test_lab_id
         FROM
             tree_tests_rollup tr
         INNER JOIN RELEVANT_CHECKOUTS rc ON (
@@ -410,6 +417,8 @@ def get_tree_details_rollup(
         )
         LEFT JOIN issues i
             ON tr.issue_id = i.id AND tr.issue_version = i.version
+        LEFT JOIN labs rl
+            ON rl.name = tr.test_lab
         ORDER BY
             tr.total_tests DESC
         """
@@ -616,7 +625,7 @@ def get_tree_details_builds(
     """
     Fetch builds for a given tree commit.
     """
-    cache_key = "treeDetailsBuildsData"
+    cache_key = "treeDetailsBuildsDataV2"
 
     params = {
         "commit_hash": commit_hash,
@@ -677,6 +686,7 @@ def get_tree_details_builds(
             b.misc AS build_misc,
             -- TODO remove misc->>'lab' fallback after lab backfill
             COALESCE(bl.name, b.misc->>'lab') AS build_lab,
+            b.lab_id AS build_lab_id,
             rc.checkout_id,
             rc.git_repository_url AS checkout_git_repository_url,
             rc.git_repository_branch AS checkout_git_repository_branch,
@@ -854,6 +864,9 @@ def get_tree_commit_history_hashes_aggregated(
     builds_duration: tuple[Optional[int], Optional[int]] = (None, None),
     boots_duration: tuple[Optional[int], Optional[int]] = (None, None),
     tests_duration: tuple[Optional[int], Optional[int]] = (None, None),
+    build_labs: Optional[set[str]] = None,
+    boot_labs: Optional[set[str]] = None,
+    test_labs: Optional[set[str]] = None,
 ) -> list[dict]:
 
     if not commit_hashes:
@@ -887,11 +900,22 @@ def get_tree_commit_history_hashes_aggregated(
         "test_duration_min": test_duration_min,
         "test_duration_max": test_duration_max,
     }
+    build_lab_sql, build_lab_params = lab_filter_sql(
+        build_labs, lab_id_column="builds.lab_id", param="build_labs"
+    )
+    test_lab_sql, test_lab_params = test_side_lab_sql(boot_labs, test_labs)
+    params.update(build_lab_params)
+    params.update(test_lab_params)
+    build_lab_clause = f"AND {build_lab_sql}" if build_lab_sql else ""
+    test_lab_clause = f"AND {test_lab_sql}" if test_lab_sql else ""
 
-    cache_key = "treeCommitHistoryHashesAggregatedNoCompatibles"
+    cache_key = "treeCommitHistoryHashesAggregatedNoCompatiblesV2"
     cache_params = {
         **params,
         "include_types": tuple(sorted(include_types)),
+        "build_labs_key": sorted(build_labs or []),
+        "boot_labs_key": sorted(boot_labs or []),
+        "test_labs_key": sorted(test_labs or []),
     }
     rows = get_query_cache(cache_key, cache_params)
     if rows is not None:
@@ -947,6 +971,7 @@ def get_tree_commit_history_hashes_aggregated(
             {git_url_full_clause}
             {tree_name_full_clause}
             {build_duration_clause}
+            {build_lab_clause}
         GROUP BY
             c.id,
             builds.status,
@@ -993,6 +1018,7 @@ def get_tree_commit_history_hashes_aggregated(
             {git_url_full_clause}
             {tree_name_full_clause}
             {boots_tests_duration_clause}
+            {test_lab_clause}
         GROUP BY
             c.id,
             c.start_time,
@@ -1205,6 +1231,9 @@ def get_tree_commit_history(
     git_branch: Optional[str],
     tree_name: Optional[str],
     include_types: Optional[list[str]] = None,
+    build_labs: Optional[set[str]] = None,
+    boot_labs: Optional[set[str]] = None,
+    test_labs: Optional[set[str]] = None,
 ) -> Optional[list[tuple]]:
     if not include_types:
         include_types = ["builds", "boots", "tests"]
@@ -1257,6 +1286,8 @@ def get_tree_commit_history(
         if include_test_data
         else "NULL"
     )
+    build_lab_id = "b.lab_id" if include_builds else "NULL"
+    test_lab_id = "t.lab_id" if include_test_data else "NULL"
 
     select_clause = f"""c.git_commit_hash,
         c.git_commit_name,
@@ -1281,7 +1312,9 @@ def get_tree_commit_history(
         ic.test_id AS incidents_test_id,
         i.id AS issues_id,
         i.version AS issues_version,
-        {build_lab} AS build_lab"""
+        {build_lab} AS build_lab,
+        {build_lab_id} AS build_lab_id,
+        {test_lab_id} AS test_lab_id"""
 
     if include_boots and not include_tests:
         test_filter = "AND (t.path IS NULL OR t.path LIKE 'boot%%')"
@@ -1290,8 +1323,22 @@ def get_tree_commit_history(
     else:
         test_filter = ""
 
+    side_sql, side_params = test_side_lab_sql(boot_labs, test_labs, table="t")
+    field_values.update(side_params)
+    side_on = f" AND {side_sql}" if side_sql else ""
+    build_sql, build_params = lab_filter_sql(
+        build_labs, lab_id_column="b.lab_id", param="build_labs"
+    )
+    field_values.update(build_params)
+    if build_sql and include_test_data:
+        history_where = f"WHERE t.id IS NOT NULL OR {build_sql}"
+    elif build_sql:
+        history_where = f"WHERE {build_sql}"
+    else:
+        history_where = ""
+
     if include_test_data:
-        test_join = f"LEFT JOIN tests AS t ON t.build_id = b.id {test_filter}"
+        test_join = f"LEFT JOIN tests AS t ON t.build_id = b.id {test_filter}{side_on}"
         test_join += "\n        LEFT JOIN labs AS tl ON t.lab_id = tl.id"
         incidents_condition = "t.id = ic.test_id OR b.id = ic.build_id"
     else:
@@ -1398,6 +1445,7 @@ def get_tree_commit_history(
     FROM
         SELECTED_CHECKOUTS AS c
         {join_clause}
+    {history_where}
     """
 
     with connection.cursor() as cursor:

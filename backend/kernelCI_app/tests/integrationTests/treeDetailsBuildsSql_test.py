@@ -65,6 +65,12 @@ def legacy_response(filters, **identity):
     instance = SimpleNamespace(filters=filters)
     for row in rows:
         data = get_current_row_data(row)
+        if data["build_id"]:
+            data["build_lab_id"] = (
+                Builds.objects.filter(id=data["build_id"])
+                .values_list("lab_id", flat=True)
+                .first()
+            )
         if decide_if_is_full_row_filtered_out(instance, data):
             continue
         if data["build_id"] is None or data["build_id"].startswith(
@@ -227,6 +233,29 @@ def test_lab_precedence_and_fallback(dataset, labs):
     assert canonical(
         get_tree_builds_response(filters=filters, **IDENTITY)
     ) == canonical(legacy_response(filters, **IDENTITY))
+
+
+def test_misc_only_build_matches_unknown(dataset):
+    Builds.objects.create(
+        id="misc-only",
+        checkout=dataset,
+        origin="maestro",
+        status="PASS",
+        misc={"lab": "only-misc"},
+    )
+    filters = FilterParams(RequestFactory().get("/"))
+
+    def rows(labs):
+        filters.filter_labs["build"] = labs
+        return get_tree_builds_response(filters=filters, **IDENTITY)["builds"]
+
+    assert {row["id"] for row in rows({"only-misc"})}.isdisjoint({"misc-only"})
+    unknown = rows({UNKNOWN_STRING})
+    misc_only = next(row for row in unknown if row["id"] == "misc-only")
+    assert misc_only["lab"] == "only-misc"
+    registered = {row["id"] for row in rows({"registered-lab"})}
+    assert "build-0" in registered
+    assert "misc-only" not in registered
 
 
 def test_cache_is_final_response_and_filter_specific(
