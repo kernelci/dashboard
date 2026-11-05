@@ -312,7 +312,7 @@ the tag. Migrations are not reverted; check them before rolling back past one.
 
 #### Things that are easy to get wrong
 
-- Tag only commits on `main`; any other commit fails the `require-main` job.
+- Tag only commits on `main`; any other commit fails the deploy before images are built.
 - Pushing a tag deploys immediately. There is no confirmation step, so diff
 migrations before pushing it.
 - The **ingester** and `pending_aggregations_processor` are not started by this workflow
