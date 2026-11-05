@@ -31,6 +31,11 @@ counters), never as per-user records or per-user timestamps:
   `direct_or_internal`. The full referring URL is never stored.
 - **Unique visitor estimates**: daily de-duplicated visit counts, in total and
   per endpoint.
+- **View time**: while you use the dashboard in a browser, the page reports
+  the URL path (for example `/tree/mainline/master`, not the query string) and
+  how many seconds that screen stayed in the foreground. This is stored only as
+  an aggregate histogram. It does not include a visit id or anything kept in
+  cache.
 
 ## What we process briefly (not kept in metrics)
 
