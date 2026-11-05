@@ -13,6 +13,9 @@ Collected as aggregate Prometheus metrics:
     observed on the Django view-latency histogram.
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
     client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``, ``unknown``).
+  * Visible seconds on a dashboard URL path, from ``POST /api/analytics/visible/``.
+    That request is not counted here: no client counter, latency sample, or
+    unique visitor. The view records ``dashboard_route_visible_seconds`` only.
 
 Unique-visitor de-duplication uses pseudonymisation, not irreversible
 anonymisation: fingerprint = ``HMAC-SHA256(daily_salt, "<ip>|<user_agent>")``.
@@ -98,6 +101,7 @@ class Metrics:
     kci_dev_requests_by_version: Counter
     visitors_by_request_count: Counter
     request_latency: Histogram
+    route_visible_seconds: Histogram
 
 
 _metrics: Metrics | None = None
@@ -152,6 +156,12 @@ def get_metrics() -> Metrics:
                         ["endpoint", "method", "client"],
                         buckets=PROMETHEUS_LATENCY_BUCKETS,
                     ),
+                    route_visible_seconds=Histogram(
+                        "dashboard_route_visible_seconds",
+                        "Seconds a dashboard URL path stayed in the foreground",
+                        ["route"],
+                        buckets=(1, 5, 15, 30, 60, 120, 300, 600, 1800),
+                    ),
                 )
     return _metrics
 
@@ -173,7 +183,8 @@ class BackendRequestMetricsMiddleware:
         started = time.perf_counter()
         response = self.get_response(request)
         elapsed = time.perf_counter() - started
-        if request.path.startswith("/api/"):
+        url_name = getattr(getattr(request, "resolver_match", None), "url_name", None)
+        if request.path.startswith("/api/") and url_name != "visibleTime":
             labels = get_backend_request_labels(request, response)
             record_client(
                 **{

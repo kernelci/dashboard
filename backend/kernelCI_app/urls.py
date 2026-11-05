@@ -242,4 +242,9 @@ urlpatterns = [
     path("origins/", views.OriginsView.as_view(), name="originsView"),
     path("tree-report/", views.TreeReport.as_view(), name="treeReportView"),
     path("metrics/", views.MetricsView.as_view(), name="metricsView"),
+    path(
+        "analytics/visible/",
+        views.VisibleTimeView.as_view(),
+        name="visibleTime",
+    ),
 ]

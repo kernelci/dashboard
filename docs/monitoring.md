@@ -63,15 +63,17 @@ poetry run python manage.py runserver 0.0.0.0:8000 --noreload
 
 After importing the dashboard, you'll have:
 
-- **Average Response Time by Endpoint** - Average, p50, and p95 per endpoint and client
-- **Total Calls by Endpoint** - Request count per endpoint and client
-- **Endpoint Performance Summary** - Table with:
-  - Endpoint name
-  - Client
-  - Total Calls
-  - Average Response Time
-  - Total Time (cumulative time per endpoint and client)
-- **Deploys** - Annotation and Running Version panel from `dashboard_build_info` (`DASHBOARD_VERSION`)
+- **Overview** — exporter, deployed version, requests, visitors, error rate, p95 latency, restarts
+- **Traffic** — requests by client and status, daily unique visitors
+- **Endpoints** — requests, errors, latency, and server time for the selected range
+- **Latency** — quantiles, slowest endpoints, slow requests, distribution
+- **Audience** — device, OS, browser, referrer
+- **Errors** — 4xx/5xx by endpoint, and non-2xx responses by view
+- **Backend** — database queries, query duration, response size
+- **View time** — foreground time per URL path for the selected range
+- **Deploys** — annotation from `dashboard_build_info` (`DASHBOARD_VERSION`)
+
+The data source, rate window, client, and endpoint are dashboard variables. The rate window defaults to 1h.
 
 ### Aggregation Process Dashboard
 
@@ -162,6 +164,16 @@ is the technical/operator reference.
   `django_http_requests_latency_seconds_by_view_method`; that series stays for
   other routes, including `/admin/`. Django status and exception counters are
   unchanged.
+- `dashboard_route_visible_seconds` — histogram of how long a dashboard URL
+  path stayed in the foreground. Label `route` is that path, such as
+  `/tree/mainline/master`, not the query string. One sample per visible
+  stretch. A stretch ends when the path changes or when the tab goes hidden;
+  time spent hidden is not included. Buckets are 1, 5, 15, 30, 60, 120, 300,
+  600, 1800, and +Inf. The 1s bucket is a stay of at most one second.
+  `POST /api/analytics/visible/` takes a JSON body, `route` and `time_ms`.
+  The handler divides `time_ms` by 1000 before observing this histogram. It
+  does not increment the client-request counter, the latency histogram, or
+  the unique-visitor count.
 
 Local publish of a finished UTC day (needs the same `PROMETHEUS_MULTIPROC_DIR`
 as the backend worker). Omit `--date` for yesterday. Today is refused so a
