@@ -24,6 +24,7 @@ from kernelCI_app.helpers.gitCommit import (
     resolve_checkout_git_url,
     run_git,
     sanitize_git_url,
+    stream_git_lines,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.git_commit_data import (
     FIRST_PARENT,
@@ -310,3 +311,24 @@ class TestRunGit:
                     os.kill(child_pid, 9)
                 except ProcessLookupError:
                     pass
+
+    def test_stream_git_lines_kills_git_on_timeout(self, tmp_path, monkeypatch):
+        fake_git = tmp_path / "git"
+        fake_git.write_text(
+            "#!/usr/bin/env python3\n"
+            "import time\n"
+            "print('first', flush=True)\n"
+            "time.sleep(30)\n"
+        )
+        fake_git.chmod(0o755)
+        monkeypatch.setattr(
+            "kernelCI_app.helpers.gitCommit._git_executable", lambda: str(fake_git)
+        )
+
+        lines: list[str] = []
+        start = time.monotonic()
+        with pytest.raises(FetchFailedError):
+            lines.extend(stream_git_lines(tmp_path, "verify-pack", timeout=1))
+
+        assert lines == ["first\n"]
+        assert time.monotonic() - start < 10

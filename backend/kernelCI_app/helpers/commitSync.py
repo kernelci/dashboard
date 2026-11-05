@@ -26,6 +26,7 @@ from kernelCI_app.helpers.gitCommit import (
     parse_commit_object,
     run_git,
     sanitize_git_url,
+    stream_git_lines,
 )
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.helpers.trees import get_tree_file_data
@@ -895,22 +896,21 @@ def _pack_rejection_reason(
 
 
 def _pack_object_types(repo_dir: Path, idx: Path) -> set[str] | None:
+    types: set[str] = set()
     try:
-        output = run_git(
+        for line in stream_git_lines(
             repo_dir,
             "verify-pack",
             "-v",
             str(idx.relative_to(repo_dir)),
             timeout=120,
-        ).decode()
+        ):
+            fields = line.split()
+            if len(fields) >= 2 and fields[1] in {"commit", "tree", "blob", "tag"}:
+                types.add(fields[1])
     except (CommitMetadataError, ValueError) as exc:
         logger.warning("verify-pack %s failed: %s", idx, exc)
         return None
-    types: set[str] = set()
-    for line in output.splitlines():
-        fields = line.split()
-        if len(fields) >= 2 and fields[1] in {"commit", "tree", "blob", "tag"}:
-            types.add(fields[1])
     return types
 
 
