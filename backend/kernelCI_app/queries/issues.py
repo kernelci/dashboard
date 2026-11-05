@@ -304,13 +304,16 @@ def get_issue_seen_data(
                     C.git_repository_url,
                     C.git_repository_branch,
                     IC.issue_version {order_direction},
-                    IC._timestamp {order_direction}
+                    IC._timestamp {order_direction},
+                    C.start_time {order_direction} NULLS LAST
             """
         else:
             query = f"""
-                WITH target_incident AS (
+                WITH bounds AS MATERIALIZED (
                     SELECT DISTINCT ON (IC.issue_id)
-                        IC.id
+                        IC.issue_id,
+                        IC.issue_version,
+                        IC._timestamp
                     FROM
                         incidents IC
                     WHERE
@@ -320,7 +323,7 @@ def get_issue_seen_data(
                         IC.issue_version {order_direction},
                         IC._timestamp {order_direction}
                 )
-                SELECT
+                SELECT DISTINCT ON (IC.issue_id)
                     IC.id,
                     IC.issue_id,
                     IC._timestamp AS first_seen,
@@ -330,16 +333,22 @@ def get_issue_seen_data(
                     C.git_repository_branch,
                     C.git_commit_name,
                     C.tree_name,
-                    C.id as checkout_id
+                    C.id AS checkout_id
                 FROM
-                    incidents IC
-                LEFT JOIN tests T ON IC.test_id = T.id
-                LEFT JOIN builds B ON (
-                    IC.build_id = B.id
-                    OR T.build_id = B.id
-                )
-                LEFT JOIN checkouts C ON B.checkout_id = C.id
-                JOIN target_incident TI ON IC.id = TI.id
+                    bounds B
+                    JOIN incidents IC
+                        ON IC.issue_id = B.issue_id
+                        AND IC.issue_version = B.issue_version
+                        AND IC._timestamp IS NOT DISTINCT FROM B._timestamp
+                    LEFT JOIN tests T ON IC.test_id = T.id
+                    LEFT JOIN builds BLD ON (
+                        IC.build_id = BLD.id
+                        OR T.build_id = BLD.id
+                    )
+                    LEFT JOIN checkouts C ON BLD.checkout_id = C.id
+                ORDER BY
+                    IC.issue_id,
+                    C.start_time {order_direction} NULLS LAST
             """
 
         with connection.cursor() as cursor:
@@ -497,7 +506,21 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
         return records
 
     query = """
-        WITH last_seen AS (
+        WITH bounds AS MATERIALIZED (
+            SELECT DISTINCT ON (IC.issue_id)
+                IC.issue_id,
+                IC.issue_version,
+                IC._timestamp
+            FROM
+                incidents IC
+            WHERE
+                IC.issue_id = ANY(%(issue_id_list)s)
+            ORDER BY
+                IC.issue_id,
+                IC.issue_version DESC,
+                IC._timestamp DESC
+        ),
+        last_seen AS (
             SELECT DISTINCT ON (IC.issue_id)
                 IC.issue_id,
                 C.id AS last_checkout_id,
@@ -507,19 +530,20 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
                 C.git_repository_url,
                 C.git_repository_branch
             FROM
-                incidents IC
-            LEFT JOIN tests T ON IC.test_id = T.id
-            LEFT JOIN builds B ON (
-                IC.build_id = B.id
-                OR T.build_id = B.id
-            )
-            LEFT JOIN checkouts C ON B.checkout_id = C.id
-            WHERE
-                IC.issue_id = ANY(%(issue_id_list)s)
+                bounds B
+                JOIN incidents IC
+                    ON IC.issue_id = B.issue_id
+                    AND IC.issue_version = B.issue_version
+                    AND IC._timestamp IS NOT DISTINCT FROM B._timestamp
+                LEFT JOIN tests T ON IC.test_id = T.id
+                LEFT JOIN builds BLD ON (
+                    IC.build_id = BLD.id
+                    OR T.build_id = BLD.id
+                )
+                LEFT JOIN checkouts C ON BLD.checkout_id = C.id
             ORDER BY
                 IC.issue_id,
-                IC.issue_version DESC,
-                IC._timestamp DESC
+                C.start_time DESC NULLS LAST
         )
         SELECT
             LS.issue_id,

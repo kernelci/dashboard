@@ -115,7 +115,8 @@ def get_tree_builds_response(
     query = f"""
         WITH relevant_hash AS (
             SELECT git_commit_hash FROM checkouts
-            WHERE git_commit_hash = %(commit_hash)s OR %(commit_hash)s = ANY(git_commit_tags)
+            -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+            WHERE git_commit_hash = %(commit_hash)s OR git_commit_tags @> ARRAY[%(commit_hash)s]::text[]
             ORDER BY _timestamp DESC LIMIT 1
         ), relevant_checkouts AS MATERIALIZED (
             SELECT id, git_repository_url, git_repository_branch FROM checkouts

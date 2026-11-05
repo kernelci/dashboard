@@ -83,7 +83,6 @@ class BaseTreeCommitsHistory(APIView):
         result = []
         for row in rows:
             build_misc = row[11]
-            build_lab = row[24] or UNKNOWN_STRING
 
             result.append(
                 {
@@ -107,11 +106,10 @@ class BaseTreeCommitsHistory(APIView):
                     "test_origin": row[17],
                     "test_lab": row[18],
                     "test_id": row[19],
-                    "incidents_id": row[20],
-                    "incidents_test_id": row[21],
-                    "issue_id": row[22],
-                    "issue_version": row[23],
-                    "build_lab": build_lab,
+                    "incidents_test_id": row[20],
+                    "issue_id": row[21],
+                    "issue_version": row[22],
+                    "build_lab": row[23] or UNKNOWN_STRING,
                 }
             )
 

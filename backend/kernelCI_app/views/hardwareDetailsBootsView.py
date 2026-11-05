@@ -165,6 +165,7 @@ class HardwareDetailsBoots(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             test_origins=origins["test_origins"],
+            history_only=True,
         )
 
         if len(records) == 0:

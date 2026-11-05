@@ -216,7 +216,8 @@ def get_tree_details_data(
                 checkouts c
             WHERE
                 c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags)
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[]
             ORDER BY
                 c._timestamp DESC
             LIMIT 1
@@ -360,7 +361,8 @@ def get_tree_details_rollup(
                 checkouts c
             WHERE
                 (c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
                 {git_url_full_clause}
                 {tree_name_full_clause}
                 AND {git_branch_clause}
@@ -525,7 +527,8 @@ def get_tree_data(
                 checkouts c
             WHERE
                 c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags)
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[]
             ORDER BY
                 c._timestamp DESC
             LIMIT 1
@@ -649,7 +652,8 @@ def get_tree_details_builds(
                 checkouts c
             WHERE
                 (c.git_commit_hash = %(commit_hash)s
-                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+                OR c.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
                 {git_url_full_clause}
                 {tree_name_full_clause}
                 AND {git_branch_clause}
@@ -1237,13 +1241,22 @@ def get_tree_commit_history(
     build_prefix = "b." if include_builds else "NULL AS "
     test_prefix = "t." if include_test_data else "NULL AS "
     build_id = "b.id" if include_builds else "NULL"
-    build_misc = "b.misc" if include_builds else "NULL"
+    build_misc = (
+        "jsonb_build_object('platform', b.misc->>'platform')"
+        if include_builds
+        else "NULL"
+    )
     # TODO remove misc fallbacks after lab backfill
     build_lab = "COALESCE(bl.name, b.misc->>'lab')" if include_builds else "NULL"
     test_misc_runtime = (
         "COALESCE(tl.name, t.misc->>'runtime')" if include_test_data else "NULL"
     )
     test_id = "t.id" if include_test_data else "NULL"
+    environment_misc = (
+        "jsonb_build_object('platform', t.environment_misc->>'platform')"
+        if include_test_data
+        else "NULL"
+    )
 
     select_clause = f"""c.git_commit_hash,
         c.git_commit_name,
@@ -1261,11 +1274,10 @@ def get_tree_commit_history(
         {test_prefix}status,
         {test_prefix}duration,
         {test_prefix}environment_compatible,
-        {test_prefix}environment_misc,
+        {environment_misc} AS environment_misc,
         {test_prefix}origin,
         {test_misc_runtime} AS test_lab,
         {test_id} AS test_id,
-        ic.id AS incidents_id,
         ic.test_id AS incidents_test_id,
         i.id AS issues_id,
         i.version AS issues_version,
@@ -1300,7 +1312,8 @@ def get_tree_commit_history(
             checkouts
         WHERE
             (git_commit_hash = %(commit_hash)s
-            OR %(commit_hash)s = ANY(checkouts.git_commit_tags))
+            -- Use @> instead of ANY. ANY scans checkouts__timestamp. SQL is an annoying language.
+            OR checkouts.git_commit_tags @> ARRAY[%(commit_hash)s]::text[])
             AND origin = %(origin_param)s
             AND {git_branch_clause}
             {git_url_full_clause}
