@@ -13,6 +13,8 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import threading
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -344,6 +346,33 @@ def _kill_process_group(pid: int) -> None:
         os.killpg(pid, signal.SIGKILL)
     except (ProcessLookupError, PermissionError):
         return
+
+
+def stream_git_lines(repo_dir: Path, *args: str, timeout: int) -> Iterator[str]:
+    """Yield git stdout line by line. Output can be millions of lines, so it is
+    never buffered. Same session, memory cap and kill as run_git."""
+    env = os.environ.copy()
+    env.update(_GIT_ENV)
+    process = subprocess.Popen(  # noqa: S603
+        [_git_executable(), "-C", str(repo_dir), *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        env=env,
+        start_new_session=True,
+    )
+    watchdog = threading.Timer(timeout, _kill_process_group, (process.pid,))
+    watchdog.start()
+    try:
+        for line in process.stdout:
+            yield line.decode("utf-8", errors="replace")
+        process.wait()
+    finally:
+        watchdog.cancel()
+        if process.poll() is None:
+            _kill_process_group(process.pid)
+            process.wait()
+    if process.returncode != 0:
+        raise FetchFailedError(f"git {' '.join(args)} failed or timed out")
 
 
 def run_git(
