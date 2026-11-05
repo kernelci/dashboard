@@ -1,7 +1,13 @@
 name: Deploy production Dashboard
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'release/*'
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   require-main:
@@ -18,8 +24,15 @@ jobs:
             exit 1
           fi
 
-  start-notification:
+  publish:
     needs: require-main
+    uses: ./.github/workflows/deploy-containers.yaml
+    permissions:
+      contents: read
+      packages: write
+
+  start-notification:
+    needs: publish
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification
@@ -127,7 +140,7 @@ jobs:
             export IMAGE_TAG=${IMAGE_TAG}
             export DASHBOARD_VERSION=${DASHBOARD_VERSION}
             docker compose -f docker-compose-next.yml pull --policy=always
-            docker compose -f docker-compose-next.yml up -d --remove-orphans
+            docker compose -f docker-compose-next.yml up -d --remove-orphans --no-build
           EOF
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
