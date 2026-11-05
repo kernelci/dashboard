@@ -28,9 +28,7 @@ jobs:
       - name: Check for new Django migrations
         id: check
         run: |
-          # Requires squash-and-merge onto staging: one commit, so HEAD~1 is the
-          # previous deploy. Update this if that merge method changes.
-          # See "Staging" in DEPLOYMENT.md.
+          # HEAD~1 is the previous deploy only with squash merges; see "Staging" in DEPLOYMENT.md.
           NEW_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- '**/migrations/*.py' \
             | grep -v '__init__.py' || true)
 
@@ -76,9 +74,6 @@ jobs:
           echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
         env:
           SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
-
-      - name: Staging image tag
-        run: echo "Deploying staging \`${{ github.ref_name }}\` (\`${{ github.sha }}\`)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy to staging
         run: |

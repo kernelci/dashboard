@@ -3,10 +3,6 @@ name: Publish GHCR Images
 on:
   workflow_call:
 
-concurrency:
-  group: publish-ghcr-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
   packages: write
