@@ -3,6 +3,11 @@ name: Deploy Staging and E2E
 on:
   workflow_call:
 
+# Staging shares one remote checkout dir, so deploys must not overlap
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
 jobs:
   check-migrations:
     runs-on: ubuntu-latest
@@ -23,6 +28,7 @@ jobs:
       - name: Check for new Django migrations
         id: check
         run: |
+          # HEAD~1 is the previous deploy only with squash merges; see "Staging" in DEPLOYMENT.md.
           NEW_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- '**/migrations/*.py' \
             | grep -v '__init__.py' || true)
 
@@ -50,8 +56,14 @@ jobs:
         with:
           args: "New Django migrations detected in this staging deployment: `${{ needs.check-migrations.outputs.migration_list }}`"
 
+  publish:
+    uses: ./.github/workflows/deploy-containers.yaml
+    permissions:
+      contents: read
+      packages: write
+
   deploy-staging:
-    needs: check-migrations
+    needs: [check-migrations, publish]
     runs-on: ubuntu-latest
     steps:
       - &ssh-host-auth
@@ -67,21 +79,24 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "
-            rm -rf dashboard-staging &&
-            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
-            cp ~/.env-staging dashboard-staging/.env &&
-            cd dashboard-staging &&
-            git checkout ${GITHUB_SHA} &&
-            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
-            docker compose pull --ignore-buildable --policy=always &&
-            docker compose build --no-cache &&
-            docker compose up -d --remove-orphans
-          "
+          ssh "${SSH_USER}@${SSH_HOST}" bash -s <<EOF
+            set -euo pipefail
+            rm -rf dashboard-staging
+            git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-staging
+            cp ~/.env-staging dashboard-staging/.env
+            cd dashboard-staging
+            git fetch --depth 1 origin "${IMAGE_TAG}"
+            git checkout --detach "${IMAGE_TAG}"
+            export IMAGE_TAG=${IMAGE_TAG}
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION}
+            docker compose pull --policy=always
+            docker compose up -d --remove-orphans --no-build
+          EOF
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect staging deployment status
