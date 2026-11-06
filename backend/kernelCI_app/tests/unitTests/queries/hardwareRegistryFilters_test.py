@@ -8,7 +8,7 @@ from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.queries.hardwareRegistryFilters import (
     HardwareRegistryFilter,
     get_hardware_registry_filter_options,
-    normalize_csv,
+    hardware_registry_filter_from_request,
     registry_filter_predicate,
 )
 from kernelCI_app.tests.unitTests.queries.conftest import setup_mock_cursor
@@ -24,56 +24,62 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         self.assertIsNone(predicate)
         self.assertEqual(params, {})
 
-    def test_architecture_excludes_unregistered_platforms(self):
+    def test_architecture_matches_the_registry_id_in_the_platform(self):
         predicate, params = registry_filter_predicate(
             HardwareRegistryFilter(architecture=("arm64", "arm")),
             "daily.platform",
         )
 
         self.assertIn("proc.architecture = ANY(%(architecture)s)", predicate)
-        self.assertNotIn("NOT EXISTS", predicate)
+        self.assertIn("split_part(daily.platform, ',', 2)", predicate)
         self.assertEqual(params["architecture"], ["arm64", "arm"])
 
     def test_platform_id_includes_unregistered_platforms(self):
         predicate, params = registry_filter_predicate(
-            HardwareRegistryFilter(platform=("am62-sk", "unknown-board")),
+            HardwareRegistryFilter(platform=("ti,am62-sk", "unknown-board")),
             "daily.platform",
         )
 
         self.assertEqual(predicate, "daily.platform = ANY(%(platform)s)")
-        self.assertNotIn("NOT EXISTS", predicate)
-        self.assertEqual(params["platform"], ["am62-sk", "unknown-board"])
+        self.assertNotIn("hardware_registry_platforms", predicate)
+        self.assertEqual(params["platform"], ["ti,am62-sk", "unknown-board"])
 
     def test_platform_id_with_another_field_excludes_unregistered_platforms(self):
         predicate, params = registry_filter_predicate(
-            HardwareRegistryFilter(architecture=("arm64",), platform=("am62-sk",)),
+            HardwareRegistryFilter(architecture=("arm64",), platform=("ti,am62-sk",)),
             "daily.platform",
         )
 
         self.assertIn("proc.architecture = ANY(%(architecture)s)", predicate)
-        self.assertIn("plat.id = ANY(%(platform)s)", predicate)
-        self.assertNotIn("NOT EXISTS", predicate)
+        self.assertIn("daily.platform = ANY(%(platform)s)", predicate)
+        self.assertIn(" AND ", predicate)
         self.assertEqual(params["architecture"], ["arm64"])
-        self.assertEqual(params["platform"], ["am62-sk"])
+        self.assertEqual(params["platform"], ["ti,am62-sk"])
 
     @patch("kernelCI_app.queries.hardwareRegistryFilters.connection")
     def test_options_read_the_registry_for_the_listed_platforms(self, mock_connection):
         cursor = setup_mock_cursor(mock_connection)
         cursor.fetchone.return_value = (["arm64"], [], [], [], [], [], ["sbc"])
 
-        options = get_hardware_registry_filter_options(["qemu", "am62", "qemu"])
+        options = get_hardware_registry_filter_options(["ti,am62-sk", "qemu", "qemu"])
 
         query, params = cursor.execute.call_args[0]
-        self.assertIn("plat.id = ANY(%(platforms)s)", query)
-        self.assertEqual(params, {"platforms": ["qemu", "am62", "qemu"]})
+        self.assertIn("plat.id = ANY(%(registry_ids)s)", query)
+        self.assertEqual(params, {"registry_ids": ["am62-sk", "qemu"]})
         self.assertEqual(options["architecture"], ["arm64"])
         self.assertEqual(options["board_type"], ["sbc"])
-        self.assertEqual(options["platform"], ["am62", "qemu"])
+        self.assertEqual(options["platform"], ["qemu", "ti,am62-sk"])
 
-    def test_normalize_csv_drops_blanks(self):
-        self.assertEqual(normalize_csv(" arm64, ,arm "), ("arm64", "arm"))
-        self.assertEqual(normalize_csv(None), ())
-        self.assertEqual(normalize_csv(""), ())
+    def test_repeated_parameters_keep_a_platform_id_with_a_comma(self):
+        request = APIRequestFactory().get(
+            "/api/hardware/",
+            {"platform": ["ti,am62-sk", " "], "architecture": ["arm64", "arm"]},
+        )
+
+        registry_filter = hardware_registry_filter_from_request(request.GET)
+
+        self.assertEqual(registry_filter.platform, ("ti,am62-sk",))
+        self.assertEqual(registry_filter.architecture, ("arm64", "arm"))
 
 
 _EMPTY_OPTIONS = {

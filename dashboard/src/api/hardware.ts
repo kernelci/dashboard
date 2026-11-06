@@ -21,6 +21,9 @@ const selectedFilterValues = (section?: Record<string, boolean>): string =>
     .map(([key]) => key)
     .join(',');
 
+// A registry field repeats its parameter, so a value may be a list.
+export type HardwareListingParams = Record<string, string | string[]>;
+
 export const hardwareListingParams = (
   diffFilter: TFilter,
 ): Record<string, string> =>
@@ -37,7 +40,7 @@ export const buildOriginForSelectors = (diffFilter: TFilter): string =>
 const fetchHardwareListing = async (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList?: string[],
 ): Promise<HardwareListingResponse> => {
   return await RequestData.get<HardwareListingResponse>('/api/hardware/', {
@@ -69,7 +72,7 @@ export const useHardwareRegistrySync =
 export const useHardwareListing = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList?: string[],
   enabled = true,
 ): UseQueryResult<HardwareListingResponse> => {
@@ -131,7 +134,7 @@ const fetchHardwareSelectors = async (
 const fetchHardwareRegistryFilterOptions = async (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList: string[] | undefined,
   selection: HardwareRevisionSelection | null,
 ): Promise<HardwareRegistryFilterOptions> =>
@@ -161,7 +164,7 @@ const fetchHardwareRegistryFilterOptions = async (
 export const useHardwareRegistryFilterOptions = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList: string[] | undefined,
   selection: HardwareRevisionSelection | null,
 ): UseQueryResult<HardwareRegistryFilterOptions> =>
@@ -197,7 +200,7 @@ export const useHardwareSelectors = (
 
 const fetchHardwareListingByRevision = async (
   selection: HardwareRevisionSelection,
-  params: Record<string, string>,
+  params: HardwareListingParams,
 ): Promise<HardwareListingResponse> => {
   return await RequestData.get<HardwareListingResponse>(
     '/api/hardware-by-revision/',
@@ -215,7 +218,7 @@ const fetchHardwareListingByRevision = async (
 
 export const useHardwareListingByRevision = (
   selection: HardwareRevisionSelection | null,
-  params: Record<string, string>,
+  params: HardwareListingParams,
 ): UseQueryResult<HardwareListingResponse> => {
   return useQuery({
     queryKey: ['hardwareListingByRevision', params, selection],

@@ -123,7 +123,8 @@ class DocStrings:
         "and/or tag strings that appear in checkout.git_commit_tags."
     )
     HARDWARE_REGISTRY_FILTER_DESCRIPTION = (
-        "Comma-separated registry values. Values in one field are OR; "
+        "Registry value. Repeat the parameter to select more than one, since "
+        "a platform id can hold a comma. Values in one field are OR; "
         "different fields are AND. A platform that is not in the registry "
         "matches only the platform filter, and only when no other registry "
         "field is set."

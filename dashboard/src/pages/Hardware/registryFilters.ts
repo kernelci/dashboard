@@ -90,13 +90,14 @@ export const cleanRegistryFilter = (
   return cleaned;
 };
 
+// Repeated query parameters, not a joined string: a platform id can hold a comma.
 export const registryFilterToParams = (
   filter: TRegistryFilter,
-): Record<string, string> =>
+): Record<string, string[]> =>
   Object.fromEntries(
     REGISTRY_FILTER_FIELDS.flatMap(({ key }) => {
       const values = filter[key];
-      return values && values.length > 0 ? [[key, values.join(',')]] : [];
+      return values && values.length > 0 ? [[key, values]] : [];
     }),
   );
 

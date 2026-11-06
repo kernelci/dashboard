@@ -182,7 +182,8 @@ def test_unknown_checkout_origin_is_listed_until_an_origin_is_chosen():
 @pytest.mark.django_db
 def test_registry_filter_narrows_the_listing_and_options_list_its_platforms():
     build = BuildFactory(checkout=_checkout(origin="maestro"), status="PASS")
-    for platform in ("arm-board", "x86-board", "unregistered"):
+    # Daily rows carry the vendor prefix; the registry holds the board alone.
+    for platform in ("ti,arm-board", "x86-board", "unregistered"):
         _test_on(build, platform)
     _recompute()
     vendor = HardwareRegistryPlatformVendor.objects.create(id="pv")
@@ -213,10 +214,14 @@ def test_registry_filter_narrows_the_listing_and_options_list_its_platforms():
         return [row[0] for row in rows]
 
     listed = platforms()
-    assert listed == ["arm-board", "unregistered", "x86-board"]
-    assert platforms(architecture=("arm64",)) == ["arm-board"]
+    assert listed == ["ti,arm-board", "unregistered", "x86-board"]
+    assert platforms(architecture=("arm64",)) == ["ti,arm-board"]
+    assert platforms(platform=("ti,arm-board",)) == ["ti,arm-board"]
     assert platforms(platform=("unregistered",)) == ["unregistered"]
     assert platforms(architecture=("arm64",), platform=("unregistered",)) == []
+    assert platforms(architecture=("arm64",), platform=("ti,arm-board",)) == [
+        "ti,arm-board"
+    ]
 
     options = get_hardware_registry_filter_options(listed)
     assert options["architecture"] == ["arm64", "x86_64"]

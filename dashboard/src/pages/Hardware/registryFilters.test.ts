@@ -9,16 +9,16 @@ import {
 } from './registryFilters';
 
 describe('registryFilterToParams', () => {
-  it('omits empty fields and joins selected values', () => {
+  it('omits empty fields and keeps a platform id with a comma whole', () => {
     const filter: TRegistryFilter = {
       architecture: ['arm64', 'arm'],
       processor: [],
-      platform: ['am62-sk'],
+      platform: ['ti,am62-sk'],
     };
 
     expect(registryFilterToParams(filter)).toEqual({
-      architecture: 'arm64,arm',
-      platform: 'am62-sk',
+      architecture: ['arm64', 'arm'],
+      platform: ['ti,am62-sk'],
     });
   });
 });
