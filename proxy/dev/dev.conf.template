@@ -1,4 +1,7 @@
 server {
+    tcp_save_syn on;
+    access_log /var/log/nginx/access.log fingerprints;
+
     location /api {
         proxy_pass ${PROXY_TARGET};
         proxy_connect_timeout 240s;
