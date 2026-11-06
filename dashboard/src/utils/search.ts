@@ -64,7 +64,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
 
   const minifiedParsedSearch = unflattenObject(
     mapRegistryFilterValues(flattenedParsedSearch, value =>
-      value.replaceAll(ESCAPED_ARRAY_SEPARATOR, ARRAY_SEPARATOR),
+      value.split(ESCAPED_ARRAY_SEPARATOR).join(ARRAY_SEPARATOR),
     ),
     KEY_FLAT_CHAR,
   );
@@ -82,7 +82,7 @@ export const stringifySearch = (
   );
   const stringifiedSearch = qs.stringify(
     mapRegistryFilterValues(flattenedSearchParams, value =>
-      value.replaceAll(ARRAY_SEPARATOR, ESCAPED_ARRAY_SEPARATOR),
+      value.split(ARRAY_SEPARATOR).join(ESCAPED_ARRAY_SEPARATOR),
     ),
     {
       arrayFormat: 'bracket-separator',
