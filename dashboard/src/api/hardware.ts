@@ -1,9 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { useSearch } from '@tanstack/react-router';
 
 import type { TFilter } from '@/types/general';
-import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import { HARDWARE_LISTING_FILTER_SECTIONS } from '@/utils/constants/hardwareListingFilters';
 
 import type {
@@ -131,18 +129,17 @@ const fetchHardwareSelectors = async (
 };
 
 const fetchHardwareRegistryFilterOptions = async (
-  origin: string,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  params: Record<string, string>,
+  commitsList: string[] | undefined,
   selection: HardwareRevisionSelection | null,
 ): Promise<HardwareRegistryFilterOptions> =>
   RequestData.get<HardwareRegistryFilterOptions>(
     '/api/hardware/registry-filters/',
     {
       params: {
-        origin,
-        startTimestampInSeconds,
-        endTimestampInSeconds,
+        ...params,
         ...(selection
           ? {
               tree_name: selection.treeName,
@@ -150,7 +147,13 @@ const fetchHardwareRegistryFilterOptions = async (
               git_repository_branch: selection.gitBranch,
               git_commit_hash: selection.gitCommitHash,
             }
-          : {}),
+          : {
+              startTimestampInSeconds,
+              endTimestampInSeconds,
+              ...(commitsList?.length
+                ? { commitsList: commitsList.join(',') }
+                : {}),
+            }),
       },
     },
   );
@@ -158,33 +161,29 @@ const fetchHardwareRegistryFilterOptions = async (
 export const useHardwareRegistryFilterOptions = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  searchFrom: HardwareListingRoutesMap['search'],
-): UseQueryResult<HardwareRegistryFilterOptions> => {
-  const { origin, treeName, gitRepositoryUrl, gitBranch, gitCommitHash } =
-    useSearch({ from: searchFrom });
-  const selection: HardwareRevisionSelection | null =
-    treeName && gitRepositoryUrl && gitBranch && gitCommitHash
-      ? { treeName, gitRepositoryUrl, gitBranch, gitCommitHash }
-      : null;
-
-  return useQuery({
+  params: Record<string, string>,
+  commitsList: string[] | undefined,
+  selection: HardwareRevisionSelection | null,
+): UseQueryResult<HardwareRegistryFilterOptions> =>
+  useQuery({
     queryKey: [
       'hardwareRegistryFilterOptions',
-      origin,
       startTimestampInSeconds,
       endTimestampInSeconds,
+      params,
+      commitsList ?? null,
       selection,
     ],
     queryFn: () =>
       fetchHardwareRegistryFilterOptions(
-        origin,
         startTimestampInSeconds,
         endTimestampInSeconds,
+        params,
+        commitsList,
         selection,
       ),
     refetchOnWindowFocus: false,
   });
-};
 
 export const useHardwareSelectors = (
   buildOrigin: string,
