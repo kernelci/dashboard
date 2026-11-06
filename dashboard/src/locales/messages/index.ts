@@ -66,6 +66,8 @@ export const messages = {
     'filter.buildOrigin': 'Build origin',
     'filter.buildStatus': 'Build Status',
     'filter.clear': 'Clear',
+    'filter.everyCheckoutFilterLabel':
+      'Showing every checkout for trees updated in the last {days} days',
     'filter.filtering': 'Filtering',
     'filter.globalFilter': 'Global filters',
     'filter.globalFilterAllTabs': 'Global filters affects all the tabs',
@@ -84,6 +86,7 @@ export const messages = {
     'filter.options': 'Options',
     'filter.origins': 'Origins',
     'filter.perTabFilter': 'Per tab filters',
+    'filter.registryFilters': 'Registry filters',
     'filter.remove': 'Remove {value}',
     'filter.search': 'Search...',
     'filter.select': 'Select',
