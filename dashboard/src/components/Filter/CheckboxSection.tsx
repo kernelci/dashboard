@@ -203,7 +203,10 @@ const FilterMultiCombobox = ({
   );
 };
 
-const CheckboxChips = ({ items, onClickItem }: ICheckboxList): JSX.Element => {
+const CheckboxChips = ({
+  items,
+  onClickItem,
+}: Omit<ICheckboxList, 'title'>): JSX.Element => {
   const itemComponents = useMemo(
     () =>
       Object.keys(items).map(key => (
