@@ -143,6 +143,8 @@ class TestGetHardwareDetailsSummary:
         assert params["checkout_origin1"] == "broonie"
         assert "tests.origin" not in executed_query
         assert "builds.origin" not in executed_query
+        # An OR across both platform columns falls back to a tests.start_time scan.
+        assert "OR tests.environment_compatible" not in executed_query
 
     @patch("kernelCI_app.queries.hardware.get_query_cache", return_value=None)
     @patch("kernelCI_app.queries.hardware.set_query_cache")
