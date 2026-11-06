@@ -36,6 +36,8 @@ import type { SearchIntent } from '@/lib/intent';
 
 import { HardwareListingFilter } from './HardwareListingFilter';
 import { HardwareRegistrySync } from './HardwareRegistrySync';
+import HardwareRegistryFilters from './HardwareRegistryFilters';
+import { hasRegistryFilter, registryFilterToParams } from './registryFilters';
 import { HardwareTable } from './HardwareTable';
 import {
   decodeBranchValue,
@@ -66,6 +68,7 @@ const HardwareListingPage = ({
     gitBranch,
     gitCommitHash,
     diffFilter,
+    registryFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -166,9 +169,16 @@ const HardwareListingPage = ({
     return getBranchBySelection(selectedTree, gitRepositoryUrl, gitBranch);
   }, [selectedTree, gitRepositoryUrl, gitBranch]);
 
-  const filters = useMemo(
+  const listingParams = useMemo(
     () => hardwareListingParams(diffFilter),
     [diffFilter],
+  );
+  const filters = useMemo(
+    () => ({
+      ...listingParams,
+      ...registryFilterToParams(registryFilter),
+    }),
+    [listingParams, registryFilter],
   );
 
   const { data: filterOptions } = useHardwareFilters(
@@ -314,7 +324,10 @@ const HardwareListingPage = ({
       activeListing.data.hardware.length > 0,
   );
   const tableEmptyMessageId =
-    hasSelection && !hasListingRows && inputFilter.length === 0
+    hasSelection &&
+    !hasListingRows &&
+    inputFilter.length === 0 &&
+    !hasRegistryFilter(registryFilter)
       ? 'hardwareListing.revisionEmpty'
       : 'hardwareListing.notFound';
 
@@ -329,11 +342,21 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          <HardwareListingFilter
-            data={filterOptions}
-            navigateFrom={urlFromMap.navigate}
-            paramFilter={diffFilter}
-          />
+          <div className="flex items-center gap-4">
+            <HardwareListingFilter
+              data={filterOptions}
+              navigateFrom={urlFromMap.navigate}
+              paramFilter={diffFilter}
+            />
+            <HardwareRegistryFilters
+              endTimestampInSeconds={endTimestampInSeconds}
+              startTimestampInSeconds={startTimestampInSeconds}
+              listingParams={listingParams}
+              commitsList={intentCommits}
+              selection={selection}
+              urlFromMap={urlFromMap}
+            />
+          </div>
         </div>
 
         <HardwareTable

@@ -19,6 +19,9 @@ import { isStringRecord } from './utils';
 // Must be a character not used in any other query parameters (e.g. '.' or '_' wouldn't work)
 const KEY_FLAT_CHAR = '|';
 const ARRAY_SEPARATOR = ',';
+// A platform id holds the separator (`ti,am335x-bone-black`), so it has to
+// travel the URL escaped or the array splits in the middle of one value.
+const ESCAPED_ARRAY_SEPARATOR = '%2C';
 
 export const isEncodedJSONArrayParam = (str: string): boolean => {
   // Regex responsible to match URI encoded (or not) array of numbers
@@ -55,11 +58,14 @@ export const parseSearch = (searchStr: string): AnySchema => {
       et: 'number',
       iv: 'number',
       ...diffFilterDurationQueryNumberTypes,
+      ...registryFilterQueryArrayTypes,
     },
   });
 
   const minifiedParsedSearch = unflattenObject(
-    flattenedParsedSearch,
+    mapRegistryFilterValues(flattenedParsedSearch, value =>
+      value.split(ESCAPED_ARRAY_SEPARATOR).join(ARRAY_SEPARATOR),
+    ),
     KEY_FLAT_CHAR,
   );
   const parsedSearch = unminifyParams(minifiedParsedSearch);
@@ -74,10 +80,15 @@ export const stringifySearch = (
     minifiedSearchParams,
     KEY_FLAT_CHAR,
   );
-  const stringifiedSearch = qs.stringify(flattenedSearchParams, {
-    arrayFormat: 'bracket-separator',
-    arrayFormatSeparator: ARRAY_SEPARATOR,
-  });
+  const stringifiedSearch = qs.stringify(
+    mapRegistryFilterValues(flattenedSearchParams, value =>
+      value.split(ARRAY_SEPARATOR).join(ESCAPED_ARRAY_SEPARATOR),
+    ),
+    {
+      arrayFormat: 'bracket-separator',
+      arrayFormatSeparator: ARRAY_SEPARATOR,
+    },
+  );
   return stringifiedSearch && `?${stringifiedSearch}`;
 };
 
@@ -156,7 +167,39 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   gitRepositoryUrl: 'gu',
   gitBranch: 'gb',
   gitCommitHash: 'ch',
+  registryFilter: 'rf',
 } as const;
+
+const registryFilterMinifiedParams = {
+  architecture: 'a',
+  processor: 'p',
+  platformVendor: 'pv',
+  siliconVendor: 'sv',
+  platform: 'pl',
+  systemModule: 'sm',
+  formFactor: 'ff',
+  boardType: 'bt',
+} as const;
+
+const registryFilterQueryArrayTypes = Object.fromEntries(
+  Object.values(registryFilterMinifiedParams).map(key => [
+    `rf${KEY_FLAT_CHAR}${key}`,
+    'string[]',
+  ]),
+) as Record<string, 'string[]'>;
+
+const mapRegistryFilterValues = <T extends Record<string, unknown>>(
+  params: T,
+  map: (value: string) => string,
+): T =>
+  Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      key in registryFilterQueryArrayTypes && Array.isArray(value)
+        ? value.map(item => (typeof item === 'string' ? map(item) : item))
+        : value,
+    ]),
+  ) as T;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
   gitBranch: 'gb',
@@ -213,7 +256,11 @@ const diffFilterDurationQueryNumberTypes = Object.fromEntries(
 ) as Record<string, 'number'>;
 
 type MinifiedParams = Record<
-  SearchParamsKeys | TFilterKeys | keyof TableFilter | keyof TTreeInformation,
+  | SearchParamsKeys
+  | TFilterKeys
+  | keyof TableFilter
+  | keyof TTreeInformation
+  | keyof typeof registryFilterMinifiedParams,
   string
 >;
 type MinifiedParamsKeys = keyof MinifiedParams;
@@ -222,6 +269,7 @@ const minifiedParams: MinifiedParams = {
   ...treeInfoMinifiedParams,
   ...tableFilterMinifiedParams,
   ...diffFilterMinifiedParams,
+  ...registryFilterMinifiedParams,
 } as const;
 
 type MinifiedValues = Record<
@@ -283,6 +331,9 @@ const tableFilterMinifiedParamsArray = Object.entries(
 const diffFilterMinifiedParamsArray = Object.entries(
   diffFilterMinifiedParams,
 ).map(([key, value]) => [value, key]);
+const registryFilterMinifiedParamsArray = Object.entries(
+  registryFilterMinifiedParams,
+).map(([key, value]) => [value, key]);
 const minifiedValuesArray = Object.entries(minifiedValues).map(
   ([key, value]) => [value, key],
 );
@@ -294,6 +345,7 @@ const groupedMinifiedParams = {
   // Multi-table sort keys reuse the tableFilter abbreviations (b, bt, t).
   s: Object.fromEntries(tableFilterMinifiedParamsArray),
   df: Object.fromEntries(diffFilterMinifiedParamsArray),
+  rf: Object.fromEntries(registryFilterMinifiedParamsArray),
   value: Object.fromEntries(minifiedValuesArray),
 } as const;
 type GroupedMinifiedKeys = keyof typeof groupedMinifiedParams;
