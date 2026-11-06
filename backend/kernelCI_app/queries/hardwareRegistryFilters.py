@@ -14,10 +14,9 @@ _CATALOG_COLUMNS = (
 )
 
 
-def normalize_csv(value: object) -> tuple[str, ...]:
-    if not isinstance(value, str):
-        return ()
-    return tuple(part.strip() for part in value.split(",") if part.strip())
+def registry_id(platform: str) -> str:
+    """Daily rows store `vendor,board`. The registry stores `board`."""
+    return platform.partition(",")[2] or platform
 
 
 @dataclass(frozen=True)
@@ -36,15 +35,22 @@ class HardwareRegistryFilter:
 
 
 def hardware_registry_filter_from_request(params) -> HardwareRegistryFilter:
+    """Repeated query parameters, not comma-separated: a platform id holds a comma."""
+
+    def values(name: str) -> tuple[str, ...]:
+        return tuple(
+            value.strip() for value in params.getlist(name) if value and value.strip()
+        )
+
     return HardwareRegistryFilter(
-        architecture=normalize_csv(params.get("architecture")),
-        processor=normalize_csv(params.get("processor")),
-        platform_vendor=normalize_csv(params.get("platformVendor")),
-        silicon_vendor=normalize_csv(params.get("siliconVendor")),
-        platform=normalize_csv(params.get("platform")),
-        system_module=normalize_csv(params.get("systemModule")),
-        form_factor=normalize_csv(params.get("formFactor")),
-        board_type=normalize_csv(params.get("boardType")),
+        architecture=values("architecture"),
+        processor=values("processor"),
+        platform_vendor=values("platformVendor"),
+        silicon_vendor=values("siliconVendor"),
+        platform=values("platform"),
+        system_module=values("systemModule"),
+        form_factor=values("formFactor"),
+        board_type=values("boardType"),
     )
 
 
@@ -53,20 +59,12 @@ def registry_filter_predicate(
 ) -> tuple[Optional[str], dict]:
     """Same field is OR (`= ANY`). Different fields are AND.
 
-    A platform missing from the registry matches only when the platform id
-    is the sole selected field.
+    Platform ids match the daily rows as they are. The other fields go through
+    the registry, so a platform missing from it drops out as soon as one of
+    them is set.
     """
     if registry_filter.is_empty():
         return None, {}
-
-    platform_only = bool(registry_filter.platform) and all(
-        not getattr(registry_filter, name) for name, _column in _CATALOG_COLUMNS
-    )
-    if platform_only:
-        return (
-            f"{platform_sql} = ANY(%(platform)s)",
-            {"platform": list(registry_filter.platform)},
-        )
 
     params: dict = {}
     catalog: list[str] = []
@@ -75,20 +73,23 @@ def registry_filter_predicate(
         if values:
             params[name] = list(values)
             catalog.append(f"{column} = ANY(%({name})s)")
-    if registry_filter.platform:
-        params["platform"] = list(registry_filter.platform)
-        catalog.append("plat.id = ANY(%(platform)s)")
 
-    registered = f"""
-        {platform_sql} IN (
+    conditions: list[str] = []
+    if catalog:
+        conditions.append(f"""
+        COALESCE(NULLIF(split_part({platform_sql}, ',', 2), ''), {platform_sql}) IN (
             SELECT plat.id
             FROM hardware_registry_platforms plat
             INNER JOIN hardware_registry_processors proc
                 ON proc.id = plat.processor_id
             WHERE {" AND ".join(catalog)}
         )
-    """
-    return registered, params
+    """)
+    if registry_filter.platform:
+        params["platform"] = list(registry_filter.platform)
+        conditions.append(f"{platform_sql} = ANY(%(platform)s)")
+
+    return " AND ".join(conditions), params
 
 
 def get_hardware_registry_filter_options(platforms: list[str]) -> dict[str, list[str]]:
@@ -110,7 +111,7 @@ def get_hardware_registry_filter_options(platforms: list[str]) -> dict[str, list
             FROM hardware_registry_platforms plat
             INNER JOIN hardware_registry_processors proc
                 ON proc.id = plat.processor_id
-            WHERE plat.id = ANY(%(platforms)s)
+            WHERE plat.id = ANY(%(registry_ids)s)
         )
         SELECT
             ARRAY(
@@ -147,7 +148,9 @@ def get_hardware_registry_filter_options(platforms: list[str]) -> dict[str, list
         "board_type",
     )
     with connection.cursor() as cursor:
-        cursor.execute(query, {"platforms": platforms})
+        cursor.execute(
+            query, {"registry_ids": sorted({registry_id(p) for p in platforms})}
+        )
         row = cursor.fetchone()
     options = {name: list(row[index] or []) for index, name in enumerate(names)}
     options["platform"] = sorted(set(platforms))

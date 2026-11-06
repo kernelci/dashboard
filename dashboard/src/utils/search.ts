@@ -19,6 +19,9 @@ import { isStringRecord } from './utils';
 // Must be a character not used in any other query parameters (e.g. '.' or '_' wouldn't work)
 const KEY_FLAT_CHAR = '|';
 const ARRAY_SEPARATOR = ',';
+// A platform id holds the separator (`ti,am335x-bone-black`), so it has to
+// travel the URL escaped or the array splits in the middle of one value.
+const ESCAPED_ARRAY_SEPARATOR = '%2C';
 
 export const isEncodedJSONArrayParam = (str: string): boolean => {
   // Regex responsible to match URI encoded (or not) array of numbers
@@ -60,7 +63,9 @@ export const parseSearch = (searchStr: string): AnySchema => {
   });
 
   const minifiedParsedSearch = unflattenObject(
-    flattenedParsedSearch,
+    mapRegistryFilterValues(flattenedParsedSearch, value =>
+      value.replaceAll(ESCAPED_ARRAY_SEPARATOR, ARRAY_SEPARATOR),
+    ),
     KEY_FLAT_CHAR,
   );
   const parsedSearch = unminifyParams(minifiedParsedSearch);
@@ -75,10 +80,15 @@ export const stringifySearch = (
     minifiedSearchParams,
     KEY_FLAT_CHAR,
   );
-  const stringifiedSearch = qs.stringify(flattenedSearchParams, {
-    arrayFormat: 'bracket-separator',
-    arrayFormatSeparator: ARRAY_SEPARATOR,
-  });
+  const stringifiedSearch = qs.stringify(
+    mapRegistryFilterValues(flattenedSearchParams, value =>
+      value.replaceAll(ARRAY_SEPARATOR, ESCAPED_ARRAY_SEPARATOR),
+    ),
+    {
+      arrayFormat: 'bracket-separator',
+      arrayFormatSeparator: ARRAY_SEPARATOR,
+    },
+  );
   return stringifiedSearch && `?${stringifiedSearch}`;
 };
 
@@ -177,6 +187,19 @@ const registryFilterQueryArrayTypes = Object.fromEntries(
     'string[]',
   ]),
 ) as Record<string, 'string[]'>;
+
+const mapRegistryFilterValues = <T extends Record<string, unknown>>(
+  params: T,
+  map: (value: string) => string,
+): T =>
+  Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      key in registryFilterQueryArrayTypes && Array.isArray(value)
+        ? value.map(item => (typeof item === 'string' ? map(item) : item))
+        : value,
+    ]),
+  ) as T;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
   gitBranch: 'gb',

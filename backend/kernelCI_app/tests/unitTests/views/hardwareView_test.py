@@ -121,8 +121,8 @@ class TestHardwareView(SimpleTestCase):
                 "startTimestampInSeconds": "1741192200",
                 "endTimestampInSeconds": "1741624200",
                 "origin": "origin1",
-                "architecture": "arm64, arm",
-                "platform": "am62-sk",
+                "architecture": ["arm64", "arm"],
+                "platform": "ti,am62-sk",
             },
         )
         response = self.view.get(request)
@@ -139,7 +139,7 @@ class TestHardwareView(SimpleTestCase):
             commits_list=None,
             registry_filter=HardwareRegistryFilter(
                 architecture=("arm64", "arm"),
-                platform=("am62-sk",),
+                platform=("ti,am62-sk",),
             ),
         )
 
