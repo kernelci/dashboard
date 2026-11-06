@@ -697,14 +697,53 @@ paths:
   /api/hardware/registry-filters/:
     get:
       operationId: hardware_registry_filters_retrieve
+      description: Options come from the listing rows, so the drawer offers the same
+        boards.
       parameters:
+      - in: query
+        name: buildLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildlab
+      - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Buildorigin
+      - in: query
+        name: checkoutOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Checkoutorigin
+      - in: query
+        name: commitsList
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commitslist
+        description: 'Optional comma-separated git commit identifiers: full SHA(s)
+          and/or tag strings that appear in checkout.git_commit_tags.'
       - in: query
         name: endTimestampInSeconds
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Endtimestampinseconds
-          type: string
-        description: Interval end timestamp in seconds for the results
-        required: true
+        description: Required without git_commit_hash. Interval end timestamp in seconds
+          for the results
       - in: query
         name: git_commit_hash
         schema:
@@ -735,18 +774,39 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          deprecated: true
           title: Origin
-          type: string
-        description: Test origin used to list the registry filter choices. Defaults
-          to maestro.
+        description: Deprecated alias for checkoutOrigin and buildOrigin
       - in: query
         name: startTimestampInSeconds
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Starttimestampinseconds
-          type: string
-        description: Interval start timestamp in seconds for the results
-        required: true
+        description: Required without git_commit_hash. Interval start timestamp in
+          seconds for the results
+      - in: query
+        name: testLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testlab
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
       - in: query
         name: tree_name
         schema:
