@@ -5,6 +5,14 @@ upstream anubis {
 
 server {
     listen 80 default_server;
+    listen 443 ssl;
+    http2 on;
+    ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    tcp_save_syn on;
+    access_log /var/log/nginx/access.log fingerprints;
 
     # NGINX remains the public entry point and TLS terminator. Anubis filters
     # requests before returning accepted traffic to the internal server below.
