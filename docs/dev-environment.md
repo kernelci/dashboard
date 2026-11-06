@@ -4,7 +4,7 @@ This document explains how to run the KernelCI Dashboard locally with live reloa
 
 ## Overview
 
-`docker-compose.dev.yml` is a self-contained Compose file designed for contributors. It is separate from the production `docker-compose.yml` so it can be used without any changes to the production config.
+`docker-compose.dev.yml` is the local development stack. Staging uses `docker-compose.yml`. Production uses `docker-compose-next.yml`.
 
 **What live reload means in practice:**
 
