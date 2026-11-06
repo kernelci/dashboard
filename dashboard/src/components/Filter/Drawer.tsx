@@ -34,6 +34,8 @@ interface IFilterDrawer {
   onFilter?: () => void;
   showLegend?: boolean;
   link?: IDrawerLink;
+  // The hardware page shows two drawers, so their triggers need distinct names.
+  labelId?: MessageDescriptor['id'];
 }
 
 const DrawerHeader = (): JSX.Element => {
@@ -145,6 +147,7 @@ const Drawer = ({
   onFilter,
   onOpenChange,
   showLegend = true,
+  labelId = 'global.filters',
 }: IFilterDrawer): JSX.Element => {
   const drawerLinkComponent = useMemo(() => {
     if (link) {
@@ -159,7 +162,7 @@ const Drawer = ({
     <UIDrawer onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
         <ButtonWithIcon
-          label={<FormattedMessage id="global.filters" />}
+          label={<FormattedMessage id={labelId} />}
           icon={<IoChevronDown />}
         />
       </DrawerTrigger>

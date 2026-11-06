@@ -95,6 +95,7 @@ const HardwareRegistryFilters = ({
 
   return (
     <FilterDrawer
+      labelId="filter.registryFilters"
       onCancel={handleOpenChange}
       onFilter={onFilter}
       onOpenChange={handleOpenChange}
