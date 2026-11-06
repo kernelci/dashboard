@@ -437,7 +437,6 @@ class HardwareStatus(models.Model):
 class HardwareDailyBuilds(models.Model):
     pk = models.CompositePrimaryKey(
         "checkout_day",
-        "test_origin",
         "build_origin",
         "build_lab",
         "platform",
@@ -446,7 +445,6 @@ class HardwareDailyBuilds(models.Model):
     checkout_day = models.DateField()
     checkout_id = models.TextField()
     checkout_origin = models.CharField(max_length=100, blank=True, null=True)
-    test_origin = models.CharField(max_length=100)
     build_origin = models.CharField(max_length=100)
     build_lab = models.TextField()
     platform = models.CharField(max_length=100)
