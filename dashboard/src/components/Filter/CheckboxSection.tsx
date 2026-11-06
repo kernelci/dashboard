@@ -4,8 +4,6 @@ import { useCallback, useMemo, type JSX } from 'react';
 
 import { useIntl, type MessageDescriptor } from 'react-intl';
 
-import type { TFilterObjectsKeys } from '@/types/general';
-
 import Checkbox from '@/components/Checkbox/Checkbox';
 
 import { OptionFilters } from '@/types/filters';
@@ -47,7 +45,7 @@ export interface ICheckboxSection {
 export interface ISectionItem {
   title: MessageDescriptor['id'];
   subtitle: MessageDescriptor['id'];
-  sectionKey: TFilterObjectsKeys;
+  sectionKey: string;
   isGlobal?: boolean;
 }
 

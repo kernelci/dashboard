@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.hardwareRegistry import get_hardware_registry_by_ids
 from kernelCI_app.queries.hardware import get_hardware_listing_data
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareListingItem,
@@ -44,9 +45,15 @@ class HardwareView(APIView):
             commits_list=query_params.commits_list,
         )
 
+        registry_by_id = get_hardware_registry_by_ids(row[0] for row in hardwares_raw)
         try:
             result = HardwareListingResponse(
-                hardware=[HardwareListingItem.from_row(row) for row in hardwares_raw]
+                hardware=[
+                    HardwareListingItem.from_row(row).model_copy(
+                        update={"registry": registry_by_id.get(row[0])}
+                    )
+                    for row in hardwares_raw
+                ]
             )
 
             if len(result.hardware) < 1:

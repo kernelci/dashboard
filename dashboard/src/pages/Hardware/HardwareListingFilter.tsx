@@ -6,12 +6,20 @@ import FilterDrawer from '@/components/Filter/Drawer';
 import { MemoizedCheckboxSection } from '@/components/Tabs/Filters';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
-import type { HardwareFiltersResponse } from '@/types/hardware';
+import type { HardwareFiltersResponse, HardwareItem } from '@/types/hardware';
 import {
   HARDWARE_LISTING_FILTER_SECTIONS,
   hardwareListingFilterSections,
 } from '@/utils/constants/hardwareListingFilters';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
+
+import {
+  cleanRegistryFilter,
+  createRegistryFilter,
+  isRegistryFilterKey,
+  registryFilterSections,
+  type TRegistryFilter,
+} from './hardwareListingFilters';
 
 const createFilter = (
   data: HardwareFiltersResponse | undefined,
@@ -87,6 +95,53 @@ export const HardwareListingFilter = ({
         isTFilterObjectKeys={isTFilterObjectKeys}
         sections={hardwareListingFilterSections}
         setDiffFilter={setDiffFilter}
+        showAllIcons={false}
+      />
+    </FilterDrawer>
+  );
+};
+
+export const RegistryListingFilter = ({
+  paramFilter,
+  items,
+  urlFromMap,
+}: {
+  paramFilter: TRegistryFilter;
+  items: HardwareItem[];
+  urlFromMap: HardwareListingRoutesMap;
+}): JSX.Element => {
+  const navigate = useNavigate({ from: urlFromMap.navigate });
+  const filter = useMemo(() => createRegistryFilter(items), [items]);
+  const [diffFilter, setDiffFilter] = useState<TRegistryFilter>(paramFilter);
+
+  const onClickFilterHandle = useCallback(() => {
+    navigate({
+      search: previousSearch => ({
+        ...previousSearch,
+        registryFilter: cleanRegistryFilter(diffFilter),
+      }),
+      state: s => s,
+    });
+  }, [diffFilter, navigate]);
+
+  const resetToParamFilter = useCallback(
+    () => setDiffFilter(paramFilter),
+    [paramFilter],
+  );
+
+  return (
+    <FilterDrawer
+      onFilter={onClickFilterHandle}
+      onOpenChange={resetToParamFilter}
+      onCancel={resetToParamFilter}
+      showLegend={false}
+    >
+      <MemoizedCheckboxSection
+        sections={registryFilterSections}
+        setDiffFilter={setDiffFilter}
+        diffFilter={diffFilter}
+        filter={filter}
+        isTFilterObjectKeys={isRegistryFilterKey}
         showAllIcons={false}
       />
     </FilterDrawer>

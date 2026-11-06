@@ -27,6 +27,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     listing_origin_args,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.hardwareRegistry import get_first_hardware_registry
 from kernelCI_app.helpers.issueExtras import parse_issue
 from kernelCI_app.queries.hardware import (
     get_hardware_details_summary,
@@ -631,6 +632,7 @@ class HardwareDetailsSummary(APIView):
                 trees=all_trees,
                 compatibles=all_compatibles,
                 in_registry=is_hardware_in_registry(hardware_id),
+                registry=get_first_hardware_registry([hardware_id, *all_compatibles]),
             )
             filters = HardwareDetailsFilters(
                 all=all_filters,
