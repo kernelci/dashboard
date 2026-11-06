@@ -85,9 +85,10 @@ paths:
           - type: 'null'
           default: null
           title: Architecture
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: boardType
         schema:
@@ -96,9 +97,10 @@ paths:
           - type: 'null'
           default: null
           title: Boardtype
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: buildLab
         schema:
@@ -150,9 +152,10 @@ paths:
           - type: 'null'
           default: null
           title: Formfactor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: origin
         schema:
@@ -171,9 +174,10 @@ paths:
           - type: 'null'
           default: null
           title: Platform
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: platformVendor
         schema:
@@ -182,9 +186,10 @@ paths:
           - type: 'null'
           default: null
           title: Platformvendor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: processor
         schema:
@@ -193,9 +198,10 @@ paths:
           - type: 'null'
           default: null
           title: Processor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: siliconVendor
         schema:
@@ -204,9 +210,10 @@ paths:
           - type: 'null'
           default: null
           title: Siliconvendor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: startTimestampInSeconds
         schema:
@@ -222,9 +229,10 @@ paths:
           - type: 'null'
           default: null
           title: Systemmodule
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: testLab
         schema:
@@ -266,9 +274,10 @@ paths:
           - type: 'null'
           default: null
           title: Architecture
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: boardType
         schema:
@@ -277,9 +286,10 @@ paths:
           - type: 'null'
           default: null
           title: Boardtype
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: buildLab
         schema:
@@ -312,9 +322,10 @@ paths:
           - type: 'null'
           default: null
           title: Formfactor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: git_commit_hash
         schema:
@@ -354,9 +365,10 @@ paths:
           - type: 'null'
           default: null
           title: Platform
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: platformVendor
         schema:
@@ -365,9 +377,10 @@ paths:
           - type: 'null'
           default: null
           title: Platformvendor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: processor
         schema:
@@ -376,9 +389,10 @@ paths:
           - type: 'null'
           default: null
           title: Processor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: siliconVendor
         schema:
@@ -387,9 +401,10 @@ paths:
           - type: 'null'
           default: null
           title: Siliconvendor
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: systemModule
         schema:
@@ -398,9 +413,10 @@ paths:
           - type: 'null'
           default: null
           title: Systemmodule
-        description: Comma-separated registry values. Values in one field are OR;
-          different fields are AND. A platform that is not in the registry matches
-          only the platform filter, and only when no other registry field is set.
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: testLab
         schema:
