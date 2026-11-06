@@ -169,12 +169,16 @@ const HardwareListingPage = ({
     return getBranchBySelection(selectedTree, gitRepositoryUrl, gitBranch);
   }, [selectedTree, gitRepositoryUrl, gitBranch]);
 
+  const listingParams = useMemo(
+    () => hardwareListingParams(diffFilter),
+    [diffFilter],
+  );
   const filters = useMemo(
     () => ({
-      ...hardwareListingParams(diffFilter),
+      ...listingParams,
       ...registryFilterToParams(registryFilter),
     }),
-    [diffFilter, registryFilter],
+    [listingParams, registryFilter],
   );
 
   const { data: filterOptions } = useHardwareFilters(
@@ -347,6 +351,9 @@ const HardwareListingPage = ({
             <HardwareRegistryFilters
               endTimestampInSeconds={endTimestampInSeconds}
               startTimestampInSeconds={startTimestampInSeconds}
+              listingParams={listingParams}
+              commitsList={intentCommits}
+              selection={selection}
               urlFromMap={urlFromMap}
             />
             {kcidevComponent}

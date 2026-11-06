@@ -6,6 +6,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useHardwareRegistryFilterOptions } from '@/api/hardware';
 import FilterCheckboxSection from '@/components/Filter/CheckboxSection';
 import FilterDrawer, { DrawerSection } from '@/components/Filter/Drawer';
+import type { HardwareRevisionSelection } from '@/types/hardware';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 
 import {
@@ -18,10 +19,16 @@ import {
 const HardwareRegistryFilters = ({
   startTimestampInSeconds,
   endTimestampInSeconds,
+  listingParams,
+  commitsList,
+  selection,
   urlFromMap,
 }: {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
+  listingParams: Record<string, string>;
+  commitsList?: string[];
+  selection: HardwareRevisionSelection | null;
   urlFromMap: HardwareListingRoutesMap;
 }): JSX.Element => {
   const intl = useIntl();
@@ -30,7 +37,9 @@ const HardwareRegistryFilters = ({
   const optionsQuery = useHardwareRegistryFilterOptions(
     startTimestampInSeconds,
     endTimestampInSeconds,
-    urlFromMap.search,
+    listingParams,
+    commitsList,
+    selection,
   );
   const [draft, setDraft] = useState<TRegistryFilter>(registryFilter);
 

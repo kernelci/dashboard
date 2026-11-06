@@ -195,21 +195,31 @@ class HardwareRegistryFilterOptions(BaseModel):
 
 
 class HardwareRegistryFilterOptionsDocumentationOnly(BaseModel):
-    origin: Annotated[
-        str,
-        Field(
-            default=DEFAULT_ORIGIN,
-            description=(
-                "Test origin used to list the registry filter choices. "
-                "Defaults to maestro."
-            ),
-        ),
-    ]
-    startTimestampInSeconds: str = Field(  # noqa: N815
-        description=DocStrings.DEFAULT_START_TS_DESCRIPTION
+    """Takes the listing filters, so the options match the listed boards."""
+
+    checkoutOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    buildOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    testOrigin: Optional[str] = None  # noqa: N815
+    buildLab: Optional[str] = None  # noqa: N815
+    testLab: Optional[str] = None  # noqa: N815
+    origin: Optional[str] = Field(
+        default=None,
+        deprecated=True,
+        description="Deprecated alias for checkoutOrigin and buildOrigin",
     )
-    endTimestampInSeconds: str = Field(  # noqa: N815
-        description=DocStrings.DEFAULT_END_TS_DESCRIPTION
+    startTimestampInSeconds: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description="Required without git_commit_hash. "
+        + DocStrings.DEFAULT_START_TS_DESCRIPTION,
+    )
+    endTimestampInSeconds: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description="Required without git_commit_hash. "
+        + DocStrings.DEFAULT_END_TS_DESCRIPTION,
+    )
+    commitsList: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION,
     )
     tree_name: Optional[str] = Field(
         default=None, description=DocStrings.TREE_NAME_PATH_DESCRIPTION

@@ -1,4 +1,3 @@
-from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -8,8 +7,6 @@ from rest_framework.test import APIRequestFactory
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.queries.hardwareRegistryFilters import (
     HardwareRegistryFilter,
-    get_hardware_daily_listing,
-    get_hardware_daily_revision_listing,
     get_hardware_registry_filter_options,
     normalize_csv,
     registry_filter_predicate,
@@ -60,93 +57,18 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         self.assertEqual(params["platform"], ["am62-sk"])
 
     @patch("kernelCI_app.queries.hardwareRegistryFilters.connection")
-    def test_daily_listing_reads_both_tables_and_applies_the_filter(
-        self, mock_connection
-    ):
+    def test_options_read_the_registry_for_the_listed_platforms(self, mock_connection):
         cursor = setup_mock_cursor(mock_connection)
-        cursor.fetchall.return_value = []
+        cursor.fetchone.return_value = (["arm64"], [], [], [], [], [], ["sbc"])
 
-        get_hardware_daily_listing(
-            origin="maestro",
-            start_date=datetime(2026, 1, 1),
-            end_date=datetime(2026, 1, 2),
-            registry_filter=HardwareRegistryFilter(architecture=("arm64",)),
-        )
+        options = get_hardware_registry_filter_options(["qemu", "am62", "qemu"])
 
         query, params = cursor.execute.call_args[0]
-        self.assertIn("hardware_daily_builds", query)
-        self.assertIn("hardware_daily_tests", query)
-        self.assertNotIn("tested.test_origin", query)
-        self.assertNotIn("build_origin", query)
-        self.assertIn("daily.test_origin = %(origin)s", query)
-        self.assertIn("picked.checkout_id = daily.checkout_id", query)
-        self.assertIn("checkouts.start_time DESC", query)
-        self.assertIn("proc.architecture = ANY(%(architecture)s)", query)
-        self.assertNotIn("NOT EXISTS", query)
-        self.assertEqual(params["architecture"], ["arm64"])
-        self.assertEqual(params["origin"], "maestro")
-
-        cursor.fetchone.return_value = ([], [], [], [], [], [], [], [])
-        get_hardware_registry_filter_options(
-            origin="maestro",
-            start_date=datetime(2026, 1, 1),
-            end_date=datetime(2026, 1, 2),
-        )
-        options_query = cursor.execute.call_args[0][0]
-        self.assertIn("SELECT DISTINCT platform FROM picked", options_query)
-        self.assertIn("checkouts.start_time DESC", options_query)
-
-        get_hardware_daily_listing(
-            origin="maestro",
-            start_date=datetime(2026, 1, 1),
-            end_date=datetime(2026, 1, 2),
-            commits_list=["abc"],
-        )
-        commits_query = cursor.execute.call_args[0][0]
-        self.assertNotIn("picked", commits_query)
-        self.assertIn("commits_list", commits_query)
-
-    @patch("kernelCI_app.queries.hardwareRegistryFilters.connection")
-    def test_revision_listing_and_options_use_the_same_daily_checkout(
-        self, mock_connection
-    ):
-        cursor = setup_mock_cursor(mock_connection)
-        cursor.fetchall.return_value = []
-        cursor.fetchone.return_value = ([], [], [], [], [], [], [], [])
-        revision = {
-            "origin": "maestro",
-            "tree_name": "android",
-            "git_repository_url": "https://example.com/android",
-            "git_repository_branch": "main",
-            "git_commit_hash": "abc",
-        }
-
-        get_hardware_daily_revision_listing(
-            **revision,
-            registry_filter=HardwareRegistryFilter(architecture=("arm64",)),
-        )
-        listing_query = cursor.execute.call_args[0][0]
-        self.assertIn("hardware_daily_builds", listing_query)
-        self.assertIn("hardware_daily_tests", listing_query)
-        self.assertNotIn("tested.checkout_id", listing_query)
-        self.assertIn("daily.test_origin = %(origin)s", listing_query)
-        self.assertNotIn("build_origin", listing_query)
-        self.assertIn("revision.git_commit_hash = %(git_commit_hash)s", listing_query)
-        self.assertNotIn("picked", listing_query)
-        self.assertNotIn("environment_misc", listing_query)
-
-        get_hardware_registry_filter_options(
-            start_date=datetime(2026, 1, 1),
-            end_date=datetime(2026, 1, 2),
-            **revision,
-        )
-        options_query = cursor.execute.call_args[0][0]
-        self.assertIn("hardware_daily_tests", options_query)
-        self.assertNotIn("hardware_daily_builds", options_query)
-        self.assertNotIn("build_origin", options_query)
-        self.assertIn("revision.git_commit_hash = %(git_commit_hash)s", options_query)
-        self.assertNotIn("picked", options_query)
-        self.assertNotIn("checkout_day", options_query)
+        self.assertIn("plat.id = ANY(%(platforms)s)", query)
+        self.assertEqual(params, {"platforms": ["qemu", "am62", "qemu"]})
+        self.assertEqual(options["architecture"], ["arm64"])
+        self.assertEqual(options["board_type"], ["sbc"])
+        self.assertEqual(options["platform"], ["am62", "qemu"])
 
     def test_normalize_csv_drops_blanks(self):
         self.assertEqual(normalize_csv(" arm64, ,arm "), ("arm64", "arm"))
@@ -166,37 +88,59 @@ _EMPTY_OPTIONS = {
 }
 
 
-class TestHardwareRegistryFiltersView(SimpleTestCase):
-    @patch(
-        "kernelCI_app.views.hardwareRegistryFiltersView."
-        "get_hardware_registry_filter_options"
-    )
-    def test_origin_stays_on_the_options_query(self, mock_options):
-        mock_options.return_value = _EMPTY_OPTIONS
-        view = HardwareRegistryFiltersView()
-        factory = APIRequestFactory()
+_VIEW = "kernelCI_app.views.hardwareRegistryFiltersView."
 
-        response = view.get(
-            factory.get(
-                "/api/hardware/registry-filters/",
-                {
-                    "startTimestampInSeconds": "1741192200",
-                    "endTimestampInSeconds": "1741624200",
-                    "origin": "broonie",
-                },
-            )
+
+@patch(_VIEW + "get_hardware_registry_filter_options", return_value=_EMPTY_OPTIONS)
+class TestHardwareRegistryFiltersView(SimpleTestCase):
+    def get(self, params):
+        return HardwareRegistryFiltersView().get(
+            APIRequestFactory().get("/api/hardware/registry-filters/", params)
+        )
+
+    @patch(_VIEW + "get_hardware_listing_data")
+    def test_options_come_from_the_unfiltered_listing(self, mock_listing, mock_options):
+        mock_listing.return_value = [("am62", None), ("qemu", None)]
+
+        response = self.get(
+            {
+                "startTimestampInSeconds": "1741192200",
+                "endTimestampInSeconds": "1741624200",
+                "buildOrigin": "ti",
+                "testLab": "lab-a",
+                "commitsList": "abc",
+                "architecture": "arm64",
+            }
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(mock_options.call_args.kwargs["origin"], "broonie")
+        kwargs = mock_listing.call_args.kwargs
+        self.assertEqual(kwargs["checkout_origin"], [DEFAULT_ORIGIN])
+        self.assertEqual(kwargs["build_origin"], ["ti"])
+        self.assertEqual(kwargs["test_lab"], ["lab-a"])
+        self.assertEqual(kwargs["commits_list"], ["abc"])
+        self.assertNotIn("registry_filter", kwargs)
+        mock_options.assert_called_once_with(["am62", "qemu"])
 
-        view.get(
-            factory.get(
-                "/api/hardware/registry-filters/",
-                {
-                    "startTimestampInSeconds": "1741192200",
-                    "endTimestampInSeconds": "1741624200",
-                },
-            )
+    @patch(_VIEW + "get_hardware_listing_data_by_revision", return_value=[])
+    def test_revision_options_use_the_revision_listing(
+        self, mock_revision, mock_options
+    ):
+        response = self.get(
+            {
+                "tree_name": "android",
+                "git_repository_url": "https://example.com/android",
+                "git_repository_branch": "main",
+                "git_commit_hash": "abc",
+            }
         )
-        self.assertEqual(mock_options.call_args.kwargs["origin"], DEFAULT_ORIGIN)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(mock_revision.call_args.kwargs["git_commit_hash"], "abc")
+        mock_options.assert_called_once_with([])
+
+    def test_window_is_required_without_a_revision(self, mock_options):
+        response = self.get({"buildOrigin": "ti"})
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        mock_options.assert_not_called()
