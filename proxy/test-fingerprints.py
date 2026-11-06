@@ -55,9 +55,11 @@ def request(connection, path):
     connection.request("GET", path, headers={
         "User-Agent": USER_AGENT,
         # These names overlap the module's variables. They must never supply
-        # fingerprints, even on plain HTTP where JA4 is unavailable.
+        # fingerprints, even on plain HTTP where TLSFP is unavailable.
         "SSL-JA4": "forged-tls",
         "SSL-JA4T": "forged-tcp",
+        "Connfp-Tls": "forged-tls",
+        "Connfp-Syn": "forged-tcp",
     })
     response = connection.getresponse()
     body = response.read()
@@ -79,7 +81,9 @@ def records(name, expected_paths):
 def check_common(row):
     assert row["status"] == 200, row
     assert row["user_agent"] == USER_AGENT, row
-    assert re.fullmatch(r"\d+_[\d-]+_\d+_\d+", row["tcp_ja4t"]), row
+    assert re.fullmatch(r"syn1:[46]:\d+:[01-]:\d+:(?:\d+|-):(?:\d+|-):(?:\d+(?:-\d+)*|-)",
+                        row["tcp_syn"]), row
+    assert row["tlsfp_registry"] == "1", row
     assert re.fullmatch(r"[0-9a-f]{32}", row["request_id"]), row
 
 
@@ -142,18 +146,18 @@ def main():
             rows = records(proxy, paths)
             for row in rows.values():
                 check_common(row)
-            assert rows["/plain"]["tls_ja4"] in ("", "-"), rows["/plain"]
+            assert rows["/plain"]["tlsfp"] in ("", "-"), rows["/plain"]
             assert rows["/http2"]["request"] == "GET /http2 HTTP/2.0", rows["/http2"]
             assert rows["/http2"]["tls_alpn"] == "h2", rows["/http2"]
-            assert re.fullmatch(r"t13d\d{4}h2_[0-9a-f]{12}_[0-9a-f]{12}",
-                                rows["/http2"]["tls_ja4"]), rows["/http2"]
+            assert re.fullmatch(r"t13d\d{4}h2_[0-9a-f]{12}_[0-9a-f]{12}_[0-9a-f]{12}",
+                                rows["/http2"]["tlsfp"]), rows["/http2"]
             for label in ("12", "13"):
                 first, second = rows[f"/tls{label}"], rows[f"/api/reuse{label}"]
-                assert re.fullmatch(rf"t{label}d\d{{4}}h1_[0-9a-f]{{12}}_[0-9a-f]{{12}}",
-                                    first["tls_ja4"]), first
+                assert re.fullmatch(rf"t{label}d\d{{4}}h1_[0-9a-f]{{12}}_[0-9a-f]{{12}}_[0-9a-f]{{12}}",
+                                    first["tlsfp"]), first
                 assert first["tls_protocol"] == f"TLSv1.{label[-1]}", first
                 assert first["tls_alpn"] == "http/1.1", first
-                for field in ("connection", "tls_ja4", "tcp_ja4t"):
+                for field in ("connection", "tlsfp", "tcp_syn"):
                     assert first[field] == second[field], (field, first, second)
                 assert (first["connection_requests"], second["connection_requests"]) == ("1", "2")
                 assert first["request_id"] != second["request_id"]
@@ -171,7 +175,7 @@ def main():
             connection.close()
             for row in records(dev, {"/dev", "/api/dev"}).values():
                 check_common(row)
-                assert row["tls_ja4"] in ("", "-"), row
+                assert row["tlsfp"] in ("", "-"), row
             print("PASS: HTTP/1.1 and HTTP/2, TLS 1.2/1.3, keepalive, Anubis, static/API routing, "
                   "header spoofing, JSON escaping and certificate-free development config")
         finally:
