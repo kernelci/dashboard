@@ -13,7 +13,11 @@ export const retryHandler = (
   retryCount: number | boolean = DEFAULT_QUERY_RETRY_COUNT,
 ) => {
   return (failureCount: number, error: Error): boolean => {
-    if (isBadRequestError(error)) {
+    if (
+      isBadRequestError(error) ||
+      (error instanceof AxiosError &&
+        error.response?.status === HttpStatusCode.NotFound)
+    ) {
       return false;
     }
 

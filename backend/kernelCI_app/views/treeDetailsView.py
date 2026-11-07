@@ -31,7 +31,7 @@ from kernelCI_app.helpers.treeDetails import (
     process_tests_issue,
     process_tree_url,
 )
-from kernelCI_app.queries.tree import get_tree_details_data
+from kernelCI_app.queries.tree import get_tree_details_data, get_tree_not_found
 from kernelCI_app.typeModels.commonDetails import (
     BaseBuildSummary,
     BuildSummary,
@@ -51,6 +51,7 @@ from kernelCI_app.typeModels.treeDetails import (
     DirectTreeQueryParameters,
     TreeCommon,
     TreeDetailsFullResponse,
+    TreeNotFoundResponse,
     TreeQueryParameters,
 )
 from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
@@ -225,7 +226,9 @@ class BaseTreeDetails(APIView):
     ):
         origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
         git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch", git_branch)
+        git_branch_param = (
+            git_branch if git_branch is not None else request.GET.get("git_branch")
+        )
         # It is possible to arrive here from the shortcut endpoints.
         # In that case, both tree_name and branch won't be null;
         # besides, it won't be possible to differentiate the reason why the git_url might be None:
@@ -243,6 +246,15 @@ class BaseTreeDetails(APIView):
         )
 
         if len(rows) == 0:
+            not_found = get_tree_not_found(
+                origin=origin_param,
+                tree_name=tree_name,
+                git_branch=git_branch_param,
+                commit_hash=commit_hash,
+                git_url=git_url_param,
+            )
+            if not_found is not None:
+                return Response(not_found.model_dump(), status=HTTPStatus.NOT_FOUND)
             return create_api_error_response(
                 error_message=ClientStrings.TREE_NO_RESULTS,
                 status_code=HTTPStatus.OK,
@@ -346,7 +358,7 @@ class BaseTreeDetails(APIView):
 
 class TreeDetailsDirect(BaseTreeDetails):
     @extend_schema(
-        responses=TreeDetailsFullResponse,
+        responses={200: TreeDetailsFullResponse, 404: TreeNotFoundResponse},
         parameters=[
             COMMIT_HASH_PATH_PARAM,
             TREE_NAME_PATH_PARAM,
@@ -372,7 +384,7 @@ class TreeDetailsDirect(BaseTreeDetails):
 
 class TreeDetails(BaseTreeDetails):
     @extend_schema(
-        responses=TreeDetailsFullResponse,
+        responses={200: TreeDetailsFullResponse, 404: TreeNotFoundResponse},
         parameters=[COMMIT_HASH_PATH_PARAM, TreeQueryParameters],
         methods=["GET"],
     )

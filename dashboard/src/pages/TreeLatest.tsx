@@ -7,7 +7,7 @@ import type { JSX } from 'react';
 import { useTreeLatest } from '@/api/tree';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import { TreeQueryError } from '@/pages/TreeDetails/TreeQueryError';
 
 type TreeLatestFrom =
   | '/_main/(alternatives)/c/$treeName/$branch/'
@@ -33,12 +33,7 @@ export const TreeLatest = ({
   const { treeName, branch } = params;
   const hash = 'hash' in params ? params.hash : undefined;
 
-  const { isLoading, data, status, error } = useTreeLatest(
-    treeName,
-    branch,
-    origin,
-    hash,
-  );
+  const { data, status, error } = useTreeLatest(treeName, branch, origin, hash);
 
   if (data) {
     navigate({
@@ -60,10 +55,12 @@ export const TreeLatest = ({
       data={data}
       status={status}
       customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel="treeDetails.notFound"
+        <TreeQueryError
+          error={error}
+          treeName={treeName}
+          branch={branch}
+          hash={hash}
+          origin={origin}
         />
       }
     >

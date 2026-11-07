@@ -59,6 +59,6 @@ def test_tree_latest(tree_name, git_branch, query, has_error_body):
     assert_status_code_and_error_response(
         response=response,
         content=content,
-        status_code=HTTPStatus.OK,
+        status_code=HTTPStatus.NOT_FOUND if has_error_body else HTTPStatus.OK,
         should_error=has_error_body,
     )

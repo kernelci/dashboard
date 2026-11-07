@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -13,6 +13,11 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
 )
 from kernelCI_app.typeModels.treeListing import BaseCheckouts
+
+
+class TreeNotFoundResponse(BaseModel):
+    error: str
+    resource: Literal["tree", "branch", "commit"]
 
 
 class TreeLatestPathParameters(BaseModel):
