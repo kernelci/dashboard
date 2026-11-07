@@ -144,7 +144,7 @@ def request_data(base_tree: dict, filters: dict | None = None) -> tuple[Response
 @pytest.mark.parametrize(
     "base_tree, status_code, has_error_body",
     [
-        (INVALID_TREE, HTTPStatus.NOT_FOUND, True),
+        (INVALID_TREE, HTTPStatus.OK, True),
         (ARM64_TREE, HTTPStatus.OK, False),
     ],
 )

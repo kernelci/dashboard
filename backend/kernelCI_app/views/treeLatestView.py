@@ -19,13 +19,13 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
     TreeLatestQueryParameters,
     TreeLatestResponse,
-    TreeNotFoundResponse,
+    TreeLatestResponseOrError,
 )
 
 
 class TreeLatest(APIView):
     @extend_schema(
-        responses={200: TreeLatestResponse, 404: TreeNotFoundResponse},
+        responses=TreeLatestResponseOrError,
         parameters=[
             TREE_NAME_PATH_PARAM,
             GIT_BRANCH_PATH_PARAM,
@@ -64,7 +64,7 @@ class TreeLatest(APIView):
                 commit_hash=query_params.commit_hash,
             )
             if not_found is not None:
-                return Response(not_found.model_dump(), status=HTTPStatus.NOT_FOUND)
+                return Response(not_found.model_dump(), status=HTTPStatus.OK)
             tree_not_found_error_message = ClientStrings.TREE_NOT_FOUND
             if request.GET.get("origin") is None:
                 tree_not_found_error_message += (

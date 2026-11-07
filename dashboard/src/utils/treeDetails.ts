@@ -2,6 +2,8 @@ import { HttpStatusCode, isAxiosError } from 'axios';
 
 import { z } from 'zod';
 
+import { ApiError } from '@/api/commonRequest';
+
 import {
   treeDetailsDirectRouteName,
   type TreeDetailsRouteFrom,
@@ -17,14 +19,18 @@ const treeNotFoundSchema = z.object({
 export const getMissingTreeResource = (
   error: unknown,
 ): z.infer<typeof treeNotFoundSchema>['resource'] | undefined => {
-  if (
-    !isAxiosError(error) ||
-    error.response?.status !== HttpStatusCode.NotFound
-  ) {
-    return undefined;
+  if (error instanceof ApiError) {
+    const result = treeNotFoundSchema.safeParse(error.data);
+    return result.success ? result.data.resource : undefined;
   }
-  const result = treeNotFoundSchema.safeParse(error.response.data);
-  return result.success ? result.data.resource : undefined;
+  if (
+    isAxiosError(error) &&
+    error.response?.status === HttpStatusCode.NotFound
+  ) {
+    const result = treeNotFoundSchema.safeParse(error.response.data);
+    return result.success ? result.data.resource : undefined;
+  }
+  return undefined;
 };
 
 type SanitizedTreeInfo = TTreeInformation & {

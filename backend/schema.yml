@@ -1748,13 +1748,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeNotFoundResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{commit_hash}/summary:
     get:
@@ -1798,13 +1792,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeNotFoundResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{commit_hash}/tests:
     get:
@@ -1901,13 +1889,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeLatestResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeNotFoundResponse'
+                $ref: '#/components/schemas/TreeLatestResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/boots:
     get:
@@ -2120,13 +2102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeNotFoundResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/summary:
     get:
@@ -2168,13 +2144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeNotFoundResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/tests:
     get:
@@ -5312,6 +5282,11 @@ components:
       - filters
       title: SummaryResponse
       type: object
+    SummaryResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/SummaryResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: SummaryResponseOrError
     TestArchSummaryItem:
       properties:
         arch:
@@ -5998,6 +5973,11 @@ components:
       - builds
       title: TreeDetailsFullResponse
       type: object
+    TreeDetailsFullResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeDetailsFullResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeDetailsFullResponseOrError
     TreeEntityTypes:
       enum:
       - builds
@@ -6038,6 +6018,11 @@ components:
       - git_repository_branch
       title: TreeLatestResponse
       type: object
+    TreeLatestResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeLatestResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeLatestResponseOrError
     TreeListingItem:
       properties:
         id:

@@ -66,8 +66,8 @@ from kernelCI_app.typeModels.issues import IssueDict
 from kernelCI_app.typeModels.treeDetails import (
     DirectTreeQueryParameters,
     SummaryResponse,
+    SummaryResponseOrError,
     TreeCommon,
-    TreeNotFoundResponse,
     TreeQueryParameters,
 )
 from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
@@ -312,7 +312,7 @@ class BaseTreeDetailsSummary(APIView):
                 git_url=git_url_param,
             )
             if not_found is not None:
-                return Response(not_found.model_dump(), status=HTTPStatus.NOT_FOUND)
+                return Response(not_found.model_dump(), status=HTTPStatus.OK)
             return create_api_error_response(
                 error_message=ClientStrings.TREE_NO_RESULTS,
                 status_code=HTTPStatus.OK,
@@ -439,7 +439,7 @@ class BaseTreeDetailsSummary(APIView):
 
 class TreeDetailsSummaryDirect(BaseTreeDetailsSummary):
     @extend_schema(
-        responses={200: SummaryResponse, 404: TreeNotFoundResponse},
+        responses=SummaryResponseOrError,
         parameters=[
             COMMIT_HASH_PATH_PARAM,
             TREE_NAME_PATH_PARAM,
@@ -465,7 +465,7 @@ class TreeDetailsSummaryDirect(BaseTreeDetailsSummary):
 
 class TreeDetailsSummary(BaseTreeDetailsSummary):
     @extend_schema(
-        responses={200: SummaryResponse, 404: TreeNotFoundResponse},
+        responses=SummaryResponseOrError,
         parameters=[COMMIT_HASH_PATH_PARAM, TreeQueryParameters],
         methods=["GET"],
     )

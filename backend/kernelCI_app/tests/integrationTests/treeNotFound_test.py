@@ -2,10 +2,13 @@
 
 from unittest.mock import patch
 
+import click
 import pytest
 from django.core.cache import cache
+from kcidev.libs.dashboard import dashboard_fetch_summary
 from rest_framework.test import APIClient
 
+import requests
 from kernelCI_app.models import Builds, Checkouts
 from kernelCI_app.queries.tree import get_tree_not_found
 
@@ -38,12 +41,15 @@ def checkout():
         ("stable", "linux-6.1.y", HASH, "other-origin", "tree"),
     ],
 )
-def test_missing_resource_returns_404(endpoint, tree, branch, commit, origin, resource):
+def test_missing_resource_preserves_200_error_contract(
+    endpoint, tree, branch, commit, origin, resource
+):
     response = APIClient().get(
         f"/api/tree/{tree}/{branch}/{commit}/{endpoint}", {"origin": origin}
     )
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json()["resource"] == resource
+    assert response.json()["error"] == f"{resource.capitalize()} not found."
 
 
 @pytest.mark.parametrize("endpoint", ["summary", "full"])
@@ -79,7 +85,7 @@ def test_commit_on_another_branch_is_missing(checkout):
         git_commit_hash="other-hash",
     )
     response = APIClient().get(f"/api/tree/stable/linux-6.2.y/{HASH}/summary")
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json()["resource"] == "commit"
 
 
@@ -89,7 +95,7 @@ def test_query_parameter_cannot_override_branch_in_path(endpoint):
         f"/api/tree/stable/linux-5.925.y/{HASH}/{endpoint}",
         {"git_branch": "linux-6.1.y"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json()["resource"] == "branch"
 
 
@@ -103,7 +109,7 @@ def test_query_parameter_cannot_override_branch_in_path(endpoint):
 )
 def test_latest_shortcuts_report_missing_component(path, params, resource):
     response = APIClient().get(f"/api/tree/{path}", params)
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json()["resource"] == resource
 
 
@@ -132,5 +138,33 @@ def test_legacy_hash_route_respects_repository_and_branch():
         f"/api/tree/{HASH}/summary",
         {"git_url": "https://example.org/linux.git", "git_branch": "missing"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 200
     assert response.json()["resource"] == "branch"
+
+
+@pytest.mark.parametrize(
+    ("git_url", "branch", "commit", "message"),
+    [
+        ("https://example.org/missing.git", "linux-6.1.y", HASH, "Tree not found."),
+        ("https://example.org/linux.git", "missing", HASH, "Branch not found."),
+        (
+            "https://example.org/linux.git",
+            "linux-6.1.y",
+            "missing",
+            "Commit not found.",
+        ),
+    ],
+)
+def test_kci_dev_preserves_missing_resource_message(git_url, branch, commit, message):
+    def get(url, **kwargs):
+        api_response = APIClient().get(url)
+        response = requests.Response()
+        response.status_code = api_response.status_code
+        response._content = api_response.content
+        response.url = url
+        return response
+
+    with patch("kcidev.libs.dashboard.kcidev_session.get", side_effect=get) as fetch:
+        with pytest.raises(click.ClickException, match=message):
+            dashboard_fetch_summary("maestro", git_url, branch, commit, None, False)
+    fetch.assert_called_once()

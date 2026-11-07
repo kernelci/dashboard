@@ -108,3 +108,17 @@ class TreeCompareTest(BaseModel):
 
 class TreeCompareBootsTestsResponse(RootModel[List[TreeCompareTest]]):
     root: List[TreeCompareTest]
+
+
+class TreeLatestResponseOrError(RootModel[TreeLatestResponse | TreeNotFoundResponse]):
+    pass
+
+
+class SummaryResponseOrError(RootModel[SummaryResponse | TreeNotFoundResponse]):
+    pass
+
+
+class TreeDetailsFullResponseOrError(
+    RootModel[TreeDetailsFullResponse | TreeNotFoundResponse]
+):
+    pass

@@ -59,7 +59,7 @@ test('client navigation to a missing branch does not reuse valid checkout detail
     if (path.includes('linux-5.925.y')) {
       await missingResponse;
       return route.fulfill({
-        status: 404,
+        status: 200,
         json: { error: 'Branch not found', resource: 'branch' },
       });
     }
@@ -101,7 +101,7 @@ for (const resource of ['tree', 'branch', 'commit'] as const) {
       const path = new URL(route.request().url()).pathname;
       requests.push(path);
       await route.fulfill({
-        status: 404,
+        status: 200,
         json: { error: `${resource} not found`, resource },
       });
     });
@@ -142,7 +142,7 @@ test('existing checkout without results shows a settled empty state', async ({
 test('unknown tree shortcut reports a missing tree', async ({ page }) => {
   await page.route('**/api/tree/unknown/master*', route =>
     route.fulfill({
-      status: 404,
+      status: 200,
       json: { error: 'Tree not found', resource: 'tree' },
     }),
   );

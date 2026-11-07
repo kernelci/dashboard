@@ -27,8 +27,8 @@ client = TreeClient()
     [
         (ANDROID_MAESTRO_MAINLINE, HTTPStatus.OK, False),
         (NEXT_PENDING_FIXES_BROONIE, HTTPStatus.OK, False),
-        (UNEXISTENT_TREE, HTTPStatus.NOT_FOUND, True),
-        (INVALID_QUERY_PARAMS, HTTPStatus.NOT_FOUND, True),
+        (UNEXISTENT_TREE, HTTPStatus.OK, True),
+        (INVALID_QUERY_PARAMS, HTTPStatus.OK, True),
         (BROONIE_MISC_BROONIE, HTTPStatus.OK, False),
     ],
 )
