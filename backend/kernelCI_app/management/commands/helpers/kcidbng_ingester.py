@@ -286,7 +286,11 @@ def flush_buffers(
     counter_lock: ProcessLock,
 ) -> None:
     """
-    Consumes the list of objects and tries to insert them into the database.
+    Commit all records for buffer_files together, then archive those submissions.
+
+    Callers must pass every table's buffer, including tables below the batch
+    threshold. A worker can be killed at any point: uncommitted submissions must
+    stay available for retry, and archived submissions must be fully committed.
     """
     total = (
         len(issues_buf)
@@ -296,7 +300,7 @@ def flush_buffers(
         + len(incidents_buf)
     )
 
-    if total == 0:
+    if total == 0 and not buffer_files:
         return
 
     # Insert in dependency-safe order
@@ -455,40 +459,25 @@ def process_batch(
         instances_dict["tests"].sort(key=lambda x: x.id)
         instances_dict["incidents"].sort(key=lambda x: x.id)
 
-        flush_buffers(
-            issues_buf=(
-                instances_dict["issues"]
-                if len(instances_dict["issues"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            checkouts_buf=(
-                instances_dict["checkouts"]
-                if len(instances_dict["checkouts"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            builds_buf=(
-                instances_dict["builds"]
-                if len(instances_dict["builds"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            tests_buf=(
-                instances_dict["tests"]
-                if len(instances_dict["tests"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            incidents_buf=(
-                instances_dict["incidents"]
-                if len(instances_dict["incidents"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            buffer_files=buffer_files,
-            dirs=dirs,
-            stat_ok=stat_ok,
-            stat_fail=stat_fail,
-            counter_lock=counter_lock,
-        )
+        # The file set covers all tables, so a threshold triggers one complete
+        # flush. Archiving after a partial table flush loses the remaining
+        # records if this worker is killed before the end of the cycle.
+        if any(len(buffer) >= INGEST_BATCH_SIZE for buffer in instances_dict.values()):
+            flush_buffers(
+                issues_buf=instances_dict["issues"],
+                checkouts_buf=instances_dict["checkouts"],
+                builds_buf=instances_dict["builds"],
+                tests_buf=instances_dict["tests"],
+                incidents_buf=instances_dict["incidents"],
+                buffer_files=buffer_files,
+                dirs=dirs,
+                stat_ok=stat_ok,
+                stat_fail=stat_fail,
+                counter_lock=counter_lock,
+            )
 
-    if any(len(instances_dict[table]) for table in instances_dict):
+    # Valid submissions with no records still need to leave the spool.
+    if buffer_files:
         out("Process finished, flushing remaining buffers")
         flush_buffers(
             issues_buf=instances_dict["issues"],

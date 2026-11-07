@@ -55,12 +55,19 @@ Each worker:
   fresh ones, since connections cannot be shared across processes.
 - Accumulates parsed instances (issues, checkouts, builds, tests,
   incidents) into an in-memory buffer.
-- Flushes the buffer to the database via `flush_buffers()` whenever
-  any entity type reaches `INGEST_BATCH_SIZE`.
+- When any table reaches `INGEST_BATCH_SIZE`, calls `flush_buffers()` with every
+  table's buffer in the same transaction. Files are archived only after all their
+  records and aggregates commit. A table below the threshold must not be left
+  behind in memory after its submission is archived.
 - Sorts instances by ID before flushing to prevent deadlocks when
   multiple workers update the same rows concurrently.
 - At cycle completion (receiving `None`), flushes any remaining buffered instances,
   closes database connections, and applies the log-excerpt cache size limit.
+  Valid submissions containing no records are also archived at cycle completion.
+
+A flush can now include records from all five tables, so a transaction can be
+larger than a single table's batch limit. The threshold and file-batch size still
+bound when a flush starts; a single large submission can exceed either limit.
 
 ### Error handling
 
