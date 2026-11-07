@@ -134,13 +134,14 @@ const TestDetailsSections = ({
       <MemoizedLinkItem
         to="/hardware/$hardwareId"
         params={{ hardwareId }}
+        search={{ diffFilter: { testOrigin: { [test.test_origin]: true } } }}
         state={s => s}
       >
         {hardware}
         <LinkIcon className="text-blue text-xl" />
       </MemoizedLinkItem>
     );
-  }, [hardware, hardwareId]);
+  }, [hardware, hardwareId, test.test_origin]);
 
   const compatiblesLink = useMemo(() => {
     if (!test.environment_compatible) {
@@ -155,6 +156,9 @@ const TestDetailsSections = ({
               key={compatible}
               to="/hardware/$hardwareId"
               params={{ hardwareId: compatible }}
+              search={{
+                diffFilter: { testOrigin: { [test.test_origin]: true } },
+              }}
               state={s => s}
             >
               {compatible}
@@ -164,7 +168,7 @@ const TestDetailsSections = ({
         )}
       </div>
     );
-  }, [test.environment_compatible]);
+  }, [test.environment_compatible, test.test_origin]);
 
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),
