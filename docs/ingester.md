@@ -71,9 +71,15 @@ bound when a flush starts; a single large submission can exceed either limit.
 
 ### Error handling
 
-- **File parse errors**: The file is moved to the `failed` directory
-  and the `stat_fail` counter is incremented. The worker continues
-  processing subsequent files. Any other exception raised while preparing a
+- **File parse errors**: The file is moved to the `failed` directory,
+  the `stat_fail` counter is incremented and the
+  `kcidb_ingestion_failures` counter is incremented with
+  `reason="json_decode"`, `reason="schema_validation"` or
+  `reason="other"`. The metric increments only after a successful move to
+  `failed`, so failed moves do not count the same file again on each retry.
+  Malformed submission structures do not prevent error logging or moving
+  the file. The worker continues processing subsequent files.
+  Any other exception raised while preparing a
   file or building its instances is handled the same way, so one bad file
   cannot take a persistent worker down. A file that disappears between the
   spool scan and its batch is skipped.
