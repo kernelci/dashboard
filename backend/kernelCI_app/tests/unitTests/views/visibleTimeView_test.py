@@ -5,7 +5,11 @@ import pytest
 from prometheus_client import REGISTRY
 from rest_framework.test import APIRequestFactory
 
-from kernelCI_app.views.visibleTimeView import DASHBOARD_ROUTES, VisibleTimeView
+from kernelCI_app.views.visibleTimeView import (
+    DASHBOARD_ROUTES,
+    VisibleTimeView,
+    route_label,
+)
 
 ROUTE = "/tree/mainline/master"
 REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -53,6 +57,36 @@ def test_invalid_beacon_records_nothing(fields):
     assert response.status_code == 400
     assert _sample("dashboard_route_visible_seconds_count", ROUTE) == before
     assert _sample("dashboard_route_visible_seconds_count", "/not-a-route") == 0
+
+
+@pytest.mark.parametrize(
+    ("path", "label"),
+    [
+        ("/tree/mainline/master/abc", "/tree/mainline/master/$hash"),
+        ("/tree/mainline/master/compare", "/tree/mainline/master/compare"),
+        ("/tree/mainline/build/compare", "/tree/mainline/build/compare"),
+        (
+            "/hardware/bcm2711-rpi-4-b/test/maestro:1",
+            "/hardware/bcm2711-rpi-4-b/test/$testId",
+        ),
+        ("/tree/abc/build/def", "/tree/$treeId/build/$buildId"),
+    ],
+)
+def test_route_label(path, label):
+    assert route_label(path) == label
+
+
+def test_build_ids_share_one_series():
+    label = "/build/$buildId"
+    before = _sample("dashboard_route_visible_seconds_count", label)
+
+    first = _post({"route": "/build/maestro:abc", "time_ms": 1_000})
+    second = _post({"route": "/build/maestro:def", "time_ms": 1_000})
+
+    assert first.status_code == 204
+    assert second.status_code == 204
+    assert _sample("dashboard_route_visible_seconds_count", label) == before + 2
+    assert _sample("dashboard_route_visible_seconds_count", "/build/maestro:abc") == 0
 
 
 def test_hardware_paths_are_separate():

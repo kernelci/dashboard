@@ -19,7 +19,7 @@
           "uid": "${datasource}"
         },
         "enable": true,
-        "expr": "max by (version) (dashboard_build_info{job=\"dashboard_metrics\"}) unless max by (version) (dashboard_build_info{job=\"dashboard_metrics\"} offset 5m)",
+        "expr": "max by (version) (dashboard_build_info{job=\"kernelci-backend\"}) unless max by (version) (dashboard_build_info{job=\"kernelci-backend\"} offset 5m)",
         "iconColor": "purple",
         "name": "Deploys",
         "step": "5m",
@@ -112,7 +112,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "up{job=\"dashboard_metrics\"}",
+          "expr": "up{job=\"kernelci-backend\"}",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -174,7 +174,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (version) (dashboard_build_info{job=\"dashboard_metrics\"})",
+          "expr": "max by (version) (dashboard_build_info{job=\"kernelci-backend\"})",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{version}}",
@@ -237,7 +237,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum(increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -300,7 +300,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(dashboard_unique_visitors_total{job=\"dashboard_metrics\", client=~\"$client\"}[24h]))",
+          "expr": "sum(increase(dashboard_unique_visitors_total{job=\"kernelci-backend\", client=~\"$client\"}[24h]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -371,7 +371,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * sum(increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$__range])) / sum(increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "100 * sum(increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$__range])) / sum(increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -438,7 +438,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=\"5xx\"}[$__range])) or vector(0)",
+          "expr": "sum(increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=\"5xx\"}[$__range])) or vector(0)",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -509,7 +509,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -576,7 +576,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "changes(process_start_time_seconds{job=\"dashboard_metrics\"}[$__range])",
+          "expr": "changes(process_start_time_seconds{job=\"kernelci-backend\"}[$__range])",
           "format": "time_series",
           "instant": true,
           "legendFormat": "",
@@ -668,7 +668,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "60 * sum by (client) (rate(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
+          "expr": "60 * sum by (client) (rate(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{client}}",
@@ -808,7 +808,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "60 * sum by (status_class) (rate(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
+          "expr": "60 * sum by (status_class) (rate(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{status_class}}",
@@ -888,7 +888,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (client) (increase(dashboard_unique_visitors_total{job=\"dashboard_metrics\", client=~\"$client\"}[1d]))",
+          "expr": "sum by (client) (increase(dashboard_unique_visitors_total{job=\"kernelci-backend\", client=~\"$client\"}[1d]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{client}}",
@@ -969,7 +969,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (band) (increase(dashboard_visitors_by_request_count_total{job=\"dashboard_metrics\", client=~\"$client\"}[1d]))",
+          "expr": "sum by (band) (increase(dashboard_visitors_by_request_count_total{job=\"kernelci-backend\", client=~\"$client\"}[1d]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{band}}",
@@ -1310,7 +1310,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1322,7 +1322,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", client=\"dashboard\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "100 * sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", client=\"dashboard\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1334,7 +1334,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "100 * sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1346,7 +1346,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.5, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
+          "expr": "histogram_quantile(0.5, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1358,7 +1358,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
+          "expr": "histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1370,7 +1370,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_sum{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_sum{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) / sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_count{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1382,7 +1382,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_sum{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_sum{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1394,7 +1394,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (endpoint) (increase(dashboard_unique_visitors_by_endpoint_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) / scalar(clamp_min(vector($__range_s / 86400), 1))",
+          "expr": "sum by (endpoint) (increase(dashboard_unique_visitors_by_endpoint_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) / scalar(clamp_min(vector($__range_s / 86400), 1))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1508,7 +1508,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, 60 * sum by (endpoint) (rate(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "topk(10, 60 * sum by (endpoint) (rate(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{endpoint}}",
@@ -1587,7 +1587,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, sum by (endpoint) (rate(dashboard_backend_request_latency_seconds_sum{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "topk(10, sum by (endpoint) (rate(dashboard_backend_request_latency_seconds_sum{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{endpoint}}",
@@ -1668,7 +1668,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, sum by (endpoint) (increase(dashboard_unique_visitors_by_endpoint_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[1d])))",
+          "expr": "topk(10, sum by (endpoint) (increase(dashboard_unique_visitors_by_endpoint_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[1d])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{endpoint}}",
@@ -1773,7 +1773,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p50",
@@ -1785,7 +1785,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p95",
@@ -1797,7 +1797,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p99",
@@ -1870,7 +1870,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sort_desc(topk(10, histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))) and on (endpoint) (sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) >= 20)))",
+          "expr": "sort_desc(topk(10, histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))) and on (endpoint) (sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_count{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) >= 20)))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{endpoint}}",
@@ -1949,7 +1949,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"1.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"1.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "> 1s",
@@ -1961,7 +1961,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"10.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"10.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "> 10s",
@@ -1973,7 +1973,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"50.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "100 * (1 - sum(increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", le=\"50.0\"}[$rate])) / sum(increase(dashboard_backend_request_latency_seconds_count{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "> 50s",
@@ -2029,7 +2029,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
+          "expr": "sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))",
           "format": "heatmap",
           "instant": false,
           "legendFormat": "{{le}}",
@@ -2107,7 +2107,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (device) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (device) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{device}}",
@@ -2172,7 +2172,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (os) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (os) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{os}}",
@@ -2237,7 +2237,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (browser) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (browser) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{browser}}",
@@ -2302,7 +2302,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (referrer_domain) (increase(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
+          "expr": "sum by (referrer_domain) (increase(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{referrer_domain}}",
@@ -2382,7 +2382,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (version) (increase(dashboard_kci_dev_requests_by_version_total{job=\"dashboard_metrics\"}[1d]))",
+          "expr": "sum by (version) (increase(dashboard_kci_dev_requests_by_version_total{job=\"kernelci-backend\"}[1d]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{version}}",
@@ -2462,7 +2462,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(8, 60 * sum by (endpoint) (rate(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=\"unknown\", endpoint=~\"$endpoint\"}[$rate])))",
+          "expr": "topk(8, 60 * sum by (endpoint) (rate(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=\"unknown\", endpoint=~\"$endpoint\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{endpoint}}",
@@ -2554,7 +2554,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "60 * sum by (endpoint, status_class) (rate(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$rate])) > 0",
+          "expr": "60 * sum by (endpoint, status_class) (rate(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\", client=~\"$client\", endpoint=~\"$endpoint\", status_class=~\"4xx|5xx\"}[$rate])) > 0",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{endpoint}} {{status_class}}",
@@ -2631,7 +2631,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (view, status) (increase(django_http_responses_total_by_status_view_method_total{job=\"dashboard_metrics\", status!~\"2..\"}[$__range])) > 0",
+          "expr": "sum by (view, status) (increase(django_http_responses_total_by_status_view_method_total{job=\"kernelci-backend\", status!~\"2..\"}[$__range])) > 0",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -2745,7 +2745,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(django_db_execute_total{job=\"dashboard_metrics\"}[$rate]))",
+          "expr": "sum(rate(django_db_execute_total{job=\"kernelci-backend\"}[$rate]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "queries/s",
@@ -2757,7 +2757,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(django_db_new_connections_total{job=\"dashboard_metrics\"}[$rate]))",
+          "expr": "sum(rate(django_db_new_connections_total{job=\"kernelci-backend\"}[$rate]))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "new connections/s",
@@ -2836,7 +2836,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le) (increase(django_db_query_duration_seconds_bucket{job=\"dashboard_metrics\"}[$rate])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(django_db_query_duration_seconds_bucket{job=\"kernelci-backend\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p50",
@@ -2848,7 +2848,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (increase(django_db_query_duration_seconds_bucket{job=\"dashboard_metrics\"}[$rate])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(django_db_query_duration_seconds_bucket{job=\"kernelci-backend\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p95",
@@ -2927,7 +2927,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le) (increase(django_http_responses_body_total_bytes_bucket{job=\"dashboard_metrics\"}[$rate])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (increase(django_http_responses_body_total_bytes_bucket{job=\"kernelci-backend\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p50",
@@ -2939,7 +2939,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (increase(django_http_responses_body_total_bytes_bucket{job=\"dashboard_metrics\"}[$rate])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(django_http_responses_body_total_bytes_bucket{job=\"kernelci-backend\"}[$rate])))",
           "format": "time_series",
           "instant": false,
           "legendFormat": "p95",
@@ -3241,7 +3241,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\"}, client)",
+        "definition": "label_values(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\"}, client)",
         "hide": 0,
         "includeAll": true,
         "label": "Client",
@@ -3249,7 +3249,7 @@
         "name": "client",
         "options": [],
         "query": {
-          "query": "label_values(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\"}, client)",
+          "query": "label_values(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\"}, client)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -3270,7 +3270,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\"}, endpoint)",
+        "definition": "label_values(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\"}, endpoint)",
         "hide": 0,
         "includeAll": true,
         "label": "Endpoint",
@@ -3278,7 +3278,7 @@
         "name": "endpoint",
         "options": [],
         "query": {
-          "query": "label_values(dashboard_backend_requests_by_client_total{job=\"dashboard_metrics\"}, endpoint)",
+          "query": "label_values(dashboard_backend_requests_by_client_total{job=\"kernelci-backend\"}, endpoint)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,

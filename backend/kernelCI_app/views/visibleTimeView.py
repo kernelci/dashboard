@@ -1,4 +1,3 @@
-import re
 from http import HTTPStatus
 
 from drf_spectacular.utils import extend_schema
@@ -50,29 +49,56 @@ DASHBOARD_ROUTES = frozenset(
 
 MAX_VISIBLE_MS = 86_400_000
 MAX_PATH_LENGTH = 2_000
+# treeId is a commit hash, so it is not kept.
+_KEEP_PARAMS = frozenset({"hardwareId", "treeName", "branch"})
 
 
-def _path_matcher(pattern: str) -> re.Pattern[str] | None:
-    segments = pattern.strip("/").split("/")
+def _segments(value: str) -> list[str]:
+    return [segment for segment in value.split("/") if segment]
+
+
+def _apply_pattern(pattern: str, path: str) -> str | None:
     # /$ is the not-found splat. It would accept every path.
-    if any(segment == "$" for segment in segments):
+    if pattern == "/$":
         return None
-    parts = [
-        "[^/]+" if segment.startswith("$") else re.escape(segment)
-        for segment in segments
+    pattern_segments = _segments(pattern)
+    path_segments = _segments(path)
+    if len(pattern_segments) != len(path_segments):
+        return None
+    label_segments = []
+    for pattern_segment, path_segment in zip(
+        pattern_segments, path_segments, strict=True
+    ):
+        if pattern_segment.startswith("$"):
+            label_segments.append(
+                path_segment if pattern_segment[1:] in _KEEP_PARAMS else pattern_segment
+            )
+        elif pattern_segment != path_segment:
+            return None
+        else:
+            label_segments.append(pattern_segment)
+    if not label_segments:
+        return "/"
+    return "/" + "/".join(label_segments)
+
+
+def route_label(path: str) -> str | None:
+    matches = [
+        (pattern, label)
+        for pattern in DASHBOARD_ROUTES
+        if (label := _apply_pattern(pattern, path)) is not None
     ]
-    return re.compile("^/" + "/".join(parts) + "$")
-
-
-_PATH_MATCHERS = tuple(
-    matcher
-    for pattern in DASHBOARD_ROUTES
-    if (matcher := _path_matcher(pattern)) is not None
-)
-
-
-def is_dashboard_path(path: str) -> bool:
-    return any(matcher.match(path) for matcher in _PATH_MATCHERS)
+    if not matches:
+        return None
+    # More fixed segments wins. Fewer placeholders breaks a tie, so a branch
+    # named "build" stays on the compare route.
+    return max(
+        matches,
+        key=lambda item: (
+            sum(not segment.startswith("$") for segment in _segments(item[0])),
+            -item[1].count("$"),
+        ),
+    )[1]
 
 
 class VisibleTimeSerializer(serializers.Serializer):
@@ -92,10 +118,10 @@ class VisibleTimeView(APIView):
     )
     def post(self, request) -> Response:
         body = VisibleTimeSerializer(data=request.data)
-        if not body.is_valid() or not is_dashboard_path(body.validated_data["route"]):
+        label = route_label(body.validated_data["route"]) if body.is_valid() else None
+        if label is None:
             return Response(status=HTTPStatus.BAD_REQUEST)
-        route = body.validated_data["route"]
-        get_metrics().route_visible_seconds.labels(route=route).observe(
+        get_metrics().route_visible_seconds.labels(route=label).observe(
             body.validated_data["time_ms"] / 1000
         )
         return Response(status=HTTPStatus.NO_CONTENT)

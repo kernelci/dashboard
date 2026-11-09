@@ -13,7 +13,7 @@ Collected as aggregate Prometheus metrics:
     observed on the Django view-latency histogram.
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
     client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``, ``unknown``).
-  * Visible seconds on a dashboard URL path, from ``POST /api/analytics/visible/``.
+  * Visible seconds on a dashboard route, from ``POST /api/analytics/visible/``.
     That request is not counted here: no client counter, latency sample, or
     unique visitor. The view records ``dashboard_route_visible_seconds`` only.
 
@@ -158,7 +158,7 @@ def get_metrics() -> Metrics:
                     ),
                     route_visible_seconds=Histogram(
                         "dashboard_route_visible_seconds",
-                        "Seconds a dashboard URL path stayed in the foreground",
+                        "Seconds a dashboard route stayed in the foreground",
                         ["route"],
                         buckets=(1, 5, 15, 30, 60, 120, 300, 600, 1800),
                     ),

@@ -32,10 +32,13 @@ counters), never as per-user records or per-user timestamps:
 - **Unique visitor estimates**: daily de-duplicated visit counts, in total and
   per endpoint.
 - **View time**: while you use the dashboard in a browser, the page reports
-  the URL path (for example `/tree/mainline/master`, not the query string) and
-  how many seconds that screen stayed in the foreground. This is stored only as
-  an aggregate histogram. It does not include a visit id or anything kept in
-  cache.
+  how many seconds a screen stayed in the foreground. The stored route keeps
+  the tree name, branch, and hardware id, for example `/tree/mainline/master`
+  and `/hardware/bcm2711-rpi-4-b`. A build, test, boot, issue, or commit id is
+  stored as its route placeholder, for example `/build/$buildId` and
+  `/tree/mainline/master/$hash`. The query string is not included. This is
+  stored only as an aggregate histogram. It does not include a visit id or
+  anything kept in cache.
 
 ## What we process briefly (not kept in metrics)
 
