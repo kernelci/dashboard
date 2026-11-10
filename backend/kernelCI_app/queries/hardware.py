@@ -402,7 +402,8 @@ def _hardware_daily_counts(
     test_lab: Optional[list[str]],
     registry_filter: Optional[HardwareRegistryFilter] = None,
 ) -> list[tuple]:
-    """Counts from daily aggregates. Build/test filtered independently; narrowed side picks platforms.
+    """Counts from daily aggregates. A test-origin filter counts builds that origin ran.
+    With no test origin, build rows are the distinct total stored as test_origin ''.
     Optional checkouts narrows checkout_id; else checkout_day window only."""
     # checkout_origin is nullable: rows whose checkout has been pruned, and rows
     # aggregated before the column existed, have no origin to compare. Narrowing
@@ -410,10 +411,17 @@ def _hardware_daily_counts(
     checkout_origin_clause = _hardware_filter_clause(
         "daily.checkout_origin", "checkout_origin", checkout_origin
     )
+    # ponytail: several selected origins sum their rows, so one build run by two
+    # of them counts twice. '' is only the unfiltered total. Distinct build ids
+    # would make the subset exact.
+    build_test_origin = test_origin or [""]
     build_filters = "\n".join(
         (
             day_range,
             checkout_origin_clause,
+            _hardware_filter_clause(
+                "daily.test_origin", "build_test_origin", build_test_origin
+            ),
             _hardware_filter_clause("daily.build_origin", "build_origin", build_origin),
             _hardware_filter_clause("daily.build_lab", "build_lab", build_lab),
         )
@@ -496,6 +504,7 @@ def _hardware_daily_counts(
                 **params,
                 "checkout_origin": checkout_origin,
                 "build_origin": build_origin,
+                "build_test_origin": build_test_origin,
                 "test_origin": test_origin,
                 "build_lab": build_lab,
                 "test_lab": test_lab,

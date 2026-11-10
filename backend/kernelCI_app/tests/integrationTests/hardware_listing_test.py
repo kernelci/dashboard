@@ -55,16 +55,16 @@ def _independent_filter_fixture():
     _test_on(
         selected_build,
         "pA",
-        origin="other-test-origin",
-        lab="other-test-lab",
-        status="FAIL",
+        origin="selected-test-origin",
+        lab="selected-test-lab",
+        status="PASS",
     )
     _test_on(
         other_build,
         "pA",
-        origin="selected-test-origin",
-        lab="selected-test-lab",
-        status="PASS",
+        origin="other-test-origin",
+        lab="other-test-lab",
+        status="FAIL",
     )
     _recompute()
     return checkout
