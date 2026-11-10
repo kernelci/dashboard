@@ -284,6 +284,7 @@ class TestParseBatchOutput:
 
 
 class TestUpsertCommits:
+    @override_settings(SYNC_COMMIT_MESSAGES=True)
     def test_topo_order_first_parent_edges(self, commit_store):
         commits_by_hash, parent_rows, message_rows = commit_store
         root = _metadata("aa" * 20, subject="root")
@@ -315,6 +316,41 @@ class TestUpsertCommits:
         assert commit_count == 1
         assert edge_count == 0
         assert parent_rows == []
+
+    def test_sync_commit_messages_flag(self, commit_store):
+        commits_by_hash, parent_rows, message_rows = commit_store
+        root = _metadata("aa" * 20, subject="root")
+        child = _metadata("bb" * 20, "aa" * 20, subject="child")
+        later = _metadata("cc" * 20, "bb" * 20, subject="later")
+
+        with override_settings(SYNC_COMMIT_MESSAGES=False):
+            commit_count, edge_count = insert_commits([root])
+
+        assert commit_count == 1
+        assert edge_count == 0
+        assert commits_by_hash["aa" * 20].author_identity_id is not None
+        assert message_rows == []
+
+        with override_settings(SYNC_COMMIT_MESSAGES=True):
+            commit_count, edge_count = insert_commits([child])
+
+        assert commit_count == 1
+        assert edge_count == 1
+        stored = {row.commit_id: row for row in message_rows}
+        child_id = commits_by_hash["bb" * 20].id
+        assert set(stored) == {child_id}
+        assert stored[child_id].subject == "child"
+        assert stored[child_id].message == b"child\n"
+
+        with override_settings(SYNC_COMMIT_MESSAGES=False):
+            commit_count, edge_count = insert_commits([later])
+
+        assert commit_count == 1
+        assert edge_count == 1
+        assert "cc" * 20 in commits_by_hash
+        assert len(parent_rows) == 2
+        assert set(stored) == {child_id}
+        assert message_rows == [stored[child_id]]
 
 
 class TestSyncCommitMetadata:

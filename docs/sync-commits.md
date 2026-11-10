@@ -1,9 +1,10 @@
 # Commit metadata sync
 
-Two management commands fill `commits`, `commit_identity`, `commit_message`,
-and `commit_parents` from git, not from KCIDB submissions. Author, committer,
-subject, message, and ordered parents are properties of a git object. The same
-hash can appear on many checkouts, so that data does not live on `checkouts`.
+Two management commands fill `commits`, `commit_identity`, and
+`commit_parents` from git, not from KCIDB submissions. `commit_message` is
+written only when `SYNC_COMMIT_MESSAGES=true`. Author, committer, subject,
+message, and ordered parents are properties of a git object. The same hash
+can appear on many checkouts, so that data does not live on `checkouts`.
 
 Parent epic: [#2079](https://github.com/kernelci/dashboard/issues/2079).
 Schema: [#2089](https://github.com/kernelci/dashboard/issues/2089).
@@ -41,6 +42,13 @@ The job never writes `checkouts.git_commit_message`.
 `committer_identity_id`, and author / committer dates.
 
 `commit_message`: `commit_id` primary key, `subject`, `message` as UTF-8 bytes.
+`sync_commit_ingest` and `--fill-gaps` write these rows only when
+`SYNC_COMMIT_MESSAGES` is `true`. Unset or `false` still writes `commits`,
+identities, and parent edges, and writes no `commit_message` rows. Rows
+already stored stay. `sync_commit_mirror` does not write database rows.
+
+Ingest only visits hashes in the tip delta. Turning the flag on later does
+not fill messages for hashes already past that delta.
 
 `commit_parents`: `commit_id`, `parent_id`, `ord` (`0` = first parent). No
 stub rows. Inserts are topological so the parent row exists before the edge.
@@ -309,6 +317,7 @@ Env:
 - `GIT_MIRROR_DIR` — persistent bare repo
 - `GIT_MIRROR_SHALLOW_SINCE` — optional cutoff (`90 days ago`). Empty keeps full history
 - `GIT_SCRATCH_DIR` — ephemeral clones for `--fill-gaps`
+- `SYNC_COMMIT_MESSAGES`: `true` stores `commit_message` subject and body on ingest and `--fill-gaps`. Unset or `false` skips those writes. Existing rows stay.
 - `BACKEND_VOLUME_DIR` — `tree-names.yaml` only
 
 ## Out of scope (follow-ups)

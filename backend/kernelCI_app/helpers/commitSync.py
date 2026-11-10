@@ -980,17 +980,19 @@ def _insert_batch(
 
     edges: list[CommitParents] = []
     messages: list[CommitMessage] = []
+    store_messages = settings.SYNC_COMMIT_MESSAGES
     for metadata in metadatas:
         commit_id = hash_to_id.get(metadata.git_commit_hash)
         if commit_id is None:
             continue
-        messages.append(
-            CommitMessage(
-                commit_id=commit_id,
-                subject=metadata.subject,
-                message=message_to_bytea(metadata.message),
+        if store_messages:
+            messages.append(
+                CommitMessage(
+                    commit_id=commit_id,
+                    subject=metadata.subject,
+                    message=message_to_bytea(metadata.message),
+                )
             )
-        )
         for ord_, parent_hash in enumerate(metadata.parent_hashes):
             parent_id = hash_to_id.get(parent_hash)
             if parent_id is None:
