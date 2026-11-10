@@ -1283,8 +1283,6 @@ class Command(BaseCommand):
             return kcidb_cursor.fetchall()
 
     def insert_hardware_daily_builds_data(self, records: list[tuple]) -> int:
-        if any(len(record) != 11 for record in records):
-            raise CommandError("hardware_daily_builds snapshot is missing test_origin")
         rows = [
             HardwareDailyBuilds(
                 checkout_day=parse_date(record[0]) if record[0] else None,

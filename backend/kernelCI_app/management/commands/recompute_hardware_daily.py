@@ -92,9 +92,8 @@ FROM counted c
 LEFT JOIN platform_compatibles pc USING (checkout_id, platform)
 """
 
-# Builds have no platform. One row per test origin counts the builds that origin
-# ran. test_origin '' is those builds once, so a build run by two origins is not
-# summed twice when the listing has no test-origin filter.
+# Builds have no platform. Each build is stored for its test origin and once
+# more as test_origin '', so the unfiltered listing counts it one time.
 INSERT_BUILDS = f"""
 INSERT INTO hardware_daily_builds (
     checkout_day, checkout_id, checkout_origin, test_origin, build_origin, build_lab,
@@ -106,44 +105,30 @@ WITH tested_builds AS (
     FROM day_tests
     WHERE build_id NOT LIKE '{MAESTRO_DUMMY_BUILD_PREFIX}%%'
 ),
-per_origin AS (
-    SELECT
-        checkout_id,
-        checkout_origin,
-        origin AS test_origin,
-        build_origin,
-        build_lab,
-        platform,
-        count(*) FILTER (WHERE build_result = 'pass') AS build_pass,
-        count(*) FILTER (WHERE build_result = 'failed') AS build_failed,
-        count(*) FILTER (WHERE build_result = 'inc') AS build_inc
+rows AS (
+    SELECT checkout_id, checkout_origin, origin AS test_origin, build_id,
+           build_origin, build_lab, platform, build_result
     FROM tested_builds
     WHERE origin IS NOT NULL AND origin <> ''
-    GROUP BY checkout_id, checkout_origin, origin, build_origin, build_lab, platform
-),
-distinct_builds AS (
-    SELECT DISTINCT checkout_id, checkout_origin, build_id, build_origin, build_lab,
-                    platform, build_result
+    UNION ALL
+    SELECT DISTINCT checkout_id, checkout_origin, '', build_id,
+           build_origin, build_lab, platform, build_result
     FROM tested_builds
 ),
-every_origin AS (
+counted AS (
     SELECT
         checkout_id,
         checkout_origin,
-        '' AS test_origin,
+        test_origin,
         build_origin,
         build_lab,
         platform,
         count(*) FILTER (WHERE build_result = 'pass') AS build_pass,
         count(*) FILTER (WHERE build_result = 'failed') AS build_failed,
         count(*) FILTER (WHERE build_result = 'inc') AS build_inc
-    FROM distinct_builds
-    GROUP BY checkout_id, checkout_origin, build_origin, build_lab, platform
-),
-counted AS (
-    SELECT * FROM per_origin
-    UNION ALL
-    SELECT * FROM every_origin
+    FROM rows
+    GROUP BY checkout_id, checkout_origin, test_origin, build_origin, build_lab,
+             platform
 )
 SELECT
     %(day)s,
