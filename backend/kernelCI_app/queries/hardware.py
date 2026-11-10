@@ -774,16 +774,29 @@ def get_hardware_details_summary(
     build_origin_clause, build_origin_params = _and_origin_clause(
         "builds.origin", build_origins, "build_origins"
     )
-    platform_predicate = """(
-                    tests.environment_misc ->> 'platform' = %(platform)s
-                    OR tests.environment_compatible @> ARRAY[%(platform)s]::TEXT[]
-                )"""
     build_lab_sql, build_lab_params = lab_filter_sql(
         build_labs, lab_id_column="builds.lab_id", param="build_labs"
     )
     test_lab_sql, test_lab_params = test_side_lab_sql(boot_labs, test_labs)
 
+    # An OR of the platform field and the compatible array makes Postgres scan
+    # tests by start_time. Each side of the UNION can use its own index.
     query = """
+            WITH platform_tests AS (
+                SELECT id
+                FROM tests
+                WHERE
+                    start_time >= %(start_date)s
+                    AND start_time <= %(end_date)s
+                    AND environment_misc ->> 'platform' = %(platform)s
+                UNION
+                SELECT id
+                FROM tests
+                WHERE
+                    start_time >= %(start_date)s
+                    AND start_time <= %(end_date)s
+                    AND environment_compatible @> ARRAY[%(platform)s]::TEXT[]
+            )
            (SELECT
                  COUNT(DISTINCT builds.id) AS count,
                  checkouts.origin,
@@ -822,7 +835,7 @@ def get_hardware_details_summary(
                 AND builds.start_time <= %(end_date)s
                 AND tests.start_time >= %(start_date)s
                 AND tests.start_time <= %(end_date)s
-                AND {platform_predicate}
+                AND tests.id IN (SELECT id FROM platform_tests)
                 AND (
                     checkouts.tree_name,
                     checkouts.git_repository_url,
@@ -866,7 +879,7 @@ def get_hardware_details_summary(
             WHERE
                 tests.start_time >= %(start_date)s
                 AND tests.start_time <= %(end_date)s
-                AND {platform_predicate}
+                AND tests.id IN (SELECT id FROM platform_tests)
                 {test_origin_clause}
                 AND (
                     checkouts.tree_name,
@@ -885,7 +898,6 @@ def get_hardware_details_summary(
         checkout_values=checkout_clause,
         test_origin_clause=test_origin_clause,
         build_origin_clause=build_origin_clause,
-        platform_predicate=platform_predicate,
         build_lab_clause=("AND " + build_lab_sql if build_lab_sql else ""),
         test_lab_clause=("AND " + test_lab_sql if test_lab_sql else ""),
     )
