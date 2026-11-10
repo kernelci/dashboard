@@ -179,6 +179,16 @@ export const IssueDetails = ({
         link: loreUrl,
         span: 4,
       },
+      ...(data.regzbot_url
+        ? [
+            {
+              title: 'issueDetails.regzbotUrl',
+              linkText: data.regzbot_url,
+              link: data.regzbot_url,
+              span: 4,
+            } satisfies SubsectionLink,
+          ]
+        : []),
       {
         title: 'issueDetails.reportUrl',
         linkText: reportUrl,

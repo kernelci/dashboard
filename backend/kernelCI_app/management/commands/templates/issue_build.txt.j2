@@ -37,7 +37,7 @@ on the KernelCI dashboard:
 - config: {{ build["config_url"] }}
 - dashboard: https://d.kernelci.org/build/{{build["id"]}}
 {% endfor %}
-{% if regzbot_tracked and builds and builds[0]["last_pass_commit"] -%}
+{% if is_regzbot_issue -%}
 #regzbot introduced: {{ builds[0]["last_pass_commit"] }}..{{ issue["git_commit_hash"] }}
 #regzbot link: https://d.kernelci.org/i/{{ issue["id"] }}
 

@@ -31,6 +31,14 @@ def is_regzbot_tree(tree_name) -> bool:
     return tree_name in REGZBOT_TREES
 
 
+def is_regzbot_issue(tree_name, incidents) -> bool:
+    return bool(
+        is_regzbot_tree(tree_name)
+        and incidents
+        and incidents[0].get("last_pass_commit")
+    )
+
+
 def setup_jinja_template(template_name: str) -> Template:
     """Gets the template file from management/commands/templates
     independently from where this function was called"""
