@@ -13,4 +13,5 @@ export type TIssueDetails = IssueKeys & {
   misc?: Record<string, unknown>;
   categories?: string[];
   extra?: IssueExtraDetailsDict;
+  regzbot_url?: string | null;
 };

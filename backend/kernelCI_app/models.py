@@ -834,6 +834,16 @@ class HardwareRegistryPlatform(models.Model):
         return self.id
 
 
+class RegzbotMessage(models.Model):
+    """First regzbot report Message-ID for an issue. Later sends keep this row."""
+
+    issue_id = models.TextField(primary_key=True)
+    message_id = models.TextField()
+
+    class Meta:
+        db_table = "regzbot_messages"
+
+
 class HardwareRegistrySync(models.Model):
     """Last successful --index run. One row, id=1."""
 

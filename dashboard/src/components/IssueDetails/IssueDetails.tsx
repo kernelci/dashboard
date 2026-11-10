@@ -8,7 +8,11 @@ import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
+import type { MessagesKey } from '@/locales/messages';
+
 import { shouldTruncate, valueOrEmpty } from '@/lib/string';
+
+import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 
@@ -54,6 +58,20 @@ import { IncidentsSection } from './IncidentsSection';
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
+
+const urlLink = (
+  title: MessagesKey,
+  url: string,
+  link: string | undefined = url,
+): ILinkWithIcon => ({
+  title,
+  linkText: shouldTruncate(url) ? (
+    <TruncatedValueTooltip value={url} isUrl={true} />
+  ) : (
+    url
+  ),
+  link,
+});
 
 interface IIssueDetails {
   versionNumber?: number;
@@ -193,24 +211,15 @@ export const IssueDetails = ({
                 title: 'global.origin',
                 linkText: valueOrEmpty(data.origin),
               },
-              {
-                title: 'issueDetails.loreUrl',
-                linkText: shouldTruncate(loreUrl) ? (
-                  <TruncatedValueTooltip value={loreUrl} isUrl={true} />
-                ) : (
-                  loreUrl
-                ),
-                link: loreUrl,
-              },
-              {
-                title: 'issueDetails.reportUrl',
-                linkText: shouldTruncate(reportUrl) ? (
-                  <TruncatedValueTooltip value={reportUrl} isUrl={true} />
-                ) : (
-                  reportUrl
-                ),
-                link: data.report_url ?? undefined,
-              },
+              urlLink('issueDetails.loreUrl', loreUrl),
+              ...(data.regzbot_url
+                ? [urlLink('issueDetails.regzbotUrl', data.regzbot_url)]
+                : []),
+              urlLink(
+                'issueDetails.reportUrl',
+                reportUrl,
+                data.report_url ?? undefined,
+              ),
               {
                 title: 'issueDetails.reportSubject',
                 linkText: shouldTruncate(reportSubject) ? (

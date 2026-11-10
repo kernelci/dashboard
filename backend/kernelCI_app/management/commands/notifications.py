@@ -16,9 +16,11 @@ from django.core.management.base import BaseCommand
 from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.hardwares import sanitize_hardware
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.helpers.regzbot import record_regzbot_message
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
+    is_regzbot_issue,
     is_regzbot_tree,
     resolve_regression_recipients,
     send_email_report,
@@ -313,15 +315,22 @@ def ask_ignore_issue():
             print("Please enter 'y' or 'n'.")
 
 
+def _regzbot_template_args(issue, incidents, message_id):
+    tracked_tree = is_regzbot_tree(issue["tree_name"])
+    return {
+        "is_regzbot_issue": is_regzbot_issue(issue["tree_name"], incidents),
+        "message_id": message_id.strip("<>") if message_id and tracked_tree else None,
+    }
+
+
 def generate_build_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_build.txt.j2")
-    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
-    report = {}
+    regzbot = _regzbot_template_args(issue, incidents, message_id)
+    report = {"is_regzbot_issue": regzbot["is_regzbot_issue"]}
     report["content"] = template.render(
         issue=issue,
         builds=incidents,
-        regzbot_tracked=regzbot_tracked,
-        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
+        **regzbot,
     )
     snippet = (
         issue["comment"]
@@ -336,13 +345,12 @@ def generate_build_issue_report(issue, incidents, message_id=None):
 
 def generate_boot_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_boot.txt.j2")
-    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
-    report = {}
+    regzbot = _regzbot_template_args(issue, incidents, message_id)
+    report = {"is_regzbot_issue": regzbot["is_regzbot_issue"]}
     report["content"] = template.render(
         issue=issue,
         boots=incidents,
-        regzbot_tracked=regzbot_tracked,
-        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
+        **regzbot,
     )
     snippet = (
         issue["comment"]
@@ -432,6 +440,9 @@ def generate_issue_report(
         recipients=recipients,
         message_id=message_id,
     )
+
+    if msg_id and report["is_regzbot_issue"]:
+        record_regzbot_message(issue_id=issue_id, message_id=msg_id)
 
     if msg_id and email_args.update:
         mark_issue_notification_sent(
