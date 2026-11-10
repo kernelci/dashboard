@@ -2,16 +2,19 @@ import json
 import logging
 import multiprocessing
 import os
+import signal
 import time
 import traceback
-from multiprocessing.sharedctypes import Synchronized
+from ctypes import c_int
+from multiprocessing.connection import Connection, wait
+from multiprocessing.process import BaseProcess
 from multiprocessing.synchronize import Lock as ProcessLock
-from queue import Queue
-from typing import Any, Optional, TypedDict
+from queue import Empty, Full, Queue
+from typing import Any, Optional, Self, TypedDict
 
 import kcidb_io
 from django.db import connections, transaction
-from prometheus_client import Counter
+from prometheus_client import Counter, multiprocess
 from typing_extensions import Literal
 
 from kernelCI_app.constants.ingester import (
@@ -22,6 +25,7 @@ from kernelCI_app.constants.ingester import (
     INGEST_FILES_BATCH_SIZE,
     INGEST_QUEUE_MAXSIZE,
     INGESTER_GRAFANA_LABEL,
+    PROMETHEUS_MULTIPROC_DIR,
     VERBOSE,
 )
 from kernelCI_app.helpers.logger import out
@@ -32,6 +36,7 @@ from kernelCI_app.management.commands.helpers.aggregation_helpers import (
 from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     LogExcerptUploadError,
+    cache_logs_maintenance,
     extract_log_excerpt,
 )
 from kernelCI_app.management.commands.helpers.process_submissions import (
@@ -163,7 +168,11 @@ def prepare_file_data(
     if fsize == 0:
         if VERBOSE:
             logger.info("File %s is empty, skipping, deleting", file["path"])
-        os.remove(file["path"])
+        try:
+            os.remove(file["path"])
+        except FileNotFoundError:
+            # Removed between the spool scan and this batch.
+            pass
         return None, None
 
     start_time = time.time()
@@ -272,12 +281,16 @@ def flush_buffers(
     incidents_buf: list[Incidents],
     buffer_files: set[tuple[str, str]],
     dirs: dict[INGESTER_DIRS, str],
-    stat_ok: Synchronized,
-    stat_fail: Synchronized,
+    stat_ok: c_int,
+    stat_fail: c_int,
     counter_lock: ProcessLock,
 ) -> None:
     """
-    Consumes the list of objects and tries to insert them into the database.
+    Commit all records for buffer_files together, then archive those submissions.
+
+    Callers must pass every table's buffer, including tables below the batch
+    threshold. A worker can be killed at any point: uncommitted submissions must
+    stay available for retry, and archived submissions must be fully committed.
     """
     total = (
         len(issues_buf)
@@ -287,7 +300,7 @@ def flush_buffers(
         + len(incidents_buf)
     )
 
-    if total == 0:
+    if total == 0 and not buffer_files:
         return
 
     # Insert in dependency-safe order
@@ -369,14 +382,11 @@ def process_batch(
     process_queue: Queue,
     tree_names: dict[str, str],
     dirs: dict[INGESTER_DIRS, str],
-    processed: Synchronized,
-    stat_ok: Synchronized,
-    stat_fail: Synchronized,
+    processed: c_int,
+    stat_ok: c_int,
+    stat_fail: c_int,
     counter_lock: ProcessLock,
 ) -> None:
-    # Ensure that the new process has a unique connection to the database
-    connections.close_all()
-
     instances_dict: SubmissionsInstances = {
         "issues": [],
         "checkouts": [],
@@ -386,15 +396,33 @@ def process_batch(
     }
 
     buffer_files = set()
+    parent = multiprocessing.parent_process()
 
     while True:
-        batch = process_queue.get()
+        try:
+            batch = process_queue.get(timeout=1)
+        except Empty:
+            # A parent killed mid-cycle never sends the end-of-cycle sentinel.
+            if parent is not None and not parent.is_alive():
+                break
+            continue
 
-        if batch is None or len(batch) == 0:
+        if batch is None:
             break
 
         for file in batch:
-            data, metadata = prepare_file_data(file, tree_names)
+            # A bad file must not take the worker down: with persistent
+            # workers an unhandled exception aborts the whole command.
+            try:
+                data, metadata = prepare_file_data(file, tree_names)
+                instances = (
+                    build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
+                    if data is not None
+                    else None
+                )
+            except Exception as e:
+                logger.exception("Unexpected error processing %s", file["name"])
+                data, metadata, instances = None, {"error": str(e)}, None
 
             if metadata and metadata.get("error"):
                 try:
@@ -416,8 +444,6 @@ def process_batch(
                 processed.value += 1
             FILES_INGESTER_COUNTER.labels(ingester=INGESTER_GRAFANA_LABEL).inc()
 
-            instances = build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
-
             instances_dict["issues"].extend(instances["issues"])
             instances_dict["checkouts"].extend(instances["checkouts"])
             instances_dict["builds"].extend(instances["builds"])
@@ -433,40 +459,25 @@ def process_batch(
         instances_dict["tests"].sort(key=lambda x: x.id)
         instances_dict["incidents"].sort(key=lambda x: x.id)
 
-        flush_buffers(
-            issues_buf=(
-                instances_dict["issues"]
-                if len(instances_dict["issues"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            checkouts_buf=(
-                instances_dict["checkouts"]
-                if len(instances_dict["checkouts"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            builds_buf=(
-                instances_dict["builds"]
-                if len(instances_dict["builds"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            tests_buf=(
-                instances_dict["tests"]
-                if len(instances_dict["tests"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            incidents_buf=(
-                instances_dict["incidents"]
-                if len(instances_dict["incidents"]) >= INGEST_BATCH_SIZE
-                else []
-            ),
-            buffer_files=buffer_files,
-            dirs=dirs,
-            stat_ok=stat_ok,
-            stat_fail=stat_fail,
-            counter_lock=counter_lock,
-        )
+        # The file set covers all tables, so a threshold triggers one complete
+        # flush. Archiving after a partial table flush loses the remaining
+        # records if this worker is killed before the end of the cycle.
+        if any(len(buffer) >= INGEST_BATCH_SIZE for buffer in instances_dict.values()):
+            flush_buffers(
+                issues_buf=instances_dict["issues"],
+                checkouts_buf=instances_dict["checkouts"],
+                builds_buf=instances_dict["builds"],
+                tests_buf=instances_dict["tests"],
+                incidents_buf=instances_dict["incidents"],
+                buffer_files=buffer_files,
+                dirs=dirs,
+                stat_ok=stat_ok,
+                stat_fail=stat_fail,
+                counter_lock=counter_lock,
+            )
 
-    if any(len(instances_dict[table]) for table in instances_dict):
+    # Valid submissions with no records still need to leave the spool.
+    if buffer_files:
         out("Process finished, flushing remaining buffers")
         flush_buffers(
             issues_buf=instances_dict["issues"],
@@ -533,129 +544,235 @@ def print_ingest_progress(
     out(msg)
 
 
-def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multiprocessing
+def _ingestion_worker(
+    control: Connection, parent_controls: list[Connection], *batch_args
+) -> None:
+    # Close inherited parent endpoints so losing the parent produces EOF.
+    for parent_control in parent_controls:
+        parent_control.close()
+    # Shutdown signals are for the parent, which finishes the cycle and then
+    # sends a stop message. A signal delivered to the whole process group must
+    # not abort a worker's transaction, so workers ignore it.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    # Connections inherited through fork must not be shared with the parent.
+    connections.close_all()
+    try:
+        while True:
+            try:
+                if not control.recv():
+                    break
+            except EOFError:
+                # The parent is gone; there will be no more cycles.
+                break
+            try:
+                process_batch(*batch_args)
+            finally:
+                connections.close_all()
+                cache_logs_maintenance()
+            try:
+                control.send(None)
+            except BrokenPipeError:
+                # The parent is gone; nothing is left to acknowledge.
+                break
+    finally:
+        control.close()
+
+
+class IngestionWorkers:
+    """Reuse writers; each cycle finishes only after every writer has flushed.
+
+    An unexpected exit aborts the command: a dead writer may have left shared
+    locks acquired. A supervisor restart creates fresh queues and locks.
+    """
+
+    def __init__(
+        self,
+        tree_names: dict[str, str],
+        dirs: dict[INGESTER_DIRS, str],
+        max_workers: int = 5,
+    ) -> None:
+        if max_workers < 1:
+            raise ValueError("max_workers must be positive")
+        # forkserver reimports models before Django is ready (Python 3.14).
+        self.context = multiprocessing.get_context("fork")
+        self.queue = self.context.Queue(maxsize=INGEST_QUEUE_MAXSIZE)
+        # Workers serialize updates with counter_lock. Parent progress reads
+        # must not block on a per-value lock abandoned by a dead worker.
+        self.processed = self.context.RawValue("i", 0)
+        self.stat_ok = self.context.RawValue("i", 0)
+        self.stat_fail = self.context.RawValue("i", 0)
+        self.counter_lock = self.context.Lock()
+        self.tree_names = tree_names
+        self.dirs = dirs
+        self.max_workers = max_workers
+        self.writers: list[BaseProcess] = []
+        self.controls: list[Connection] = []
+
+    def __enter__(self) -> Self:
+        try:
+            self._start_workers()
+        except BaseException as exc:
+            self.__exit__(type(exc), exc, exc.__traceback__)
+            raise
+        return self
+
+    def _start_workers(self) -> None:
+        while len(self.writers) < self.max_workers:
+            control, child_control = self.context.Pipe()
+            writer = self.context.Process(
+                target=_ingestion_worker,
+                args=(
+                    child_control,
+                    self.controls,
+                    self.queue,
+                    self.tree_names,
+                    self.dirs,
+                    self.processed,
+                    self.stat_ok,
+                    self.stat_fail,
+                    self.counter_lock,
+                ),
+            )
+            # Listed before the fork so the child closes this endpoint too.
+            self.controls.append(control)
+            try:
+                writer.start()
+            finally:
+                child_control.close()
+            self.writers.append(writer)
+
+    @staticmethod
+    def _log_failure(writer: BaseProcess) -> None:
+        reason = "signal" if writer.exitcode < 0 else "exception"
+        logger.error(
+            "Worker %s exited with code %s (%s)", writer.pid, writer.exitcode, reason
+        )
+        WORKER_FAILURES_COUNTER.labels(
+            ingester=INGESTER_GRAFANA_LABEL, reason=reason
+        ).inc()
+
+    def check_workers(self) -> None:
+        failed = [writer for writer in self.writers if writer.exitcode is not None]
+        if failed:
+            for writer in failed:
+                self._log_failure(writer)
+            raise RuntimeError(
+                "Ingester worker exited; restart required to retry unarchived submissions"
+            )
+
+    def _abort_worker(self, writer: BaseProcess) -> None:
+        # EOF can arrive just before the exit code becomes available.
+        writer.join(timeout=5)
+        if writer.is_alive():
+            writer.kill()
+            writer.join()
+        self.check_workers()
+
+    def _put(self, batch: list[SubmissionFileMetadata] | None) -> None:
+        while True:
+            self.check_workers()
+            try:
+                self.queue.put(batch, timeout=1)
+                return
+            except Full:
+                continue
+
+    def ingest(self, json_files: list[str]) -> None:
+        self.check_workers()
+        self.processed.value = self.stat_ok.value = self.stat_fail.value = 0
+        cycle_start = time.monotonic()
+        total_bytes = 0
+        pending: dict[Connection, BaseProcess] = {}
+        for writer, control in list(zip(self.writers, self.controls, strict=True)):
+            try:
+                control.send(True)
+            except OSError:
+                self._abort_worker(writer)
+            else:
+                pending[control] = writer
+
+        for offset in range(0, len(json_files), INGEST_FILES_BATCH_SIZE):
+            batch = []
+            for path in json_files[offset : offset + INGEST_FILES_BATCH_SIZE]:
+                try:
+                    size = os.path.getsize(path)
+                except OSError:
+                    size = 0
+                total_bytes += size
+                batch.append(
+                    SubmissionFileMetadata(
+                        path=path, name=os.path.basename(path), size=size
+                    )
+                )
+            self._put(batch)
+        for _ in self.writers:
+            self._put(None)
+
+        # A writer waits for the next start message after acknowledging its
+        # sentinel, so it cannot consume another writer's end-of-cycle marker.
+        # A writer that exits closes its control pipe, which reads as EOF.
+        last_progress = cycle_start
+        while pending:
+            ready = wait([*pending, *(w.sentinel for w in self.writers)], timeout=1)
+            self.check_workers()
+            for control, writer in list(pending.items()):
+                if control in ready:
+                    try:
+                        control.recv()
+                    except EOFError:
+                        self._abort_worker(writer)
+                else:
+                    continue
+                del pending[control]
+            now = time.monotonic()
+            if not pending or now - last_progress >= 2:
+                print_ingest_progress(
+                    self.processed.value,
+                    len(json_files),
+                    total_bytes,
+                    self.stat_ok.value,
+                    self.stat_fail.value,
+                    now - cycle_start,
+                    self.queue.qsize(),
+                )
+                last_progress = now
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if exc_type is None:
+            for control in self.controls:
+                try:
+                    control.send(False)
+                except OSError:
+                    pass
+        else:
+            # Workers ignore SIGTERM, so only SIGKILL stops them early.
+            for writer in self.writers:
+                if writer.is_alive():
+                    writer.kill()
+        for writer in self.writers:
+            writer.join(timeout=5)
+            if writer.is_alive():
+                writer.kill()
+                writer.join()
+            if exc_type is None and writer.exitcode:
+                self._log_failure(writer)
+            if PROMETHEUS_MULTIPROC_DIR:
+                multiprocess.mark_process_dead(writer.pid)
+        for control in self.controls:
+            control.close()
+        # A failed worker may leave unread items. Never wait for the feeder
+        # thread to flush a queue whose readers have stopped.
+        self.queue.cancel_join_thread()
+        self.queue.close()
+
+
+def ingest_submissions_parallel(
     json_files: list[str],
     tree_names: dict[str, str],
     dirs: dict[INGESTER_DIRS, str],
     max_workers: int = 5,
 ) -> None:
-    """
-    Ingest submissions in parallel using child processes for I/O and database operations.
-    """
-    cycle_start = time.time()
-    total_bytes = 0
-    total_files_count = len(json_files)
-
-    # Python 3.14 defaults to forkserver, which reimports this module before
-    # Django is ready and the workers exit with AppRegistryNotReady.
-    mp_context = multiprocessing.get_context("fork")
-    process_queue: multiprocessing.Queue[Optional[list[SubmissionFileMetadata]]] = (
-        mp_context.Queue(maxsize=INGEST_QUEUE_MAXSIZE)
-    )
-
-    batch = []
-    for file_path in json_files:
-        try:
-            file_size = os.path.getsize(file_path)
-        except OSError:
-            file_size = 0
-
-        total_bytes += file_size
-        batch.append(
-            SubmissionFileMetadata(
-                path=file_path,
-                name=os.path.basename(file_path),
-                size=file_size,
-            )
-        )
-
-        batch_len = len(batch)
-        if batch_len >= INGEST_FILES_BATCH_SIZE or batch_len >= total_files_count:
-            process_queue.put(batch)
-            batch = []
-
-    out(
-        "Spool status: %d .json files queued (%.2f MB)"
-        % (
-            len(json_files),
-            total_bytes / (1024 * 1024) if total_bytes else 0.0,
-        )
-    )
-
-    stat_ok = mp_context.Value("i", 0)
-    stat_fail = mp_context.Value("i", 0)
-    counter_lock = mp_context.Lock()
-    processed = mp_context.Value("i", 0)
-    last_progress = cycle_start
-    progress_every_sec = 2.0
-
-    writers = []
-    try:
-        for _ in range(max_workers):
-            writer = mp_context.Process(
-                target=process_batch,
-                args=(
-                    process_queue,
-                    tree_names,
-                    dirs,
-                    processed,
-                    stat_ok,
-                    stat_fail,
-                    counter_lock,
-                ),
-            )
-            writers.append(writer)
-            writer.start()
-            process_queue.put(None)  # Poison pill to signal the end of the queue
-
-        while not process_queue.empty():
-            if time.time() - last_progress > progress_every_sec:
-                print_ingest_progress(
-                    processed.value,
-                    total_files_count,
-                    total_bytes,
-                    stat_ok.value,
-                    stat_fail.value,
-                    time.time() - cycle_start,
-                    process_queue.qsize(),
-                )
-                last_progress = time.time()
-            if not any(w.is_alive() for w in writers):
-                if not process_queue.empty():
-                    logger.error("All workers exited while queue still has items")
-                break
-            time.sleep(1)
-
-        for writer in writers:
-            writer.join()
-            if writer.exitcode:
-                reason = "signal" if writer.exitcode < 0 else "exception"
-                logger.error(
-                    "Worker %s exited with code %s (%s)",
-                    writer.pid,
-                    writer.exitcode,
-                    reason,
-                )
-                WORKER_FAILURES_COUNTER.labels(
-                    ingester=INGESTER_GRAFANA_LABEL, reason=reason
-                ).inc()
-    except KeyboardInterrupt:
-        out("\nKeyboardInterrupt: terminating workers...")
-        for writer in writers:
-            if writer.is_alive():
-                writer.terminate()
-        for writer in writers:
-            writer.join()
-        out("Workers terminated.")
-
-    elapsed = time.time() - cycle_start
-    total_files = total_files_count
-    print_ingest_progress(
-        processed.value,
-        total_files,
-        total_bytes,
-        stat_ok.value,
-        stat_fail.value,
-        elapsed,
-        process_queue.qsize(),
-    )
+    """One-shot entry point for callers outside the long-running monitor."""
+    with IngestionWorkers(tree_names, dirs, max_workers) as workers:
+        workers.ingest(json_files)

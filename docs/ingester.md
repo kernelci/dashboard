@@ -8,52 +8,44 @@ Entry point: `backend/kernelCI_app/management/commands/helpers/kcidbng_ingester.
 
 ## Parallel ingestion
 
-`ingest_submissions_parallel()` is the main orchestration function.
-It uses `multiprocessing.Process` workers and a shared
-`multiprocessing.Queue` to parallelize file parsing and database writes.
-
-### Data flow
-
-```
-json_files (list)
-    |
-    v
-[batch into groups of INGEST_FILES_BATCH_SIZE]
-    |
-    v
-multiprocessing.Queue (maxsize = INGEST_QUEUE_MAXSIZE)
-    |                       |               |
-    v                       v               v
-  worker 0              worker 1    ...   worker N-1
-  (process_batch)       (process_batch)   (process_batch)
-    |                       |               |
-    v                       v               v
-  DB writes via         DB writes via     DB writes via
-  flush_buffers()       flush_buffers()   flush_buffers()
-```
+`monitor_submissions` keeps one `IngestionWorkers` context alive for the
+command's lifetime. It starts `max_workers` processes once, using `fork`, and
+feeds them through a bounded shared queue. The one-shot
+`ingest_submissions_parallel()` entry point remains available for benchmarks.
 
 ### Worker-queue protocol
 
-1. **Spool phase** - The main process batches `json_files` into groups
-   of `INGEST_FILES_BATCH_SIZE` and puts each batch into the queue.
-   This happens before any workers start.
+1. The parent sends each worker a start message through its control pipe.
+2. It queues file batches, including the final partial batch, followed by one
+   end-of-cycle sentinel per worker. Workers are already running, so a full
+   queue applies backpressure without preventing them from starting.
+3. Each worker processes batches, consumes one sentinel, flushes its remaining
+   buffers, closes its database connections, and acknowledges completion.
+4. The worker waits on its control pipe until the next cycle. It cannot consume
+   another worker's sentinel. The parent waits for every acknowledgement before
+   resetting counters or starting another cycle.
+5. On normal shutdown the parent sends stop messages and joins the workers.
+   On an exception it kills them, since workers ignore SIGTERM (see below).
 
-2. **Start workers** - `max_workers` child processes are spawned. Each
-   runs `process_batch()`, which loops on `process_queue.get()` until
-   it receives `None`.
+Workers poll the queue with a timeout. A worker whose parent died mid-cycle
+would otherwise wait forever for a sentinel; instead it flushes what it has
+buffered and exits.
 
-3. **Enqueue poison pills** - One `None` per worker is put into the
-   queue alongside worker starts. Since batches are already in the
-   queue (FIFO), the Nones always sit behind all batches and workers
-   consume them only after all real work is done.
+### Metrics accumulation
 
-4. **Wait for completion** - The main loop waits for the queue to
-   drain, reporting progress every `progress_every_sec` seconds. If
-   all workers exit while items remain in the queue, the loop logs an
-   error and breaks instead of hanging indefinitely.
+Persistent workers stop the per-cycle creation of Prometheus metric files.
+`kcidb_ingester_prometheus_files{ingester="django"}` reports the number of `.db`
+files in `PROMETHEUS_MULTIPROC_DIR`. The monitor samples it at most once per minute,
+between ingestion cycles; a long cycle delays the next update. The count should
+settle after workers have exercised their metrics and then remain stable.
 
-5. **Join** - After all workers exit, the main process joins them and
-   prints a final progress report.
+Worker cleanup calls `mark_process_dead()` after joining each process. This
+removes live-gauge files while retaining counter and histogram totals. The
+existing startup cleanup clears the directory when the command restarts.
+
+For an accumulation check, record the file-count gauge and Prometheus's
+`scrape_duration_seconds` over repeated busy cycles. A healthy scrape immediately
+after a restart alone does not demonstrate that accumulation is fixed.
 
 ### Worker internals (process_batch)
 
@@ -63,25 +55,51 @@ Each worker:
   fresh ones, since connections cannot be shared across processes.
 - Accumulates parsed instances (issues, checkouts, builds, tests,
   incidents) into an in-memory buffer.
-- Flushes the buffer to the database via `flush_buffers()` whenever
-  any entity type reaches `INGEST_BATCH_SIZE`.
+- When any table reaches `INGEST_BATCH_SIZE`, calls `flush_buffers()` with every
+  table's buffer in the same transaction. Files are archived only after all their
+  records and aggregates commit. A table below the threshold must not be left
+  behind in memory after its submission is archived.
 - Sorts instances by ID before flushing to prevent deadlocks when
   multiple workers update the same rows concurrently.
-- On exit (receiving `None`), flushes any remaining buffered instances.
+- At cycle completion (receiving `None`), flushes any remaining buffered instances,
+  closes database connections, and applies the log-excerpt cache size limit.
+  Valid submissions containing no records are also archived at cycle completion.
+
+A flush can now include records from all five tables, so a transaction can be
+larger than a single table's batch limit. The threshold and file-batch size still
+bound when a flush starts; a single large submission can exceed either limit.
 
 ### Error handling
 
 - **File parse errors**: The file is moved to the `failed` directory
   and the `stat_fail` counter is incremented. The worker continues
-  processing subsequent files.
-- **Worker crash**: `is_alive()` returns False, so the main loop
-  breaks and joins the remaining workers. After join, non-zero exit
-  codes are logged and the `kcidb_ingester_worker_failures` counter
-  is incremented with `reason="exception"` (positive exit code) or
-  `reason="signal"` (negative, e.g. SIGKILL/-9 from OOM killer).
+  processing subsequent files. Any other exception raised while preparing a
+  file or building its instances is handled the same way, so one bad file
+  cannot take a persistent worker down. A file that disappears between the
+  spool scan and its batch is skipped.
+- **Worker crash**: the parent checks exit codes while idle, feeding the queue,
+  and waiting for completion. EOF on a control pipe also reports a worker failure.
+  It logs the exit, increments `kcidb_ingester_worker_failures`, and aborts the
+  command. Other workers are killed and unarchived files remain for retry.
+  A worker killed between its transaction commit and the archive renames leaves
+  committed files in the spool; the next run re-ingests them, which the
+  `ON CONFLICT` upserts tolerate.
+  The counter increment is best effort: the command exits right after it and
+  the startup cleanup clears `PROMETHEUS_MULTIPROC_DIR`, so it is rarely
+  scraped. Alert on the restart instead, for example
+  `resets(kcidb_ingestions_total[1h]) > 0`.
+  The process supervisor must restart the command, creating fresh shared queues
+  and locks. Replacing a worker in place is unsafe because its abrupt exit can
+  leave a shared lock permanently acquired.
+- **Signals**: workers ignore SIGINT and SIGTERM. A signal delivered to the whole
+  process group (systemd, `docker run --init`) then reaches the parent, which
+  finishes the cycle and sends stop messages, instead of aborting worker
+  transactions. Only SIGKILL stops a worker early. A container stop grace
+  period shorter than a cycle still ends in SIGKILL; the interrupted files stay
+  in the spool and are retried on the next start.
 - **Worker hang**: Depends on `requests` timeouts (set on all
   production HTTP calls) to eventually unblock the worker.
-- **KeyboardInterrupt**: The main process terminates all live workers
+- **KeyboardInterrupt**: The main process kills all live workers
   and joins them.
 
 ### Log excerpts
