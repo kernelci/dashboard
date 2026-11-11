@@ -11,7 +11,6 @@ from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
 )
-from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.issues import IssueDict
 from kernelCI_app.typeModels.labDetails import (
@@ -56,10 +55,7 @@ def tree_key(tree_name: str, git_branch: str) -> str:
 
 
 def platform_from_row(row: dict) -> str:
-    misc = handle_misc(row.get("test_environment_misc"))
-    if not misc:
-        return ""
-    platform = misc.get("platform")
+    platform = row.get("test_platform")
     return platform if isinstance(platform, str) else ""
 
 
@@ -275,7 +271,7 @@ def build_lab_details_response(
         runs_with_duration += int(row.get("test_duration") is not None)
         runs_with_platform += int(bool(platform.strip()))
         runs_with_log_url += int(bool(row.get("test_log_url")))
-        runs_with_log_excerpt += int(bool(row.get("test_log_excerpt")))
+        runs_with_log_excerpt += int(bool(row.get("test_has_log_excerpt")))
         platform_counter[platform.strip()] += 1
         config_counter[config_name.strip()] += 1
         arch_counter[arch.strip()] += 1
@@ -385,7 +381,6 @@ def build_lab_boot_rows(test_rows: list[dict]) -> LabBootRowsResponse:
                 start_time=row.get("test_start_time"),
                 duration=row.get("test_duration"),
                 log_url=row.get("test_log_url"),
-                log_excerpt=row.get("test_log_excerpt"),
             )
         )
     return LabBootRowsResponse(boots=items)
@@ -417,8 +412,6 @@ def build_lab_test_rows(test_rows: list[dict], *, lab_name: str) -> LabTestRowsR
                 compiler=row.get("build_compiler"),
                 platform=platform,
                 log_url=row.get("test_log_url"),
-                log_excerpt=row.get("test_log_excerpt"),
-                environment_misc=row.get("test_environment_misc"),
             )
         )
     return LabTestRowsResponse(tests=items)

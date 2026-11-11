@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 from kernelCI_app.helpers.lab_details import (
     build_lab_attention_response,
     build_lab_details_response,
+    build_lab_test_rows,
     parse_tree_filters,
     tree_key,
 )
@@ -48,8 +49,8 @@ class LabDetailsHelperTest(SimpleTestCase):
                 "test_start_time": when,
                 "test_duration": None,
                 "test_log_url": "http://log",
-                "test_log_excerpt": None,
-                "test_environment_misc": {"platform": "board-a"},
+                "test_has_log_excerpt": True,
+                "test_platform": "board-a",
                 "build_config_name": "defconfig",
                 "build_architecture": "arm64",
                 "build_compiler": "gcc-14",
@@ -81,6 +82,8 @@ class LabDetailsHelperTest(SimpleTestCase):
         self.assertEqual(result.fill.builds_total, 1)
         self.assertEqual(result.fill.builds_with_duration, 1)
         self.assertEqual(result.fill.runs_total, 1)
+        self.assertEqual(result.fill.runs_with_log_excerpt, 1)
+        self.assertEqual(result.fill.runs_with_platform, 1)
         self.assertEqual(result.distribution.build_status.PASS, 1)
         self.assertEqual(result.distribution.boot_status.FAIL, 1)
         self.assertEqual(result.distribution.platforms[0].name, "board-a")
@@ -111,3 +114,22 @@ class LabDetailsHelperTest(SimpleTestCase):
         self.assertEqual(result.items[0].passed_labs, ["lab-a", "lab-b"])
         self.assertEqual(result.items[1].kind, "test")
         self.assertEqual(result.items[1].path, "kselftest.rtc")
+
+    def test_test_rows_keep_platform(self):
+        result = build_lab_test_rows(
+            [
+                {
+                    "test_id": "t1",
+                    "test_status": "PASS",
+                    "test_path": "kselftest.rtc",
+                    "test_platform": "zynqmp-zcu102",
+                    "tree_name": "cip",
+                    "git_branch": "linux-6.12.y-cip",
+                }
+            ],
+            lab_name="lava-cip",
+        )
+        self.assertEqual(result.tests[0].platform, "zynqmp-zcu102")
+        dumped = result.tests[0].model_dump()
+        self.assertNotIn("environment_misc", dumped)
+        self.assertNotIn("log_excerpt", dumped)
