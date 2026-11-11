@@ -73,6 +73,7 @@ import { TreeCompareLink } from '@/pages/TreeCompare/TreeCompareLink';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
+import { TreeQueryError } from './TreeQueryError';
 
 interface ITreeHeader {
   treeNames?: string;
@@ -379,6 +380,30 @@ const TreeDetails = ({
       />
     );
   }, [data, diffFilter, isLoading, urlFrom]);
+
+  if (treeDetailsLazyLoaded.summary.status === 'error') {
+    return (
+      <PageWithTitle title={treeDetailsTitle}>
+        <TreeQueryError
+          error={treeDetailsLazyLoaded.summary.error}
+          treeName={sanitizedTreeInfo.treeName}
+          branch={sanitizedTreeInfo.gitBranch}
+          hash={sanitizedTreeInfo.hash}
+          origin={searchParams.origin}
+        />
+      </PageWithTitle>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <PageWithTitle title={treeDetailsTitle}>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <LoadingCircle />
+        </div>
+      </PageWithTitle>
+    );
+  }
 
   return (
     <PageWithTitle title={treeDetailsTitle}>

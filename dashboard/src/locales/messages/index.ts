@@ -498,11 +498,21 @@ export const messages = {
     'treeCompare.suggestion.swap': 'Swap base and compare',
     'treeCompare.suggestions': 'Suggestions',
     'treeCompare.summaryTitle': 'Tree summary',
+    'treeDetails.backToTrees': 'Back to Trees',
     'treeDetails.bootsHistory': 'Boots History',
     'treeDetails.branch': 'Branch',
     'treeDetails.buildsHistory': 'Builds History',
     'treeDetails.commitOrTag': 'Commit/Tag',
     'treeDetails.hardwareUsed': 'Hardware Used',
+    'treeDetails.missing.branch': 'Branch not found',
+    'treeDetails.missing.branch.description':
+      'Branch "{branch}" was not found in tree "{tree}" for origin "{origin}".',
+    'treeDetails.missing.commit': 'Commit not found',
+    'treeDetails.missing.commit.description':
+      'Commit or tag "{hash}" was not found in tree "{tree}", branch "{branch}", for origin "{origin}".',
+    'treeDetails.missing.tree': 'Tree not found',
+    'treeDetails.missing.tree.description':
+      'Tree "{tree}" was not found for origin "{origin}".',
     'treeDetails.notFound': 'No results available for this tree/branch/commit',
     'treeDetails.testsHistory': 'Tests History',
     'treeListing.description': 'List of trees for kernel builds and tests',

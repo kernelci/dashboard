@@ -15,35 +15,35 @@ client = TreeClient()
     "tree_name, git_branch, query, has_error_body",
     [
         ("android", "android-mainline", {}, False),
-        ("mainline", "master", {"origin": "microsoft"}, False),
+        ("next", "pending-fixes", {"origin": "broonie"}, False),
         ("invalid_tree_name", "invalid_branch", {}, True),
         (
-            "qcom",
-            "for-next",
+            "broonie-misc",
+            "for-kernelci",
             {},
             False,
-        ),  # No qcom tree in tree-names.yaml, only in kcidb
+        ),
         (
             "agross",
             "for-next",
             {},
             True,
-        ),  # No agross tree in kcidb, only in tree-names.yaml
+        ),
         (
             "android",
             "android-mainline",
             {
                 "origin": "maestro",
-                "commit_hash": "1064be81d694bc2b3c308de6b2951c21a3f89677",
+                "commit_hash": "fdf4d20b86285d7b4d1c2d3349a1bd1bc41b24ba",
             },
             False,
         ),
         (
-            "mainline",
-            "master",
+            "next",
+            "pending-fixes",
             {
-                "origin": "microsoft",
-                "commit_hash": "c4dce0c094a89b1bc8fde1163342bd6fe29c0370",
+                "origin": "broonie",
+                "commit_hash": "33040a50cdaec186c13ef3f7b9c9b668d8e32637",
             },
             False,
         ),
@@ -62,3 +62,10 @@ def test_tree_latest(tree_name, git_branch, query, has_error_body):
         status_code=HTTPStatus.OK,
         should_error=has_error_body,
     )
+    if not has_error_body:
+        assert "error" not in content
+        assert content["tree_name"] == tree_name
+        assert content["git_repository_branch"] == git_branch
+        assert content["origin"] == query.get("origin", "maestro")
+        if "commit_hash" in query:
+            assert content["git_commit_hash"] == query["commit_hash"]

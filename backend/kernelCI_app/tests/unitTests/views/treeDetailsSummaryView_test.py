@@ -217,7 +217,11 @@ class TestTreeDetailsSummaryRollupFallback(SimpleTestCase):
         mock_get_rollup.return_value = []
         mock_get_builds.return_value = []
 
-        response = self.view.get(self._make_request(), commit_hash=COMMIT_HASH)
+        with patch(
+            "kernelCI_app.views.treeDetailsSummaryView.get_tree_not_found",
+            return_value=None,
+        ):
+            response = self.view.get(self._make_request(), commit_hash=COMMIT_HASH)
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("error", response.data)

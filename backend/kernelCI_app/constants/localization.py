@@ -56,6 +56,8 @@ class ClientStrings:
     BUILD_ISSUES_NOT_FOUND = "No issues found for this build"
     BUILD_DETAILS_NOT_FOUND = "Build not found"
     TREE_NOT_FOUND = "Tree not found."
+    TREE_BRANCH_NOT_FOUND = "Branch not found."
+    TREE_COMMIT_NOT_FOUND = "Commit not found."
     TREE_LATEST_DEFAULT_ORIGIN = "No origin was provided so it was defaulted to"
     METRICS_INVALID_INTERVAL = (
         "start_days_ago must be greater than end_days_ago to define a valid interval"

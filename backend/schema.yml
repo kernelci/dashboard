@@ -1748,7 +1748,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{commit_hash}/summary:
     get:
@@ -1792,7 +1792,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{commit_hash}/tests:
     get:
@@ -1889,7 +1889,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeLatestResponse'
+                $ref: '#/components/schemas/TreeLatestResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/boots:
     get:
@@ -2102,7 +2102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/summary:
     get:
@@ -2144,7 +2144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/tests:
     get:
@@ -5192,6 +5192,12 @@ components:
       - status
       title: RegressionHistoryItem
       type: object
+    ResourceEnum:
+      enum:
+      - tree
+      - branch
+      - commit
+      type: string
     StatusCount:
       properties:
         PASS:
@@ -5276,6 +5282,11 @@ components:
       - filters
       title: SummaryResponse
       type: object
+    SummaryResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/SummaryResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: SummaryResponseOrError
     TestArchSummaryItem:
       properties:
         arch:
@@ -5962,6 +5973,11 @@ components:
       - builds
       title: TreeDetailsFullResponse
       type: object
+    TreeDetailsFullResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeDetailsFullResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeDetailsFullResponseOrError
     TreeEntityTypes:
       enum:
       - builds
@@ -6002,6 +6018,11 @@ components:
       - git_repository_branch
       title: TreeLatestResponse
       type: object
+    TreeLatestResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeLatestResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeLatestResponseOrError
     TreeListingItem:
       properties:
         id:
@@ -6048,6 +6069,20 @@ components:
         $ref: '#/components/schemas/TreeListingItem'
       title: TreeListingResponse
       type: array
+    TreeNotFoundResponse:
+      properties:
+        error:
+          title: Error
+          type: string
+        resource:
+          allOf:
+          - $ref: '#/components/schemas/ResourceEnum'
+          title: Resource
+      required:
+      - error
+      - resource
+      title: TreeNotFoundResponse
+      type: object
     TreeReportIssues:
       properties:
         builds:

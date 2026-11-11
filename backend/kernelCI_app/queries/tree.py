@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.labFilter import lab_filter_sql, test_side_lab_sql
 from kernelCI_app.helpers.treeCompare import (
@@ -17,9 +18,47 @@ from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
     get_build_duration_clause,
 )
+from kernelCI_app.typeModels.treeDetails import TreeNotFoundResponse
 
 if TYPE_CHECKING:
     from kernelCI_app.helpers.filters import FilterParams
+
+
+def get_tree_not_found(
+    *,
+    origin: str,
+    tree_name: Optional[str],
+    git_branch: Optional[str],
+    commit_hash: Optional[str],
+    git_url: Optional[str] = None,
+) -> Optional[TreeNotFoundResponse]:
+    """Diagnose an empty lookup without confusing missing results with a missing checkout.
+
+    Call only after the normal lookup fails, so successful requests do no extra work.
+    Result filters deliberately do not participate in existence checks.
+    """
+    tree = Checkouts.objects.filter(origin=origin)
+    if tree_name:
+        tree = tree.filter(tree_name=tree_name)
+    if not (tree_name and git_branch):
+        tree = tree.filter(git_repository_url=git_url or None)
+    branch = tree.filter(git_repository_branch=git_branch or None)
+    checkout = branch
+    if commit_hash is not None:
+        checkout = checkout.filter(
+            Q(git_commit_hash=commit_hash) | Q(git_commit_tags__contains=[commit_hash])
+        )
+    if checkout.exists():
+        return None
+    if not tree.exists():
+        return TreeNotFoundResponse(error=ClientStrings.TREE_NOT_FOUND, resource="tree")
+    if not branch.exists():
+        return TreeNotFoundResponse(
+            error=ClientStrings.TREE_BRANCH_NOT_FOUND, resource="branch"
+        )
+    return TreeNotFoundResponse(
+        error=ClientStrings.TREE_COMMIT_NOT_FOUND, resource="commit"
+    )
 
 
 def _get_tree_listing_count_clause() -> str:
