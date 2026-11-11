@@ -12,6 +12,7 @@ from multiprocessing.synchronize import Lock as ProcessLock
 from queue import Empty, Full, Queue
 from typing import Any, Optional, Self, TypedDict
 
+import jsonschema
 import kcidb_io
 from django.db import connections, transaction
 from prometheus_client import Counter, multiprocess
@@ -82,6 +83,19 @@ WORKER_FAILURES_COUNTER = Counter(
     "Number of ingester worker processes that exited abnormally",
     ["ingester", "reason"],
 )
+FILE_FAILURES_COUNTER = Counter(
+    "kcidb_ingestion_failures",
+    "Number of submission files that failed preparation and were moved to failed",
+    ["ingester", "reason"],
+)
+
+
+def _failure_reason(error: Exception) -> str:
+    if isinstance(error, json.JSONDecodeError):
+        return "json_decode"
+    if isinstance(error, jsonschema.ValidationError):
+        return "schema_validation"
+    return "other"
 
 
 def standardize_tree_names(
@@ -137,19 +151,25 @@ def standardize_labs(input_data: dict[str, Any]) -> None:
         _standardize_lab_field(test, "runtime")
 
 
-def _extract_origins_info(data: Optional[dict[str, Any]]) -> str:
+def _extract_origins_info(data: Any) -> str:
     """Extract unique origins from submissions for error reporting.
 
     Returns a formatted string like " [origins: origin1, origin2]" if origins
     are found, otherwise an empty string.
     """
     origins: set[str] = set()
-    if data:
-        for section in ("tests", "builds", "checkouts", "issues", "incidents"):
-            for item in data.get(section, []):
-                origin = item.get("origin")
-                if origin:
-                    origins.add(origin)
+    if not isinstance(data, dict):
+        return ""
+    for section in ("tests", "builds", "checkouts", "issues", "incidents"):
+        items = data.get(section, [])
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            origin = item.get("origin")
+            if isinstance(origin, str) and origin:
+                origins.add(origin)
     return f" [origins: {', '.join(sorted(origins))}]" if origins else ""
 
 
@@ -206,6 +226,7 @@ def prepare_file_data(
         logger.error(traceback.format_exc())
         return None, {
             "error": str(e),
+            "reason": _failure_reason(e),
         }
 
 
@@ -422,7 +443,11 @@ def process_batch(
                 )
             except Exception as e:
                 logger.exception("Unexpected error processing %s", file["name"])
-                data, metadata, instances = None, {"error": str(e)}, None
+                data, metadata, instances = (
+                    None,
+                    {"error": str(e), "reason": _failure_reason(e)},
+                    None,
+                )
 
             if metadata and metadata.get("error"):
                 try:
@@ -430,6 +455,11 @@ def process_batch(
                     move_file_to_failed_dir(file["path"], dirs[destination])
                 except Exception:
                     pass
+                else:
+                    if destination == "failed":
+                        FILE_FAILURES_COUNTER.labels(
+                            ingester=INGESTER_GRAFANA_LABEL, reason=metadata["reason"]
+                        ).inc()
                 with counter_lock:
                     stat_fail.value += 1
                     processed.value += 1

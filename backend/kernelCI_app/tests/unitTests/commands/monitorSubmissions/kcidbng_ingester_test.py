@@ -1,10 +1,12 @@
 from queue import Queue
 from unittest.mock import MagicMock, call, mock_open, patch
 
+import jsonschema
 import pytest
 
 from kernelCI_app.constants.ingester import (
     AUTOMATIC_LAB_FIELD,
+    INGESTER_GRAFANA_LABEL,
 )
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     SubmissionFileMetadata,
@@ -121,6 +123,27 @@ class TestExtractOriginsInfo:
         }
         result = _extract_origins_info(data)
         assert result == " [origins: lab1]"
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            [1],
+            "invalid",
+            1,
+            {"checkouts": ["a"]},
+            {"tests": None},
+            {"builds": {}},
+            {"issues": [{"origin": []}, {"origin": 1}]},
+        ],
+    )
+    def test_extract_origins_info_malformed_data(self, data):
+        assert _extract_origins_info(data) == ""
+
+    def test_extract_origins_info_keeps_valid_origins(self):
+        assert (
+            _extract_origins_info({"tests": [None, {"origin": []}, {"origin": "lab1"}]})
+            == " [origins: lab1]"
+        )
 
 
 class TestStandardizeTreeNames:
@@ -535,6 +558,112 @@ class TestPrepareFileData:
         mock_logger.error.assert_called()
         mock_file_open.assert_called_once()
 
+    @pytest.mark.parametrize(
+        "read_data, validate_side_effect, expected_reason",
+        [
+            ("{not json", None, "json_decode"),
+            (
+                SUBMISSION_FILE_MOCK,
+                jsonschema.ValidationError("bad schema"),
+                "schema_validation",
+            ),
+            (SUBMISSION_FILE_MOCK, RuntimeError("boom"), "other"),
+        ],
+    )
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.FILE_FAILURES_COUNTER"
+    )
+    @patch("kcidb_io.schema.V5_3.validate")
+    def test_prepare_file_data_failure_reason(
+        self,
+        mock_validate,
+        mock_failures_counter,
+        mock_logger,
+        read_data,
+        validate_side_effect,
+        expected_reason,
+    ):
+        """Preparation returns a reason without counting an unmoved file."""
+        mock_validate.side_effect = validate_side_effect
+        mock_file = SubmissionFileMetadata(
+            name=SUBMISSION_FILENAME_MOCK,
+            path=SUBMISSION_PATH_MOCK,
+            size=100,
+        )
+
+        with patch("builtins.open", mock_open(read_data=read_data)):
+            result_data, result_metadata = prepare_file_data(mock_file, {})
+
+        assert result_data is None
+        assert "error" in result_metadata
+        assert "retry" not in result_metadata
+        assert result_metadata["reason"] == expected_reason
+        mock_failures_counter.labels.assert_not_called()
+        mock_logger.error.assert_called()
+
+
+@pytest.mark.parametrize("move_succeeds", [True, False])
+@pytest.mark.parametrize(
+    "read_data, validate_side_effect, expected_reason",
+    [
+        ("{not json", None, "json_decode"),
+        ("[1]", None, "other"),
+        ('{"checkouts": ["a"]}', None, "other"),
+        (
+            SUBMISSION_FILE_MOCK,
+            jsonschema.ValidationError("bad schema"),
+            "schema_validation",
+        ),
+        (SUBMISSION_FILE_MOCK, RuntimeError("boom"), "other"),
+    ],
+)
+def test_process_batch_counts_only_moved_failures(
+    tmp_path, move_succeeds, read_data, validate_side_effect, expected_reason
+):
+    path = tmp_path / "bad.json"
+    path.write_text(read_data)
+    failed_dir = tmp_path / "failed"
+    if move_succeeds:
+        failed_dir.mkdir()
+    file = SubmissionFileMetadata(
+        name=path.name, path=str(path), size=path.stat().st_size
+    )
+    queue = Queue()
+    queue.put([file])
+    if not move_succeeds:
+        queue.put([file])
+    queue.put(None)
+    module = "kernelCI_app.management.commands.helpers.kcidbng_ingester"
+    with (
+        patch(f"{module}.connections.close_all"),
+        patch(f"{module}.CONVERT_LOG_EXCERPT", False),
+        patch(f"{module}.flush_buffers"),
+        patch("kcidb_io.schema.V5_3.validate", side_effect=validate_side_effect),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
+    ):
+        processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
+        process_batch(
+            queue,
+            {},
+            {"failed": str(failed_dir)},
+            processed,
+            stat_ok,
+            stat_fail,
+            MagicMock(),
+        )
+
+    assert path.exists() is not move_succeeds
+    assert (failed_dir / path.name).exists() is move_succeeds
+    assert processed.value == stat_fail.value == (1 if move_succeeds else 2)
+    if move_succeeds:
+        counter.labels.assert_called_once_with(
+            ingester=INGESTER_GRAFANA_LABEL, reason=expected_reason
+        )
+        counter.labels.return_value.inc.assert_called_once()
+    else:
+        counter.labels.assert_not_called()
+
 
 @pytest.mark.parametrize("retry", [True, False])
 def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
@@ -562,7 +691,10 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
         patch(f"{module}.connections.close_all"),
         patch(
             f"{module}.prepare_file_data",
-            side_effect=[(None, {"error": "unavailable", "retry": retry}), ({}, {})],
+            side_effect=[
+                (None, {"error": "unavailable", "retry": retry, "reason": "other"}),
+                ({}, {}),
+            ],
         ),
         patch(
             f"{module}.build_instances_from_submission",
@@ -572,6 +704,7 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
             },
         ),
         patch(f"{module}.flush_buffers", side_effect=flush),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
     ):
         processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
         process_batch(queue, {}, dirs, processed, stat_ok, stat_fail, MagicMock())
@@ -583,6 +716,50 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
     assert buffers == [{("good.json", str(tmp_path / "good.json"))}]
     assert processed.value == 2
     assert stat_fail.value == 1
+    if retry:
+        counter.labels.assert_not_called()
+    else:
+        counter.labels.assert_called_once_with(
+            ingester=INGESTER_GRAFANA_LABEL, reason="other"
+        )
+        counter.labels.return_value.inc.assert_called_once()
+
+
+def test_instance_build_failure_is_counted_after_move(tmp_path):
+    path = tmp_path / "bad.json"
+    path.write_text("{}")
+    failed_dir = tmp_path / "failed"
+    failed_dir.mkdir()
+    queue = Queue()
+    queue.put([SubmissionFileMetadata(name=path.name, path=str(path), size=2)])
+    queue.put(None)
+    module = "kernelCI_app.management.commands.helpers.kcidbng_ingester"
+    with (
+        patch(f"{module}.prepare_file_data", return_value=({}, {})),
+        patch(
+            f"{module}.build_instances_from_submission",
+            side_effect=RuntimeError("invalid instance"),
+        ),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
+    ):
+        processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
+        process_batch(
+            queue,
+            {},
+            {"failed": str(failed_dir)},
+            processed,
+            stat_ok,
+            stat_fail,
+            MagicMock(),
+        )
+
+    assert not path.exists()
+    assert (failed_dir / path.name).exists()
+    assert processed.value == stat_fail.value == 1
+    counter.labels.assert_called_once_with(
+        ingester=INGESTER_GRAFANA_LABEL, reason="other"
+    )
+    counter.labels.return_value.inc.assert_called_once()
 
 
 class TestConsumeBuffer:
