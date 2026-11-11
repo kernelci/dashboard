@@ -1,5 +1,8 @@
+import logging
+import threading
 from http import HTTPStatus
 
+from django.db import DatabaseError, connection
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -7,8 +10,12 @@ from rest_framework.views import APIView
 
 from kernelCI_app.middleware.backendRequestMetricsMiddleware import get_metrics
 
-# Keys of FileRoutesByTo in dashboard/src/routeTree.gen.ts.
-# A test fails when the two lists diverge.
+logger = logging.getLogger(__name__)
+
+_cache_lock = threading.Lock()
+_tree_cache: set[tuple[str, str]] = set()
+_hardware_cache: set[str] = set()
+
 DASHBOARD_ROUTES = frozenset(
     {
         "/",
@@ -47,14 +54,86 @@ DASHBOARD_ROUTES = frozenset(
     }
 )
 
-MAX_VISIBLE_MS = 86_400_000
+MAX_VISIBLE_SECONDS = 86_400
 MAX_PATH_LENGTH = 2_000
-# treeId is a commit hash, so it is not kept.
-_KEEP_PARAMS = frozenset({"hardwareId", "treeName", "branch"})
 
 
 def _segments(value: str) -> list[str]:
     return [segment for segment in value.split("/") if segment]
+
+
+def _tree_pair_in_checkouts(pair: tuple[str, str]) -> bool:
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM checkouts
+                    WHERE tree_name = %s AND git_repository_branch = %s
+                )
+                """,
+                pair,
+            )
+            return bool(cursor.fetchone()[0])
+    except DatabaseError:
+        logger.exception("visible time tree lookup failed")
+        return False
+
+
+def _hardware_id_in_status(hardware_id: str) -> bool:
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM hardware_status WHERE platform = %s
+                )
+                """,
+                [hardware_id],
+            )
+            if cursor.fetchone()[0]:
+                return True
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM hardware_status
+                    WHERE compatibles @> ARRAY[%s]::text[]
+                )
+                """,
+                [hardware_id],
+            )
+            return bool(cursor.fetchone()[0])
+    except DatabaseError:
+        logger.exception("visible time hardware lookup failed")
+        return False
+
+
+def _cached(cache: set, key, lookup) -> bool:
+    if key in cache:
+        return True
+    if not lookup(key):
+        return False
+    with _cache_lock:
+        cache.add(key)
+    return True
+
+
+def _label_segment(
+    pattern_segment: str,
+    values: dict[str, str],
+    tree_pair_cached: bool,
+    cached_hardware_id: str | None,
+) -> str:
+    if not pattern_segment.startswith("$"):
+        return pattern_segment
+    param = pattern_segment[1:]
+    value = values[param]
+    if param == "hardwareId" and value == cached_hardware_id:
+        return value
+    if param in {"treeName", "branch"} and tree_pair_cached:
+        return value
+    # treeId is a commit hash, and object ids are not kept.
+    return pattern_segment
 
 
 def _apply_pattern(pattern: str, path: str) -> str | None:
@@ -65,18 +144,32 @@ def _apply_pattern(pattern: str, path: str) -> str | None:
     path_segments = _segments(path)
     if len(pattern_segments) != len(path_segments):
         return None
-    label_segments = []
+    values: dict[str, str] = {}
     for pattern_segment, path_segment in zip(
         pattern_segments, path_segments, strict=True
     ):
         if pattern_segment.startswith("$"):
-            label_segments.append(
-                path_segment if pattern_segment[1:] in _KEEP_PARAMS else pattern_segment
-            )
+            values[pattern_segment[1:]] = path_segment
         elif pattern_segment != path_segment:
             return None
-        else:
-            label_segments.append(pattern_segment)
+    tree_name = values.get("treeName")
+    branch = values.get("branch")
+    tree_pair_cached = (
+        tree_name is not None
+        and branch is not None
+        and _cached(_tree_cache, (tree_name, branch), _tree_pair_in_checkouts)
+    )
+    hardware_id = values.get("hardwareId")
+    cached_hardware_id = (
+        hardware_id
+        if hardware_id is not None
+        and _cached(_hardware_cache, hardware_id, _hardware_id_in_status)
+        else None
+    )
+    label_segments = [
+        _label_segment(pattern_segment, values, tree_pair_cached, cached_hardware_id)
+        for pattern_segment in pattern_segments
+    ]
     if not label_segments:
         return "/"
     return "/" + "/".join(label_segments)
@@ -103,7 +196,7 @@ def route_label(path: str) -> str | None:
 
 class VisibleTimeSerializer(serializers.Serializer):
     route = serializers.CharField(max_length=MAX_PATH_LENGTH)
-    time_ms = serializers.IntegerField(min_value=0, max_value=MAX_VISIBLE_MS)
+    time_ms = serializers.IntegerField(min_value=0)
 
 
 class VisibleTimeView(APIView):
@@ -122,6 +215,6 @@ class VisibleTimeView(APIView):
         if label is None:
             return Response(status=HTTPStatus.BAD_REQUEST)
         get_metrics().route_visible_seconds.labels(route=label).observe(
-            body.validated_data["time_ms"] / 1000
+            min(body.validated_data["time_ms"] / 1000, MAX_VISIBLE_SECONDS)
         )
         return Response(status=HTTPStatus.NO_CONTENT)

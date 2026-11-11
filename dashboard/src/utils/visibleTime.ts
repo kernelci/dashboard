@@ -30,10 +30,10 @@ export const trackVisibleTime = (router: VisibleRouter, url: string): void => {
     stop();
     const elapsed = visibleMs;
     visibleMs = 0;
-    if (route === '') {
+    const timeMs = Math.round(elapsed);
+    if (route === '' || timeMs === 0) {
       return;
     }
-    const timeMs = Math.round(elapsed);
     // sendBeacon always sends cookies, and this API allows any origin with
     // Access-Control-Allow-Origin: *. A credentialed JSON request is rejected.
     void fetch(url, {

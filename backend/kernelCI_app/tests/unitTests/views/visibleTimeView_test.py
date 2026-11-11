@@ -5,6 +5,7 @@ import pytest
 from prometheus_client import REGISTRY
 from rest_framework.test import APIRequestFactory
 
+from kernelCI_app.views import visibleTimeView
 from kernelCI_app.views.visibleTimeView import (
     DASHBOARD_ROUTES,
     VisibleTimeView,
@@ -13,6 +14,16 @@ from kernelCI_app.views.visibleTimeView import (
 
 ROUTE = "/tree/mainline/master"
 REPO_ROOT = Path(__file__).resolve().parents[5]
+
+
+@pytest.fixture(autouse=True)
+def route_label_cache(monkeypatch):
+    visibleTimeView._tree_cache = {("mainline", "master"), ("mainline", "build")}
+    visibleTimeView._hardware_cache = {"bcm2711-rpi-4-b", "board-a", "board-b"}
+    monkeypatch.setattr(visibleTimeView, "_tree_pair_in_checkouts", lambda _pair: False)
+    monkeypatch.setattr(
+        visibleTimeView, "_hardware_id_in_status", lambda _hardware_id: False
+    )
 
 
 def _sample(name: str, route: str) -> float:
@@ -44,11 +55,9 @@ def test_valid_beacon_observes_visible_seconds():
     [
         {"route": "/not-a-route", "time_ms": 20_000},
         {"route": ROUTE, "time_ms": -1},
-        {"route": ROUTE, "time_ms": 86_400_001},
         {"route": ROUTE, "time_ms": "nope"},
         {"time_ms": 20_000},
         {"route": ROUTE},
-        {"route": "/nope/not-a-page", "time_ms": 20_000},
     ],
 )
 def test_invalid_beacon_records_nothing(fields):
@@ -76,32 +85,57 @@ def test_route_label(path, label):
     assert route_label(path) == label
 
 
-def test_build_ids_share_one_series():
-    label = "/build/$buildId"
+def test_long_stay_is_capped_at_one_day():
+    before_sum = _sample("dashboard_route_visible_seconds_sum", ROUTE)
+    before_count = _sample("dashboard_route_visible_seconds_count", ROUTE)
+
+    response = _post({"route": ROUTE, "time_ms": 86_400_000 + 3_600_000})
+
+    assert response.status_code == 204
+    assert _sample("dashboard_route_visible_seconds_sum", ROUTE) == before_sum + 86_400
+    assert _sample("dashboard_route_visible_seconds_count", ROUTE) == before_count + 1
+
+
+def test_unknown_tree_and_hardware_use_the_pattern():
+    tree_label = "/tree/$treeName/$branch"
+    hardware_label = "/hardware/$hardwareId"
+    before_tree = _sample("dashboard_route_visible_seconds_count", tree_label)
+    before_hardware = _sample("dashboard_route_visible_seconds_count", hardware_label)
+
+    tree = _post({"route": "/tree/nope/nope", "time_ms": 1_000})
+    hardware = _post({"route": "/hardware/nope", "time_ms": 1_000})
+
+    assert tree.status_code == 204
+    assert hardware.status_code == 204
+    assert (
+        _sample("dashboard_route_visible_seconds_count", tree_label) == before_tree + 1
+    )
+    assert (
+        _sample("dashboard_route_visible_seconds_count", hardware_label)
+        == before_hardware + 1
+    )
+    assert _sample("dashboard_route_visible_seconds_count", "/tree/nope/nope") == 0
+    assert _sample("dashboard_route_visible_seconds_count", "/hardware/nope") == 0
+
+
+def test_a_tree_found_on_miss_joins_the_cache(monkeypatch):
+    calls = {"n": 0}
+
+    def in_checkouts(pair):
+        calls["n"] += 1
+        return pair == ("fresh", "topic")
+
+    monkeypatch.setattr(visibleTimeView, "_tree_pair_in_checkouts", in_checkouts)
+    label = "/tree/fresh/topic"
     before = _sample("dashboard_route_visible_seconds_count", label)
 
-    first = _post({"route": "/build/maestro:abc", "time_ms": 1_000})
-    second = _post({"route": "/build/maestro:def", "time_ms": 1_000})
+    first = _post({"route": label, "time_ms": 1_000})
+    second = _post({"route": label, "time_ms": 1_000})
 
     assert first.status_code == 204
     assert second.status_code == 204
+    assert calls["n"] == 1
     assert _sample("dashboard_route_visible_seconds_count", label) == before + 2
-    assert _sample("dashboard_route_visible_seconds_count", "/build/maestro:abc") == 0
-
-
-def test_hardware_paths_are_separate():
-    board_a = "/hardware/board-a"
-    board_b = "/hardware/board-b"
-    before_a = _sample("dashboard_route_visible_seconds_count", board_a)
-    before_b = _sample("dashboard_route_visible_seconds_count", board_b)
-
-    first = _post({"route": board_a, "time_ms": 1_000})
-    second = _post({"route": board_b, "time_ms": 1_000})
-
-    assert first.status_code == 204
-    assert second.status_code == 204
-    assert _sample("dashboard_route_visible_seconds_count", board_a) == before_a + 1
-    assert _sample("dashboard_route_visible_seconds_count", board_b) == before_b + 1
 
 
 def test_dashboard_routes_match_generated_route_tree():

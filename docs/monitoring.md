@@ -165,14 +165,15 @@ is the technical/operator reference.
   other routes, including `/admin/`. Django status and exception counters are
   unchanged.
 - `dashboard_route_visible_seconds` — histogram of how long a dashboard route
-  stayed in the foreground. Label `route` keeps the tree name, branch, and
-  hardware id, and stores a build, test, boot, issue, or commit id as its
-  `$placeholder`. The query string is not included. One sample per visible
+  stayed in the foreground. Label `route` keeps a tree name, branch, and
+  hardware id that already exist in `checkouts` or `hardware_status`. An
+  unknown one is stored as its `$placeholder`, as are a build, test, boot,
+  issue, or commit id. The query string is not included. One sample per visible
   stretch. A stretch ends when the path changes or when the tab goes hidden;
   time spent hidden is not included. Buckets are 1, 5, 15, 30, 60, 120, 300,
   600, 1800, and +Inf. The 1s bucket is a stay of at most one second.
   `POST /api/analytics/visible/` takes a JSON body, `route` and `time_ms`.
-  The handler divides `time_ms` by 1000 before observing this histogram. It
+  The handler divides `time_ms` by 1000 and stores at most 86400 seconds. It
   does not increment the client-request counter, the latency histogram, or
   the unique-visitor count.
 

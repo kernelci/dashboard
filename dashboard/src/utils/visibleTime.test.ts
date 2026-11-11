@@ -141,6 +141,33 @@ describe('trackVisibleTime', () => {
     });
   });
 
+  it('does not send a zero sample when the path changes while hidden', async () => {
+    openRoute();
+    clock = TWENTY_SECONDS_MS;
+    visibility = 'hidden';
+    onVisibility();
+    pathname = '/hardware/board-a';
+    onResolved();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(body(0)).toEqual({
+      route: '/tree/mainline/master',
+      time_ms: TWENTY_SECONDS_MS,
+    });
+
+    visibility = 'visible';
+    onVisibility();
+    clock = TWENTY_SECONDS_MS + 15_000;
+    pathname = '/labs';
+    onResolved();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(body(1)).toEqual({
+      route: '/hardware/board-a',
+      time_ms: 15_000,
+    });
+  });
+
   it('does not send a beacon when only the search changes', async () => {
     openRoute();
     clock = TWENTY_SECONDS_MS;
@@ -155,16 +182,13 @@ describe('trackVisibleTime', () => {
     });
   });
 
-  it('sends again for another hardware path', async () => {
-    pathname = '/hardware/board-a';
+  it('sends a stay longer than 24h as measured', async () => {
     openRoute();
-    clock = TWENTY_SECONDS_MS;
-    pathname = '/hardware/board-b';
+    clock = 86_400_000 + 3_600_000;
+    pathname = '/labs';
     onResolved();
-
-    expect(body(0)).toEqual({
-      route: '/hardware/board-a',
-      time_ms: TWENTY_SECONDS_MS,
+    expect(body(0)).toMatchObject({
+      time_ms: 86_400_000 + 3_600_000,
     });
   });
 

@@ -33,10 +33,11 @@ counters), never as per-user records or per-user timestamps:
   per endpoint.
 - **View time**: while you use the dashboard in a browser, the page reports
   how many seconds a screen stayed in the foreground. The stored route keeps
-  the tree name, branch, and hardware id, for example `/tree/mainline/master`
-  and `/hardware/bcm2711-rpi-4-b`. A build, test, boot, issue, or commit id is
-  stored as its route placeholder, for example `/build/$buildId` and
-  `/tree/mainline/master/$hash`. The query string is not included. This is
+  a tree name, branch, and hardware id that already exist, for example
+  `/tree/mainline/master` and `/hardware/bcm2711-rpi-4-b`. An unknown tree,
+  branch, or hardware id is stored as its placeholder, as are a build, test,
+  boot, issue, or commit id, for example `/build/$buildId`,
+  `/tree/$treeName/$branch`, and `/tree/mainline/master/$hash`. The query string is not included. This is
   stored only as an aggregate histogram. It does not include a visit id or
   anything kept in cache.
 
