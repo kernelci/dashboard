@@ -12,6 +12,7 @@ from kernelCI_app.models import (
     HardwareRegistrySiliconVendor,
     HardwareRegistrySync,
 )
+from kernelCI_app.queries.hardware import is_hardware_in_registry
 
 
 def _vendor_yaml(*platform_ids: str) -> str:
@@ -157,3 +158,28 @@ def test_single_file_run_does_not_replace_the_stamp(tmp_path):
     }
     stamp = HardwareRegistrySync.objects.get(pk=1)
     assert stamp.files[0]["name"] == "index.yaml"
+
+
+@pytest.mark.django_db
+def test_registry_membership_matches_id_or_compatible():
+    silicon = HardwareRegistrySiliconVendor.objects.create(
+        id="ti", type="silicon_vendor"
+    )
+    vendor = HardwareRegistryPlatformVendor.objects.create(
+        id="ti", type="platform_vendor"
+    )
+    processor = HardwareRegistryProcessor.objects.create(
+        id="am62p5", type="soc", vendor=silicon
+    )
+    HardwareRegistryPlatform.objects.create(
+        id="am62p-sk",
+        type="evaluation_board",
+        vendor=vendor,
+        processor=processor,
+        compatible=["ti,am62p5-sk", "ti,am62p5"],
+    )
+
+    assert is_hardware_in_registry("am62p-sk")
+    assert is_hardware_in_registry("ti,am62p5-sk")
+    assert is_hardware_in_registry("ti,am62p5")
+    assert not is_hardware_in_registry("ti,am62-sk")
