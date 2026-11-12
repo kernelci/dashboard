@@ -11,6 +11,9 @@ const ALMOST_ONE_SECOND_MS = 999;
 const FIVE_SECONDS_MS = 5_000;
 const EIGHT_SECONDS_MS = 8_000;
 const ELEVEN_SECONDS_MS = 11_000;
+const FIFTEEN_SECONDS_MS = 15_000;
+const ONE_HOUR_MS = 3_600_000;
+const ONE_DAY_MS = 86_400_000;
 
 type VisibleTimeBody = {
   route: string;
@@ -157,14 +160,14 @@ describe('trackVisibleTime', () => {
 
     visibility = 'visible';
     onVisibility();
-    clock = TWENTY_SECONDS_MS + 15_000;
+    clock = TWENTY_SECONDS_MS + FIFTEEN_SECONDS_MS;
     pathname = '/labs';
     onResolved();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(body(1)).toEqual({
       route: '/hardware/board-a',
-      time_ms: 15_000,
+      time_ms: FIFTEEN_SECONDS_MS,
     });
   });
 
@@ -184,11 +187,11 @@ describe('trackVisibleTime', () => {
 
   it('sends a stay longer than 24h as measured', async () => {
     openRoute();
-    clock = 86_400_000 + 3_600_000;
+    clock = ONE_DAY_MS + ONE_HOUR_MS;
     pathname = '/labs';
     onResolved();
     expect(body(0)).toMatchObject({
-      time_ms: 86_400_000 + 3_600_000,
+      time_ms: ONE_DAY_MS + ONE_HOUR_MS,
     });
   });
 
