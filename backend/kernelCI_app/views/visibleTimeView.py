@@ -1,6 +1,7 @@
 import logging
 import threading
 from http import HTTPStatus
+from urllib.parse import unquote
 
 from django.db import DatabaseError, connection
 from drf_spectacular.utils import extend_schema
@@ -59,7 +60,8 @@ MAX_PATH_LENGTH = 2_000
 
 
 def _segments(value: str) -> list[str]:
-    return [segment for segment in value.split("/") if segment]
+    # Split before decoding so a %2F inside a branch stays one segment.
+    return [unquote(segment) for segment in value.split("/") if segment]
 
 
 def _tree_pair_in_checkouts(pair: tuple[str, str]) -> bool:

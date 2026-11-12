@@ -85,6 +85,15 @@ def test_route_label(path, label):
     assert route_label(path) == label
 
 
+def test_encoded_slash_in_a_branch_matches_the_checkout():
+    visibleTimeView._tree_cache.add(("stable", "linux-6.1.y/test"))
+
+    assert (
+        route_label("/tree/stable/linux-6.1.y%2Ftest")
+        == "/tree/stable/linux-6.1.y/test"
+    )
+
+
 def test_long_stay_is_capped_at_one_day():
     before_sum = _sample("dashboard_route_visible_seconds_sum", ROUTE)
     before_count = _sample("dashboard_route_visible_seconds_count", ROUTE)

@@ -3093,7 +3093,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_count[$__range]) and dashboard_route_visible_seconds_count offset $__range ) or ( dashboard_route_visible_seconds_count unless dashboard_route_visible_seconds_count offset $__range ) ))",
+          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_count{job=\"kernelci-backend\"}[$__range]) and dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} offset $__range ) or ( dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} unless dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} offset $__range ) ))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -3105,7 +3105,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.5, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket[$__range]) and dashboard_route_visible_seconds_bucket offset $__range ) or ( dashboard_route_visible_seconds_bucket unless dashboard_route_visible_seconds_bucket offset $__range ) )))",
+          "expr": "histogram_quantile(0.5, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"}[$__range]) and dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} offset $__range ) or ( dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} unless dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} offset $__range ) )))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -3117,7 +3117,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket[$__range]) and dashboard_route_visible_seconds_bucket offset $__range ) or ( dashboard_route_visible_seconds_bucket unless dashboard_route_visible_seconds_bucket offset $__range ) )))",
+          "expr": "histogram_quantile(0.95, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"}[$__range]) and dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} offset $__range ) or ( dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} unless dashboard_route_visible_seconds_bucket{job=\"kernelci-backend\"} offset $__range ) )))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -3129,7 +3129,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_sum[$__range]) and dashboard_route_visible_seconds_sum offset $__range ) or ( dashboard_route_visible_seconds_sum unless dashboard_route_visible_seconds_sum offset $__range ) )) / sum by (route) (( ( increase(dashboard_route_visible_seconds_count[$__range]) and dashboard_route_visible_seconds_count offset $__range ) or ( dashboard_route_visible_seconds_count unless dashboard_route_visible_seconds_count offset $__range ) ))",
+          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_sum{job=\"kernelci-backend\"}[$__range]) and dashboard_route_visible_seconds_sum{job=\"kernelci-backend\"} offset $__range ) or ( dashboard_route_visible_seconds_sum{job=\"kernelci-backend\"} unless dashboard_route_visible_seconds_sum{job=\"kernelci-backend\"} offset $__range ) )) / sum by (route) (( ( increase(dashboard_route_visible_seconds_count{job=\"kernelci-backend\"}[$__range]) and dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} offset $__range ) or ( dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} unless dashboard_route_visible_seconds_count{job=\"kernelci-backend\"} offset $__range ) ))",
           "format": "table",
           "instant": true,
           "legendFormat": "",
