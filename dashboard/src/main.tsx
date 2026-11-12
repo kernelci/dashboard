@@ -18,6 +18,8 @@ import { LOCALES } from './locales/constants';
 
 import { routeTree } from './routeTree.gen';
 
+import { trackVisibleTime } from './utils/visibleTime';
+
 import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
@@ -85,6 +87,13 @@ const router = createRouter({
   parseSearch: parseSearch,
   stringifySearch: stringifySearch,
 });
+
+if (import.meta.env.VITE_API_BASE_URL) {
+  trackVisibleTime(
+    router,
+    `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')}/api/analytics/visible/`,
+  );
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
