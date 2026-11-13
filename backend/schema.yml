@@ -4469,12 +4469,6 @@ components:
           - type: 'null'
           default: null
           title: Log Url
-        log_excerpt:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Log Excerpt
       required:
       - tree_name
       - git_branch
@@ -4875,19 +4869,6 @@ components:
           - type: 'null'
           default: null
           title: Log Url
-        log_excerpt:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Log Excerpt
-        environment_misc:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          default: null
-          title: Environment Misc
       required:
       - id
       - status
