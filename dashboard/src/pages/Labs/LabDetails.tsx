@@ -500,15 +500,19 @@ const StatusPane = ({
 
 const LabDetails = (): JSX.Element => {
   const { labName } = useParams({ from: '/_main/labs/$labName' });
-  const { origin, intervalInDays, currentPageTab } = useSearch({
+  const { origin, intervalInDays, currentPageTab, treeIndexes } = useSearch({
     from: '/_main/labs/$labName',
   });
   const navigate = useNavigate({ from: '/labs/$labName' });
   const { formatMessage } = useIntl();
   const details = useLabDetails(labName);
   const trees = details.data?.trees ?? [];
-  const [selectedKeys, setSelectedKeys] = useState<string[] | null>(null);
-  const selection = selectedKeys ?? trees.map(tree => tree.key);
+  const treeKeys = trees.map(tree => tree.key);
+  const knownKeys = new Set(treeKeys);
+  const selection =
+    treeIndexes === null
+      ? treeKeys
+      : treeIndexes.filter(key => knownKeys.has(key));
   const selectedTrees = trees.filter(tree => selection.includes(tree.key));
   const summary = sumLabTrees(selectedTrees);
   const allSelected = trees.length > 0 && selection.length === trees.length;
@@ -519,12 +523,6 @@ const LabDetails = (): JSX.Element => {
   const tests = useLabTests(labName, treeFilter, rowsEnabled);
   const [loadAttention, setLoadAttention] = useState(false);
   const attention = useLabAttention(labName, loadAttention);
-  const treeKeyList = trees.map(tree => tree.key).join('\n');
-
-  useEffect(() => {
-    setSelectedKeys(null);
-  }, [labName, treeKeyList]);
-
   useEffect(() => {
     setLoadAttention(trees.length > 0);
   }, [trees.length]);
@@ -542,6 +540,19 @@ const LabDetails = (): JSX.Element => {
     [navigate],
   );
 
+  const writeSelection = useCallback(
+    (keys: string[]) => {
+      navigate({
+        search: previous => ({
+          ...previous,
+          treeIndexes: checkedTreeParams(trees.length, keys) ?? null,
+        }),
+        state: s => s,
+      });
+    },
+    [navigate, trees.length],
+  );
+
   const toggleTree = (key: string): void => {
     const next = new Set(selection);
     if (next.has(key)) {
@@ -549,7 +560,7 @@ const LabDetails = (): JSX.Element => {
     } else {
       next.add(key);
     }
-    setSelectedKeys([...next]);
+    writeSelection([...next]);
   };
 
   const showEmpty = details.isSuccess && trees.length === 0;
@@ -608,9 +619,7 @@ const LabDetails = (): JSX.Element => {
               trees={trees}
               selection={selection}
               allSelected={allSelected}
-              onToggleAll={() =>
-                setSelectedKeys(allSelected ? [] : trees.map(tree => tree.key))
-              }
+              onToggleAll={() => writeSelection(allSelected ? [] : treeKeys)}
               onToggleTree={toggleTree}
             />
             {selectedTrees.length === 0 ? (
