@@ -92,36 +92,49 @@ FROM counted c
 LEFT JOIN platform_compatibles pc USING (checkout_id, platform)
 """
 
-# Builds have no platform; attach them to every platform they tested, but DISTINCT so
-# a build is not counted once per test (or per test lab).
+# Builds have no platform. Each build is stored for its test origin and once
+# more as test_origin '', so the unfiltered listing counts it one time.
 INSERT_BUILDS = f"""
 INSERT INTO hardware_daily_builds (
-    checkout_day, checkout_id, checkout_origin, build_origin, build_lab, platform,
-    compatibles, build_pass, build_failed, build_inc
+    checkout_day, checkout_id, checkout_origin, test_origin, build_origin, build_lab,
+    platform, compatibles, build_pass, build_failed, build_inc
 )
-WITH day_builds AS (
-    SELECT DISTINCT checkout_id, checkout_origin, build_id, build_origin, build_lab,
-                    platform, build_result
+WITH tested_builds AS (
+    SELECT DISTINCT checkout_id, checkout_origin, origin, build_id, build_origin,
+                    build_lab, platform, build_result
     FROM day_tests
     WHERE build_id NOT LIKE '{MAESTRO_DUMMY_BUILD_PREFIX}%%'
+),
+rows AS (
+    SELECT checkout_id, checkout_origin, origin AS test_origin, build_id,
+           build_origin, build_lab, platform, build_result
+    FROM tested_builds
+    WHERE origin IS NOT NULL AND origin <> ''
+    UNION ALL
+    SELECT DISTINCT checkout_id, checkout_origin, '', build_id,
+           build_origin, build_lab, platform, build_result
+    FROM tested_builds
 ),
 counted AS (
     SELECT
         checkout_id,
         checkout_origin,
+        test_origin,
         build_origin,
         build_lab,
         platform,
         count(*) FILTER (WHERE build_result = 'pass') AS build_pass,
         count(*) FILTER (WHERE build_result = 'failed') AS build_failed,
         count(*) FILTER (WHERE build_result = 'inc') AS build_inc
-    FROM day_builds
-    GROUP BY checkout_id, checkout_origin, build_origin, build_lab, platform
+    FROM rows
+    GROUP BY checkout_id, checkout_origin, test_origin, build_origin, build_lab,
+             platform
 )
 SELECT
     %(day)s,
     c.checkout_id,
     c.checkout_origin,
+    c.test_origin,
     c.build_origin,
     c.build_lab,
     c.platform,

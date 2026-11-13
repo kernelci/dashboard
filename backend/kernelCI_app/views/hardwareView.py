@@ -9,6 +9,9 @@ from rest_framework.views import APIView
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.hardware import get_hardware_listing_data
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    hardware_registry_filter_from_request,
+)
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareListingItem,
     HardwareListingResponse,
@@ -42,6 +45,7 @@ class HardwareView(APIView):
             build_lab=query_params.build_lab,
             test_lab=query_params.test_lab,
             commits_list=query_params.commits_list,
+            registry_filter=hardware_registry_filter_from_request(request.GET),
         )
 
         try:
