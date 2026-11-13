@@ -4,6 +4,7 @@ from typing import Any, Literal
 from django.conf import settings
 
 import requests
+from kernelCI_app.helpers import http
 from kernelCI_app.helpers.logger import log_message
 
 MONITORING_ID_PARAM_HELP_TEXT = (
@@ -37,7 +38,7 @@ def _ping_healthcheck(*, monitoring_id: str, status: PingStatus) -> None:
         return
 
     try:
-        response = requests.get(monitoring_url, timeout=10)
+        response = http.get(monitoring_url, timeout=10)
         response.raise_for_status()
         log_message(
             "Success at pinging healthcheck '%s' with monitoring_id '%s'"
