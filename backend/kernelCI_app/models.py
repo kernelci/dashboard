@@ -177,7 +177,6 @@ class Commits(models.Model):
         related_name="committed_commits",
     )
     committer_date = models.DateTimeField(blank=True, null=True)
-    fetched_from_url = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "commits"
