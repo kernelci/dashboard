@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("kernelCI_app", "0025_merge_20261023_1833"),
+        ("kernelCI_app", "0027_hardware_daily_builds_test_origin"),
     ]
 
     operations = [
