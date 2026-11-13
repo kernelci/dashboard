@@ -20,6 +20,7 @@ from kernelCI_app.helpers.regzbot import record_regzbot_message
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
+    addressed_to_regressions,
     is_regzbot_issue,
     is_regzbot_tree,
     resolve_regression_recipients,
@@ -441,7 +442,11 @@ def generate_issue_report(
         message_id=message_id,
     )
 
-    if msg_id and report["is_regzbot_issue"] and email_args.add_mailing_lists:
+    if (
+        msg_id
+        and report["is_regzbot_issue"]
+        and addressed_to_regressions(email_args.delivered_to, email_args.delivered_cc)
+    ):
         record_regzbot_message(issue_id=issue_id, message_id=msg_id)
 
     if msg_id and email_args.update:
