@@ -354,3 +354,47 @@ def test_reports_use_shared_defaults(tmp_path, monkeypatch, regression_report):
     assert send.call_args.args[5] == (
         "regressions@example.org" if regression_report else ""
     )
+
+
+def test_private_send_then_public_records_the_public_message_id():
+    issue, incidents = make_build_issue()
+    issue.update(
+        version=1,
+        _timestamp=datetime(2026, 10, 22, tzinfo=timezone.utc),
+        build_id="build-1",
+        test_id=None,
+    )
+    email_args = SimpleNamespace(
+        add_mailing_lists=False,
+        ignore_recipients=True,
+        update=False,
+    )
+    stored = {}
+
+    def get_or_create(*, issue_id, defaults):
+        stored.setdefault(issue_id, defaults["message_id"])
+        return None, True
+
+    def send(**kwargs):
+        return kwargs["message_id"]
+
+    with (
+        patch(f"{MODULE}.kcidb_issue_details", return_value=[issue]),
+        patch(f"{MODULE}.kcidb_build_incidents", return_value=incidents),
+        patch(f"{MODULE}.kcidb_last_build_without_issue", return_value=[]),
+        patch(
+            f"{MODULE}.make_msgid",
+            side_effect=["<private@kernelci.org>", "<public@kernelci.org>"],
+        ),
+        patch(f"{MODULE}.send_email_report", side_effect=send),
+        patch(
+            "kernelCI_app.helpers.regzbot.RegzbotMessage.objects.get_or_create",
+            side_effect=get_or_create,
+        ),
+    ):
+        generate_issue_report(service=None, issue_id=issue["id"], email_args=email_args)
+        assert stored == {}
+        email_args.add_mailing_lists = True
+        generate_issue_report(service=None, issue_id=issue["id"], email_args=email_args)
+
+    assert stored == {issue["id"]: "public@kernelci.org"}
