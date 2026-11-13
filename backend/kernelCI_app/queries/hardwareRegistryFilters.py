@@ -14,11 +14,6 @@ _CATALOG_COLUMNS = (
 )
 
 
-def registry_id(platform: str) -> str:
-    """Daily rows store `vendor,board`. The registry stores `board`."""
-    return platform.partition(",")[2] or platform
-
-
 @dataclass(frozen=True)
 class HardwareRegistryFilter:
     architecture: tuple[str, ...] = ()
@@ -61,7 +56,7 @@ def registry_filter_predicate(
 
     Platform ids match the daily rows as they are. The other fields go through
     the registry, so a platform missing from it drops out as soon as one of
-    them is set.
+    them is set. A name in `compatible` counts as that registry row.
     """
     if registry_filter.is_empty():
         return None, {}
@@ -76,15 +71,29 @@ def registry_filter_predicate(
 
     conditions: list[str] = []
     if catalog:
-        conditions.append(f"""
-        COALESCE(NULLIF(split_part({platform_sql}, ',', 2), ''), {platform_sql}) IN (
-            SELECT plat.id
+        catalog_where = " AND ".join(catalog)
+        board_id = (
+            f"COALESCE(NULLIF(split_part({platform_sql}, ',', 2), ''), {platform_sql})"
+        )
+        registry_from = """
             FROM hardware_registry_platforms plat
             INNER JOIN hardware_registry_processors proc
                 ON proc.id = plat.processor_id
-            WHERE {" AND ".join(catalog)}
-        )
-    """)
+        """
+        # Two hashed INs. One EXISTS rescans the registry for every listing name.
+        conditions.append(f"""(
+            {board_id} IN (
+                SELECT plat.id
+                {registry_from}
+                WHERE {catalog_where}
+            )
+            OR {platform_sql} IN (
+                SELECT compat
+                {registry_from}
+                CROSS JOIN LATERAL unnest(plat.compatible) AS compat
+                WHERE {catalog_where}
+            )
+        )""")
     if registry_filter.platform:
         params["platform"] = list(registry_filter.platform)
         conditions.append(f"{platform_sql} = ANY(%(platform)s)")
@@ -111,7 +120,8 @@ def get_hardware_registry_filter_options(platforms: list[str]) -> dict[str, list
             FROM hardware_registry_platforms plat
             INNER JOIN hardware_registry_processors proc
                 ON proc.id = plat.processor_id
-            WHERE plat.id = ANY(%(registry_ids)s)
+            WHERE plat.id = ANY(%(board_ids)s)
+               OR plat.compatible && %(platforms)s::text[]
         )
         SELECT
             ARRAY(
@@ -148,8 +158,16 @@ def get_hardware_registry_filter_options(platforms: list[str]) -> dict[str, list
         "board_type",
     )
     with connection.cursor() as cursor:
+        listed = sorted(set(platforms))
+        # Daily rows store `vendor,board`. The registry stores `board`.
         cursor.execute(
-            query, {"registry_ids": sorted({registry_id(p) for p in platforms})}
+            query,
+            {
+                "board_ids": sorted(
+                    {platform.partition(",")[2] or platform for platform in listed}
+                ),
+                "platforms": listed,
+            },
         )
         row = cursor.fetchone()
     options = {name: list(row[index] or []) for index, name in enumerate(names)}
