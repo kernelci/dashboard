@@ -4496,6 +4496,12 @@ components:
           anyOf:
           - $ref: '#/components/schemas/ProcessedExtraDetailedIssues'
           - type: 'null'
+        regzbot_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Regzbot Url
       required:
       - field_timestamp
       - id

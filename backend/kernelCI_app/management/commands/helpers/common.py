@@ -31,6 +31,14 @@ def is_regzbot_tree(tree_name) -> bool:
     return tree_name in REGZBOT_TREES
 
 
+def is_regzbot_issue(tree_name, incidents) -> bool:
+    return bool(
+        is_regzbot_tree(tree_name)
+        and incidents
+        and incidents[0].get("last_pass_commit")
+    )
+
+
 def setup_jinja_template(template_name: str) -> Template:
     """Gets the template file from management/commands/templates
     independently from where this function was called"""
@@ -108,6 +116,25 @@ def unscoped_regression_recipients(
         entries_by_url = load_regression_files()
     entries = entries_by_url.get(git_url, [])
     return _union_recipients(entry for entry in entries if not entry.scope)
+
+
+def _addresses(value: Optional[str]) -> set[str]:
+    found = set()
+    if not value:
+        return found
+    for part in value.split(","):
+        address = parseaddr(part)[1].lower()
+        if address:
+            found.add(address)
+    return found
+
+
+def addressed_to_regressions(to: Optional[str], cc: Optional[str]) -> bool:
+    defaults = load_recipient_default(
+        os.path.join(settings.BACKEND_DATA_DIR, "notifications")
+    )
+    channel = parseaddr(defaults.regressions)[1].lower()
+    return channel in _addresses(to) | _addresses(cc)
 
 
 def _ask_confirmation():
@@ -189,6 +216,8 @@ def send_email_report(
 
     print(f"sending {subject}.")
 
+    email_args.delivered_to = to
+    email_args.delivered_cc = cc
     return smtp_send_email(
         service,
         sender_email,

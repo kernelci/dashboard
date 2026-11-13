@@ -354,3 +354,109 @@ def test_reports_use_shared_defaults(tmp_path, monkeypatch, regression_report):
     assert send.call_args.args[5] == (
         "regressions@example.org" if regression_report else ""
     )
+
+
+def _qualifying_issue():
+    issue, incidents = make_build_issue()
+    issue.update(
+        version=1,
+        _timestamp=datetime(2026, 10, 22, tzinfo=timezone.utc),
+        build_id="build-1",
+        test_id=None,
+    )
+    return issue, incidents
+
+
+def _write_regressions_default(tmp_path, monkeypatch):
+    directory = tmp_path / "notifications"
+    directory.mkdir()
+    (directory / "default.yaml").write_text(
+        "to: results@example.org\n"
+        "reply_to: reply@example.org\n"
+        "regressions: regressions@lists.linux.dev\n"
+    )
+    monkeypatch.setattr(settings, "BACKEND_DATA_DIR", str(tmp_path))
+
+
+def _send_issue(issue, incidents, email_args, message_ids, stored):
+    sent = []
+
+    def get_or_create(*, issue_id, defaults):
+        stored.setdefault(issue_id, defaults["message_id"])
+        return None, True
+
+    def smtp(*args):
+        sent.append({"to": args[2], "cc": args[5], "message_id": args[8]})
+        return args[8]
+
+    with (
+        patch(f"{MODULE}.kcidb_issue_details", return_value=[issue]),
+        patch(f"{MODULE}.kcidb_build_incidents", return_value=incidents),
+        patch(f"{MODULE}.kcidb_last_build_without_issue", return_value=[]),
+        patch(f"{MODULE}.make_msgid", side_effect=message_ids),
+        patch(
+            "kernelCI_app.management.commands.helpers.common.smtp_send_email",
+            side_effect=smtp,
+        ),
+        patch(
+            "kernelCI_app.helpers.regzbot.RegzbotMessage.objects.get_or_create",
+            side_effect=get_or_create,
+        ),
+    ):
+        for _ in message_ids:
+            generate_issue_report(
+                service=None, issue_id=issue["id"], email_args=email_args
+            )
+    return sent
+
+
+def test_private_send_then_public_records_the_public_message_id(tmp_path, monkeypatch):
+    _write_regressions_default(tmp_path, monkeypatch)
+    issue, incidents = _qualifying_issue()
+    email_args = SimpleNamespace(
+        send=True,
+        add_mailing_lists=False,
+        ignore_recipients=True,
+        cc=None,
+        yes=True,
+        to="reviewer@example.org",
+        in_reply_to=None,
+        update=False,
+    )
+    stored = {}
+    private = _send_issue(
+        issue, incidents, email_args, ["<private@kernelci.org>"], stored
+    )
+    assert private[0]["to"] == "reviewer@example.org"
+    assert private[0]["cc"] == ""
+    assert stored == {}
+
+    email_args.add_mailing_lists = True
+    public = _send_issue(
+        issue, incidents, email_args, ["<public@kernelci.org>"], stored
+    )
+    assert public[0]["to"] == "results@example.org"
+    assert public[0]["cc"] == "regressions@lists.linux.dev"
+    assert stored == {issue["id"]: "public@kernelci.org"}
+
+
+def test_mail_to_the_regressions_list_is_recorded_without_mailing_lists(
+    tmp_path, monkeypatch
+):
+    _write_regressions_default(tmp_path, monkeypatch)
+    issue, incidents = _qualifying_issue()
+    email_args = SimpleNamespace(
+        send=True,
+        add_mailing_lists=False,
+        ignore_recipients=True,
+        cc=None,
+        yes=True,
+        to="Regressions <regressions@lists.linux.dev>",
+        in_reply_to=None,
+        update=False,
+    )
+    stored = {}
+    sent = _send_issue(issue, incidents, email_args, ["<direct@kernelci.org>"], stored)
+
+    assert sent[0]["to"] == "Regressions <regressions@lists.linux.dev>"
+    assert stored == {issue["id"]: "direct@kernelci.org"}
