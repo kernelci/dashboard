@@ -118,6 +118,25 @@ def unscoped_regression_recipients(
     return _union_recipients(entry for entry in entries if not entry.scope)
 
 
+def _addresses(value: Optional[str]) -> set[str]:
+    found = set()
+    if not value:
+        return found
+    for part in value.split(","):
+        address = parseaddr(part)[1].lower()
+        if address:
+            found.add(address)
+    return found
+
+
+def addressed_to_regressions(to: Optional[str], cc: Optional[str]) -> bool:
+    defaults = load_recipient_default(
+        os.path.join(settings.BACKEND_DATA_DIR, "notifications")
+    )
+    channel = parseaddr(defaults.regressions)[1].lower()
+    return channel in _addresses(to) | _addresses(cc)
+
+
 def _ask_confirmation():
     while True:
         choice = input(">> Do you want to send the email? (y/n): ").strip().lower()
@@ -197,6 +216,8 @@ def send_email_report(
 
     print(f"sending {subject}.")
 
+    email_args.delivered_to = to
+    email_args.delivered_cc = cc
     return smtp_send_email(
         service,
         sender_email,
