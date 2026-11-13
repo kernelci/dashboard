@@ -89,7 +89,7 @@ class TestSendDiscordNotification:
     @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
     @patch("kernelCI_app.helpers.discordWebhook.get_notification_cache")
     @patch("kernelCI_app.helpers.discordWebhook.set_notification_cache")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     @patch("kernelCI_app.helpers.discordWebhook.datetime")
     def test_send_discord_notification_with_content_success(
         self,
@@ -160,7 +160,7 @@ class TestSendDiscordNotification:
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
     @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     def test_send_discord_notification_with_embeds(
         self, mock_post, mock_validate, mock_getenv
     ):
@@ -186,7 +186,7 @@ class TestSendDiscordNotification:
     @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
     @patch("kernelCI_app.helpers.discordWebhook.get_notification_cache")
     @patch("kernelCI_app.helpers.discordWebhook.set_notification_cache")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     def test_send_discord_notification_with_custom_avatar_and_name(
         self, mock_post, mock_set_cache, mock_get_cache, mock_validate, mock_getenv
     ):
@@ -212,7 +212,7 @@ class TestSendDiscordNotification:
         assert data["username"] == "Custom Name"
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     def test_send_discord_notification_http_error(
         self,
         mock_post,
@@ -231,7 +231,7 @@ class TestSendDiscordNotification:
         assert "Discord webhook request failed" in caplog.text
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
     def test_send_discord_notification_retries_connection_error(
         self,
@@ -252,7 +252,7 @@ class TestSendDiscordNotification:
         assert "attempt 1/3" in caplog.text
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
     def test_send_discord_notification_stops_retrying_connection_error(
         self,
@@ -274,7 +274,7 @@ class TestSendDiscordNotification:
         assert "Discord webhook request failed" in caplog.text
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
-    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.http.post")
     @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
     def test_send_discord_notification_does_not_retry_timeout(
         self,

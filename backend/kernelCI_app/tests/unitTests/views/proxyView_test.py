@@ -19,7 +19,7 @@ class TestProxyView(SimpleTestCase):
         self.url = "/proxy/"
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_success(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.OK
         mock_requests_get.return_value.content = b"file content"
@@ -48,7 +48,7 @@ class TestProxyView(SimpleTestCase):
         )
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_default_content_type(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.OK
         mock_requests_get.return_value.content = b"content"
@@ -84,7 +84,7 @@ class TestProxyView(SimpleTestCase):
         self.assertEqual(response.data, {"error": ClientStrings.PROXY_INVALID_URL})
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_external_error(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.NOT_FOUND
         mock_requests_get.return_value.reason = "Not Found"
@@ -98,7 +98,7 @@ class TestProxyView(SimpleTestCase):
         self.assertIn(ClientStrings.PROXY_FETCH_FAILED, response.data["error"])
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_request_exception(self, mock_requests_get):
         mock_requests_get.side_effect = requests.RequestException("Connection error")
 
@@ -119,7 +119,7 @@ class TestProxyView(SimpleTestCase):
         self.assertEqual(response.data, {"error": ClientStrings.PROXY_FORBIDDEN_DOMAIN})
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_wildcard_domain_match(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.OK
         mock_requests_get.return_value.content = b"content"
@@ -133,7 +133,7 @@ class TestProxyView(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", MOCK_ALLOWED_DOMAINS)
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_exact_domain_match(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.OK
         mock_requests_get.return_value.content = b"content"
@@ -146,7 +146,7 @@ class TestProxyView(SimpleTestCase):
 
     @patch("kernelCI_app.views.proxyView.ALLOWED_S3_PATHS", MOCK_ALLOWED_S3_PATHS)
     @patch("kernelCI_app.views.proxyView.ALLOWED_DOMAINS", ["s3.amazonaws.com"])
-    @patch("kernelCI_app.views.proxyView.requests.get")
+    @patch("kernelCI_app.views.proxyView.http.get")
     def test_get_proxy_s3_allowed_bucket(self, mock_requests_get):
         mock_requests_get.return_value.status_code = HTTPStatus.OK
         mock_requests_get.return_value.content = b"log content"

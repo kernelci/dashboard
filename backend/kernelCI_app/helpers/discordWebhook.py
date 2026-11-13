@@ -11,6 +11,7 @@ from kernelCI_app.cache import (
     set_notification_cache,
 )
 from kernelCI_app.constants.general import REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
+from kernelCI_app.helpers import http
 from kernelCI_app.helpers.logger import log_message
 
 # For more information on discord webhook structure, visit
@@ -105,7 +106,7 @@ def send_discord_notification(
 
     for attempt in range(1, WEBHOOK_MAX_ATTEMPTS + 1):
         try:
-            result = requests.post(
+            result = http.post(
                 url=url, json=data, timeout=REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
             )
             result.raise_for_status()

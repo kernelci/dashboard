@@ -13,6 +13,7 @@ from django.db import transaction
 from django.utils import timezone
 
 import requests
+from kernelCI_app.helpers import http
 from kernelCI_app.models import (
     HardwareRegistryPlatform,
     HardwareRegistryPlatformVendor,
@@ -112,7 +113,7 @@ class Command(BaseCommand):
 
     def _fetch_url(self, url: str) -> bytes:
         try:
-            response = requests.get(url, timeout=30)
+            response = http.get(url, timeout=30)
             response.raise_for_status()
             return response.content
         except requests.RequestException as exc:
