@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional, TypedDict
 
 from django.db import connection, connections
+from django.db.models import Q
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.hardwareDetails import make_tree_key
@@ -1591,4 +1592,6 @@ def get_hardware_commit_history(
 
 
 def is_hardware_in_registry(hardware_id: str) -> bool:
-    return HardwareRegistryPlatform.objects.filter(pk=hardware_id).exists()
+    return HardwareRegistryPlatform.objects.filter(
+        Q(pk=hardware_id) | Q(compatible__contains=[hardware_id])
+    ).exists()
