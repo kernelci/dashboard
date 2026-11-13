@@ -441,7 +441,7 @@ def generate_issue_report(
         message_id=message_id,
     )
 
-    if msg_id and report["is_regzbot_issue"]:
+    if msg_id and report["is_regzbot_issue"] and email_args.add_mailing_lists:
         record_regzbot_message(issue_id=issue_id, message_id=msg_id)
 
     if msg_id and email_args.update:
