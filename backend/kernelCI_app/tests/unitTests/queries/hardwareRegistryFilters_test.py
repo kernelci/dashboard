@@ -31,7 +31,13 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         )
 
         self.assertIn("proc.architecture = ANY(%(architecture)s)", predicate)
-        self.assertIn("split_part(daily.platform, ',', 2)", predicate)
+        self.assertIn(
+            "COALESCE(NULLIF(split_part(daily.platform, ',', 2), ''), daily.platform) IN (",
+            predicate,
+        )
+        self.assertIn("daily.platform IN (", predicate)
+        self.assertIn("unnest(plat.compatible)", predicate)
+        self.assertNotIn("EXISTS", predicate)
         self.assertEqual(params["architecture"], ["arm64", "arm"])
 
     def test_platform_id_includes_unregistered_platforms(self):
@@ -64,8 +70,15 @@ class TestRegistryFilterPredicate(SimpleTestCase):
         options = get_hardware_registry_filter_options(["ti,am62-sk", "qemu", "qemu"])
 
         query, params = cursor.execute.call_args[0]
-        self.assertIn("plat.id = ANY(%(registry_ids)s)", query)
-        self.assertEqual(params, {"registry_ids": ["am62-sk", "qemu"]})
+        self.assertIn("plat.id = ANY(%(board_ids)s)", query)
+        self.assertIn("plat.compatible && %(platforms)s::text[]", query)
+        self.assertEqual(
+            params,
+            {
+                "board_ids": ["am62-sk", "qemu"],
+                "platforms": ["qemu", "ti,am62-sk"],
+            },
+        )
         self.assertEqual(options["architecture"], ["arm64"])
         self.assertEqual(options["board_type"], ["sbc"])
         self.assertEqual(options["platform"], ["qemu", "ti,am62-sk"])
