@@ -187,13 +187,16 @@ To run said cron jobs locally, execute
 You don't need to run the backend or server for those cron jobs to work, they will be run in your machine.
 You can also use other args such as `show` to show the cron jobs and `remove` to remove them.
 
-These cron jobs will also be automatically executed from the backend container if you are running with docker.
-You can check that the cron jobs are listed inside the docker container with
-```docker exec -it dashboard-backend-1 crontab -l```
-or
-```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
+Docker runs these jobs in the `cron` service, not in the API container. See [Cron jobs](../DEPLOYMENT.md#cron-jobs).
 
-If you are a developer and want to skip the cron job setup while you're testing, you can also export `SKIP_CRONJOBS=True` to skip cron jobs entirely.
+```bash
+docker compose exec cron crontab -l
+docker compose exec cron poetry run ./manage.py crontab show
+```
+
+For the contributor stack, add `-f docker-compose.dev.yml`.
+
+Set `SKIP_CRONJOBS=True` in `.env` to leave that crontab empty. The API service always sets `SKIP_CRONJOBS=true` itself.
 
 
 ## Deploy instructions

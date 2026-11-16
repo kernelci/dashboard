@@ -109,6 +109,8 @@ If you introduce a syntax error, Vite surfaces it in the browser overlay and in 
 
 The backend container runs migrations automatically on startup through `backend/utils/docker/backend_entrypoint.sh`. That entrypoint calls `backend/migrate-app-db.sh` for the default PostgreSQL database and `backend/migrate-cache-db.sh` for the SQLite cache / notifications databases.
 
+The `cron` service uses the same image and entrypoint, with `SKIP_DB_SETUP=true`, so it does not run those scripts. It registers `CRONJOBS` and runs `crond` in the foreground. The API container sets `SKIP_CRONJOBS=true` and does not start `crond`. Job output is in `docker compose -f docker-compose.dev.yml logs cron`.
+
 For staging and production, coordinate schema changes (especially migrations that add
 new tables) before deploy; see [Database schema changes](../DEPLOYMENT.md#database-schema-changes)
 in the deployment guide.

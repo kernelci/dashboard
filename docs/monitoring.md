@@ -103,7 +103,7 @@ The monitoring system supports multi-worker Gunicorn deployments using Prometheu
 
 ### Cronjob Healthchecks
 
-The backend can ping healthcheck.io for cronjobs that run Django management commands.
+Scheduled jobs run in the `cron` container. Their output is in `docker compose logs cron`. Those jobs ping healthcheck.io when they run a Django management command.
 
 - The public base URL is defined in code as `HEALTHCHECK_BASE_URL`.
 - Private monitor tokens stay in environment variables and are mapped in Django settings.
