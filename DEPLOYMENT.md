@@ -23,6 +23,7 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 - [Profile Reference](#profile-reference)
 - [Docker Secrets Support](#docker-secrets-support)
 - [Database schema changes](#database-schema-changes)
+- [Cron jobs](#cron-jobs)
 - [Ingester deployment](#ingester-deployment)
 - [Migration Guide](#migration-guide-legacy)
 - [Related Documentation](#related-documentation)
@@ -83,7 +84,7 @@ you must request permissions for the SSH connection and database user.
 
 ## Database schema changes
 
-The backend Docker entrypoint runs Django migrations on startup. Staging and production
+The backend Docker entrypoint runs Django migrations on startup. The `cron` service does not. Staging and production
 use the same PostgreSQL database, so schema changes affect both environments once deployed.
 
 > [!WARNING]
@@ -93,6 +94,28 @@ use the same PostgreSQL database, so schema changes affect both environments onc
 > Migrations that **create a new table** must be called out explicitly there and
 > **Denys Fedoryshchenko** must be notified. New tables need **manual grants** for
 > database permissions; migrations do not apply those grants.
+
+## Cron jobs
+
+Scheduled jobs run in the `cron` service, using the same backend image as the API. The API service sets `SKIP_CRONJOBS=true`, so it does not register a crontab and does not start `crond`.
+
+The cron service sets `SKIP_DB_SETUP=true`. It does not run `setup-dashboard-db.sh` or either migration script. Compose starts it after the backend health check passes. The entrypoint registers the existing `CRONJOBS` list, then `crond -f` stays in the foreground. Job output is that process's stdout.
+
+```bash
+docker compose -f docker-compose-next.yml logs cron
+docker compose -f docker-compose.yml logs cron
+docker compose -f docker-compose.dev.yml logs cron
+```
+
+Staging (`docker-compose.yml`) and production (`docker-compose-next.yml`) give `cron` its own `mem_limit: 3g` and `restart: always`. An OOM kill in `cron` does not stop the API container.
+
+`SKIP_CRONJOBS=True` in `.env` leaves the cron container's crontab empty. The schedules stay in `CRONJOBS` in `backend/kernelCI/settings.py`. The management commands still send the healthcheck.io pings.
+
+Recreate `cron` together with `backend` when the backend image changes, so the scheduler runs that image.
+
+```bash
+docker compose -f docker-compose-next.yml up -d backend cron
+```
 
 ## 1. Development
 
@@ -354,7 +377,7 @@ sh .github/scripts/deploy_collect_compose_status.sh docker-compose-next.yml
 
 | Command | Services |
 |---------|----------|
-| `docker compose -f docker-compose-next.yml up -d` | redis, backend, dashboard, proxy |
+| `docker compose -f docker-compose-next.yml up -d` | redis, backend, cron, dashboard, proxy |
 | `... --profile=local-db up -d` | + dashboard_db |
 | `... --profile=with_commands up -d` | + ingester, pending_aggregations_processor |
 | `... --profile=local-db --profile=with_commands up -d` | All services |
