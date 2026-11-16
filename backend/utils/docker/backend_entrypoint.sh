@@ -26,6 +26,13 @@ function file_env() {
   export "$var"="$val"
 }
 
+# True only for the string "true", matching is_boolean_or_string_true.
+function is_true() {
+  local val
+  val=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+  [ "$val" = "true" ]
+}
+
 file_env DB_PASSWORD
 
 # Initialize Prometheus metrics before Django starts
@@ -44,25 +51,25 @@ if [ "$PROMETHEUS_METRICS_ENABLED" = "true" ]; then
     python3 utils/prometheus_aggregator.py &
 fi
 
-chmod +x ./setup-dashboard-db.sh
-./setup-dashboard-db.sh
-
-
-# Assure that the sqlite folder exists and export the variable for crond
+# Assure that the sqlite folder exists and export the variable for crond.
 export BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR:-/volume_data}
 mkdir -p "$BACKEND_VOLUME_DIR"
 
-# Update the sqlite cache db
-chmod +x ./migrate-cache-db.sh
-./migrate-cache-db.sh
+# The cron service sets SKIP_DB_SETUP so it does not migrate alongside the API.
+if ! is_true "$SKIP_DB_SETUP"; then
+    chmod +x ./setup-dashboard-db.sh
+    ./setup-dashboard-db.sh
 
-# Update the MAIN db
-chmod +x ./migrate-app-db.sh
-./migrate-app-db.sh
+    chmod +x ./migrate-cache-db.sh
+    ./migrate-cache-db.sh
 
-# Add and start cronjobs in background and emit logs to container stdout.
-poetry run ./manage.py crontab add
-crond -b -L /proc/1/fd/1
+    chmod +x ./migrate-app-db.sh
+    ./migrate-app-db.sh
+fi
 
+# The API service sets SKIP_CRONJOBS. crond itself is the cron service command.
+if ! is_true "$SKIP_CRONJOBS"; then
+    poetry run ./manage.py crontab add
+fi
 
 exec "$@"
