@@ -56,7 +56,7 @@ class TestGetLabListingData:
         cached = [("lava", 1, 0, 0, 0, 0, 0, 0, 0, 0)]
         mock_get_cache.return_value = cached
 
-        result = get_lab_listing_data(origin="maestro", interval_in_days=5)
+        result = get_lab_listing_data(interval_in_days=5)
 
         assert result == cached
         mock_connection.cursor.assert_not_called()
@@ -72,11 +72,14 @@ class TestGetLabListingData:
         mock_cursor = setup_mock_cursor(mock_connection)
         mock_cursor.fetchall.return_value = rows
 
-        result = get_lab_listing_data(origin="maestro", interval_in_days=5)
+        result = get_lab_listing_data(interval_in_days=5)
 
         assert result == rows
+        executed_query, executed_params = mock_cursor.execute.call_args[0]
+        assert "origin" not in executed_query
+        assert executed_params == {"interval_in_days": 5}
         mock_set_cache.assert_called_once_with(
             key="labListing",
-            params={"origin": "maestro", "interval_in_days": 5},
+            params={"interval_in_days": 5},
             rows=rows,
         )

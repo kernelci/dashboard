@@ -25,17 +25,17 @@ STATUS_FIELDS = ["PASS", "FAIL", "INCONCLUSIVE"]
     "query, status_code, has_error_body",
     [
         (
-            {"origin": "maestro", "interval_in_days": "7"},
+            {"interval_in_days": "7"},
             HTTPStatus.OK,
             False,
         ),
         (
             {"origin": "invalid", "interval_in_days": "7"},
             HTTPStatus.OK,
-            True,
+            False,
         ),
         (
-            {"origin": "maestro", "interval_in_days": "-1"},
+            {"interval_in_days": "-1"},
             HTTPStatus.BAD_REQUEST,
             True,
         ),

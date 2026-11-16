@@ -25,11 +25,10 @@ def get_lab_origins(*, interval_in_days: int) -> list[str]:
 
 def get_lab_listing_data(
     *,
-    origin: str,
     interval_in_days: int,
 ) -> list[tuple]:
     cache_key = "labListing"
-    params = {"origin": origin, "interval_in_days": interval_in_days}
+    params = {"interval_in_days": interval_in_days}
 
     rows = get_query_cache(cache_key, params)
     if rows is not None:
@@ -49,8 +48,7 @@ def get_lab_listing_data(
             COALESCE(SUM(d.test_inc), 0) AS test_inc
         FROM lab_daily d
         JOIN labs bl ON d.lab_id = bl.id
-        WHERE d.origin = %(origin)s
-          AND d.day >= CURRENT_DATE - %(interval_in_days)s
+        WHERE d.day >= CURRENT_DATE - %(interval_in_days)s
         GROUP BY bl.name
         ORDER BY bl.name
     """

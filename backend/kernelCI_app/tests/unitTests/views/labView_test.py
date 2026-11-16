@@ -22,7 +22,7 @@ class TestLabView(SimpleTestCase):
 
         query_params = {
             "interval_in_days": "7",
-            "origin": "maestro",
+            "origin": "not-maestro",
         }
 
         request = self.factory.get(self.url, query_params)
@@ -30,7 +30,6 @@ class TestLabView(SimpleTestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         mock_get_lab_listing_data.assert_called_once_with(
-            origin="maestro",
             interval_in_days=7,
         )
         self.assertEqual(
@@ -62,7 +61,7 @@ class TestLabView(SimpleTestCase):
     def test_get_lab_listing_invalid_query_params_returns_bad_request(self):
         request = self.factory.get(
             self.url,
-            {"origin": "maestro", "interval_in_days": "-1"},
+            {"interval_in_days": "-1"},
         )
         response = self.view.get(request)
 
@@ -77,7 +76,7 @@ class TestLabView(SimpleTestCase):
 
         query_params = {
             "interval_in_days": "7",
-            "origin": "maestro",
+            "origin": "not-maestro",
         }
 
         request = self.factory.get(self.url, query_params)
@@ -85,6 +84,7 @@ class TestLabView(SimpleTestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.data, {"error": ClientStrings.NO_LABS_FOUND})
+        mock_get_lab_listing_data.assert_called_once_with(interval_in_days=7)
 
     @patch("kernelCI_app.views.labView.get_lab_listing_data")
     def test_get_lab_listing_sanitize_validation_error_returns_internal_server_error(
@@ -96,7 +96,6 @@ class TestLabView(SimpleTestCase):
 
         query_params = {
             "interval_in_days": "7",
-            "origin": "maestro",
         }
 
         request = self.factory.get(self.url, query_params)
