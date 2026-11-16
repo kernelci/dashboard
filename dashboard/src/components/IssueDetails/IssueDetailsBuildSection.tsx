@@ -6,7 +6,7 @@ import { useIntl } from 'react-intl';
 
 import { useMemo, type JSX } from 'react';
 
-import { Separator } from '@/components/ui/separator';
+import Section from '@/components/Section/Section';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type {
   AccordionItemBuilds,
@@ -35,6 +35,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
     accessorKey: 'treeBranch',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.treeBranch" />
+    ),
+    cell: ({ row }): JSX.Element => (
+      <span className="text-nowrap">{row.getValue('treeBranch')}</span>
     ),
   },
   ...defaultBuildColumns,
@@ -65,30 +68,29 @@ export const IssueDetailsBuildSection = ({
     return <></>;
   }
 
+  const body = data ? (
+    <div className="flex flex-col gap-6">
+      <BuildsTable
+        tableKey="issueDetailsBuilds"
+        buildItems={buildData}
+        filter={buildTableFilter}
+        getRowLink={getTableRowLink}
+        onToggleFilter={onToggleFilter}
+        columns={columns}
+        sortKey="buildsTable"
+      />
+    </div>
+  ) : (
+    <MemoizedSectionError
+      isLoading={isLoading}
+      emptyLabel="issueDetails.noBuildResults"
+    />
+  );
+
   return (
-    <>
-      <h2 className="text-2xl font-bold">
-        {formatMessage({ id: 'global.builds' })}
-      </h2>
-      <Separator className="bg-dark-gray my-6" />
-      {data ? (
-        <div className="flex flex-col gap-6">
-          <BuildsTable
-            tableKey="issueDetailsBuilds"
-            buildItems={buildData}
-            filter={buildTableFilter}
-            getRowLink={getTableRowLink}
-            onToggleFilter={onToggleFilter}
-            columns={columns}
-            sortKey="buildsTable"
-          />
-        </div>
-      ) : (
-        <MemoizedSectionError
-          isLoading={isLoading}
-          emptyLabel="issueDetails.noBuildResults"
-        />
-      )}
-    </>
+    <Section
+      title={formatMessage({ id: 'global.builds' })}
+      subsections={[{ infos: [{ children: body }] }]}
+    />
   );
 };

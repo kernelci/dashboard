@@ -8,7 +8,13 @@ import { memo, useMemo } from 'react';
 
 import { cn } from '@/lib/utils';
 
+import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +33,7 @@ type TCodeBlockProps = {
   className?: string;
   variant?: CodeBlockVariant;
   highlightsClassnames?: string;
+  compact?: boolean;
 };
 
 interface IHighlightedCode {
@@ -220,6 +227,7 @@ const CodeBlock = ({
   highlightsClassnames,
   variant = 'default',
   className,
+  compact = false,
 }: TCodeBlockProps): JSX.Element => {
   const disableHighlight = code.length >= MAX_HIGHLIGHT_CODE_LENGTH;
 
@@ -241,60 +249,75 @@ const CodeBlock = ({
       />
     ) : undefined;
 
-  return (
+  const excerpt = (
     <>
-      <div className="min-h-[300px] w-full">
-        <div className="pl-3">
-          {variant === 'log-viewer' && (
-            <h3 className="py-1 text-2xl font-bold">
-              <FormattedMessage
-                id="global.fullLogs"
-                defaultMessage="Log Excerpt"
-              />
-            </h3>
-          )}
-          {variant === 'default' && (
-            <h3 className="py-4 font-bold">
-              <FormattedMessage
-                id="global.logExcerpt"
-                defaultMessage="Log Excerpt"
-              />
-            </h3>
-          )}
-        </div>
+      {disableHighlight && (
+        <span className="text-gray-500">
+          <FormattedMessage id="logViewer.disabledHighlight" />
+        </span>
+      )}
+      {variant !== 'log-viewer' && (
+        <CodeBlockDialog>
+          <MemoizedCode
+            className="max-h-[100%]"
+            parsedCode={
+              typeof parsedCode === 'string'
+                ? parsedCode
+                : parsedCode.highlightedCode
+            }
+            statsElement={statsElement}
+            variant={variant}
+          />
+        </CodeBlockDialog>
+      )}
 
-        {disableHighlight && (
-          <span className="text-gray-500">
-            <FormattedMessage id="logViewer.disabledHighlight" />
-          </span>
-        )}
-        {variant !== 'log-viewer' && (
-          <CodeBlockDialog>
-            <MemoizedCode
-              className="max-h-[100%]"
-              parsedCode={
-                typeof parsedCode === 'string'
-                  ? parsedCode
-                  : parsedCode.highlightedCode
-              }
-              statsElement={statsElement}
-              variant={variant}
-            />
-          </CodeBlockDialog>
-        )}
-
-        <MemoizedCode
-          variant={variant}
-          parsedCode={
-            typeof parsedCode === 'string'
-              ? parsedCode
-              : parsedCode.highlightedCode
-          }
-          statsElement={statsElement}
-          className={className}
-        />
-      </div>
+      <MemoizedCode
+        variant={variant}
+        parsedCode={
+          typeof parsedCode === 'string'
+            ? parsedCode
+            : parsedCode.highlightedCode
+        }
+        statsElement={statsElement}
+        className={className}
+      />
     </>
+  );
+
+  if (compact) {
+    return (
+      <Collapsible className="group">
+        <CollapsibleTrigger className="flex items-center gap-2 py-1 text-left text-sm font-bold">
+          <ChevronRightAnimate className="shrink-0" />
+          <FormattedMessage id="global.logExcerpt" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-1">{excerpt}</CollapsibleContent>
+      </Collapsible>
+    );
+  }
+
+  return (
+    <div className="min-h-[300px] w-full">
+      <div className="pl-3">
+        {variant === 'log-viewer' && (
+          <h3 className="py-1 text-2xl font-bold">
+            <FormattedMessage
+              id="global.fullLogs"
+              defaultMessage="Log Excerpt"
+            />
+          </h3>
+        )}
+        {variant === 'default' && (
+          <h3 className="py-4 font-bold">
+            <FormattedMessage
+              id="global.logExcerpt"
+              defaultMessage="Log Excerpt"
+            />
+          </h3>
+        )}
+      </div>
+      {excerpt}
+    </div>
   );
 };
 

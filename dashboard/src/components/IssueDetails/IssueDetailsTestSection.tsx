@@ -12,7 +12,7 @@ import { TestsTable } from '@/components/TestsTable/TestsTable';
 import { defaultInnerColumns } from '@/components/TestsTable/DefaultTestsColumns';
 import { TableHeader } from '@/components/Table/TableHeader';
 
-import { Separator } from '@/components/ui/separator';
+import Section from '@/components/Section/Section';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
@@ -32,6 +32,9 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
     accessorKey: 'treeBranch',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.treeBranch" />
+    ),
+    cell: ({ row }): JSX.Element => (
+      <span className="text-nowrap">{row.getValue('treeBranch')}</span>
     ),
   },
   ...defaultInnerColumns.slice(1),
@@ -54,30 +57,29 @@ export const IssueDetailsTestSection = ({
     return <></>;
   }
 
+  const body = data ? (
+    <div className="flex flex-col gap-6">
+      <TestsTable
+        tableKey="issueDetailsTests"
+        testHistory={data}
+        onToggleFilter={onToggleFilter}
+        filter={testTableFilter}
+        getRowLink={getTableRowLink}
+        innerColumns={innerColumns}
+        sortKey="testsTable"
+      />
+    </div>
+  ) : (
+    <MemoizedSectionError
+      isLoading={isLoading}
+      emptyLabel="issueDetails.noTestResults"
+    />
+  );
+
   return (
-    <>
-      <h2 className="text-2xl font-bold">
-        {formatMessage({ id: 'global.tests' })}
-      </h2>
-      <Separator className="bg-dark-gray my-6" />
-      {data ? (
-        <div className="flex flex-col gap-6">
-          <TestsTable
-            tableKey="issueDetailsTests"
-            testHistory={data}
-            onToggleFilter={onToggleFilter}
-            filter={testTableFilter}
-            getRowLink={getTableRowLink}
-            innerColumns={innerColumns}
-            sortKey="testsTable"
-          />
-        </div>
-      ) : (
-        <MemoizedSectionError
-          isLoading={isLoading}
-          emptyLabel="issueDetails.noTestResults"
-        />
-      )}
-    </>
+    <Section
+      title={formatMessage({ id: 'global.tests' })}
+      subsections={[{ infos: [{ children: body }] }]}
+    />
   );
 };

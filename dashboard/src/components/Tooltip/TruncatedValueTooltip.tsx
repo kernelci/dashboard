@@ -23,7 +23,7 @@ export const TruncatedValueTooltip = ({
     <Tooltip>
       <TooltipTrigger
         className={cn(
-          '',
+          'w-fit max-w-full text-left',
           isClickable || isUrl ? 'cursor-pointer' : 'cursor-default',
         )}
       >

@@ -12,6 +12,7 @@ export const TreeDetailsLink = ({
   gitUrl,
   commitName,
   showFullLabel = false,
+  className,
 }: {
   treeName?: string;
   gitBranch?: string;
@@ -19,6 +20,7 @@ export const TreeDetailsLink = ({
   gitUrl?: string;
   commitName?: string;
   showFullLabel?: boolean;
+  className?: string;
 }): JSX.Element => {
   const linkText = showFullLabel
     ? `${valueOrEmpty(treeName)} / ${valueOrEmpty(gitBranch)} / ${truncateBigText(commitHash)}`
@@ -41,8 +43,9 @@ export const TreeDetailsLink = ({
         search={s => ({
           origin: s.origin,
         })}
+        className={className}
       >
-        {linkText}
+        <span className="min-w-0 break-all">{linkText}</span>
         {linkIcon}
       </MemoizedLinkItem>
     );
@@ -50,6 +53,7 @@ export const TreeDetailsLink = ({
 
   return (
     <MemoizedLinkItem
+      className={className}
       to="/tree/$treeId"
       params={{ treeId: commitHash }}
       state={s => s}
@@ -64,7 +68,7 @@ export const TreeDetailsLink = ({
         },
       })}
     >
-      {linkText}
+      <span className="min-w-0 break-all">{linkText}</span>
       {linkIcon}
     </MemoizedLinkItem>
   );

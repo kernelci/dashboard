@@ -7,6 +7,7 @@ import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 
 import CopyButton from '@/components/Button/CopyButton';
+import BaseCard from '@/components/Cards/BaseCard';
 
 import { LinkIcon } from '@/components/Icons/Link';
 
@@ -17,6 +18,7 @@ export interface ISection {
   leftIcon?: JSX.Element;
   subsections?: ISubsection[];
   eyebrow?: string | ReactElement;
+  card?: boolean;
 }
 
 export interface SubsectionLink extends ILinkWithIcon {
@@ -62,6 +64,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
               )
             }
             onClick={info.onClick ?? undefined}
+            titleClassName="text-dark-gray2 text-xs font-normal"
           />
         );
 
@@ -74,7 +77,10 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             info.copyValue !== undefined
           ) {
             return (
-              <div key={info.title} className="flex flex-row items-end">
+              <div
+                key={info.title}
+                className="flex max-w-full min-w-0 flex-row items-start"
+              >
                 {WrapperComponent ? (
                   <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
                 ) : (
@@ -92,29 +98,18 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
   }, [infos]);
 
   return (
-    <div className="border-dark-gray border-t pt-4">
-      {title ? (
-        <div className="flex flex-col gap-4">
-          <span className="max-w-full text-2xl font-bold break-all">
-            {title}
-          </span>
-          {items.length > 0 && (
-            <div className="grid grid-cols-1 gap-x-8 gap-y-11 pb-4 md:grid-cols-2">
-              {items}
-            </div>
-          )}
-          {children.length > 0 && <div className="mb-4">{children}</div>}
-        </div>
-      ) : (
-        <>
-          {items.length > 0 && (
-            <div className="grid grid-cols-1 gap-x-8 gap-y-11 pb-4 md:grid-cols-2">
-              {items}
-            </div>
-          )}
-          {children.length > 0 && <div className="mb-4">{children}</div>}
-        </>
+    <div className="border-dark-gray flex flex-col gap-2 border-t pt-3">
+      {title && (
+        <span className="text-dark-gray2 max-w-full text-xs font-medium tracking-wide break-all uppercase">
+          {title}
+        </span>
       )}
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+          {items}
+        </div>
+      )}
+      {children.length > 0 && <div>{children}</div>}
     </div>
   );
 };
@@ -126,6 +121,7 @@ const Section = ({
   eyebrow,
   rightIcon,
   leftIcon,
+  card = false,
 }: ISection): JSX.Element => {
   const sections: JSX.Element[] | undefined = useMemo(
     () =>
@@ -139,25 +135,47 @@ const Section = ({
     [subsections],
   );
 
-  return (
-    <div className="text-dim-gray mb-6 flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        {eyebrow && <span className="text-sm">{eyebrow}</span>}
-        <div className="overflow-hidden">
-          {leftIcon && (
-            <span className="float-left mr-2 -mb-2 [&_svg]:h-8 [&_svg]:w-8">
-              {leftIcon}
-            </span>
-          )}
-          {title && (
-            <span className="max-w-full text-2xl font-bold break-all">
-              {title}
-            </span>
-          )}
-          {rightIcon && <span className="ml-1 sm:ml-2">{rightIcon}</span>}
-        </div>
-        {subtitle}
+  const header = (
+    <div className="flex flex-col gap-1 pr-3 font-normal">
+      {eyebrow && <span className="text-sm">{eyebrow}</span>}
+      <div className="flex items-start gap-2">
+        {leftIcon && (
+          <span className="mt-0.5 shrink-0 [&_svg]:h-6 [&_svg]:w-6">
+            {leftIcon}
+          </span>
+        )}
+        {title && (
+          <span className="min-w-0 text-xl font-bold break-words">{title}</span>
+        )}
+        {rightIcon && <span className="shrink-0">{rightIcon}</span>}
       </div>
+      {subtitle}
+    </div>
+  );
+
+  if (card) {
+    return (
+      <BaseCard
+        className="mb-0"
+        title={
+          <span className="flex items-center gap-2">
+            {leftIcon}
+            <span className="min-w-0">{title}</span>
+            {rightIcon}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-4 px-3 pb-4 [&>div:first-child]:border-t-0 [&>div:first-child]:pt-0">
+          {subtitle}
+          {sections}
+        </div>
+      </BaseCard>
+    );
+  }
+
+  return (
+    <div className="text-dim-gray flex flex-col gap-2">
+      {header}
       {sections}
     </div>
   );

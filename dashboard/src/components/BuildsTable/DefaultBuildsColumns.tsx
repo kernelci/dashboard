@@ -45,12 +45,9 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
       <TableHeader column={column} intlKey="global.date" />
     ),
     cell: ({ row }): JSX.Element => (
-      <TooltipDateTime
-        dateTime={row.getValue('date')}
-        lineBreak={true}
-        showLabelTime={true}
-        showLabelTZ={true}
-      />
+      <div className="text-nowrap">
+        <TooltipDateTime dateTime={row.getValue('date')} showLabelTime={true} />
+      </div>
     ),
   },
   {

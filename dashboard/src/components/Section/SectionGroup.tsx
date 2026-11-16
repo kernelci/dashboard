@@ -23,7 +23,7 @@ const SectionGroup = ({ sections }: ISectionGroup): JSX.Element => {
       )),
     [sections],
   );
-  return <div className="flex flex-col gap-8">{groupSections}</div>;
+  return <div className="flex flex-col gap-6">{groupSections}</div>;
 };
 
 export default SectionGroup;

@@ -315,15 +315,13 @@ const TestDetailsSections = ({
 
     return {
       title: test.path ?? test.id,
-      subtitle: (
-        <div>
-          <span className="text-[18px]">
-            {formatDate(valueOrEmpty(test.start_time), false, true)}
-          </span>
-          <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />
-        </div>
-      ),
+      subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
       leftIcon: <StatusIcon status={test.status} showTooltip />,
+      rightIcon: (
+        <span className="text-dark-gray2 text-sm font-normal">
+          {formatDate(valueOrEmpty(test.start_time), false, true)}
+        </span>
+      ),
       subsections: [
         {
           infos: [

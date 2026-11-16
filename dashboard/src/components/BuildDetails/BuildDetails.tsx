@@ -143,15 +143,13 @@ const BuildDetails = ({
     return [
       {
         title: buildDetailsTitle,
-        subtitle: (
-          <div>
-            <span className="text-[18px]">
-              {formatDate(valueOrEmpty(data.start_time), false, true)}
-            </span>
-            <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />
-          </div>
-        ),
+        subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
         leftIcon: <StatusIcon status={data.status} showTooltip />,
+        rightIcon: (
+          <span className="text-dark-gray2 text-sm font-normal">
+            {formatDate(valueOrEmpty(data.start_time), false, true)}
+          </span>
+        ),
         subsections: [
           {
             infos: [

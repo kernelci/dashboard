@@ -15,6 +15,7 @@ export interface ILinkWithIcon {
   unformattedTitle?: string;
   titleIcon?: JSX.Element;
   className?: string;
+  titleClassName?: string;
 }
 
 const LinkWithIcon = ({
@@ -27,6 +28,7 @@ const LinkWithIcon = ({
   unformattedTitle,
   titleIcon,
   className,
+  titleClassName,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
 
@@ -41,19 +43,34 @@ const LinkWithIcon = ({
 
   return (
     <div
-      className={cn('flex flex-col items-start gap-1 text-[16px]', className)}
+      className={cn(
+        'flex max-w-full min-w-0 flex-col items-start gap-1 text-[16px]',
+        className,
+      )}
     >
       {(titleText || titleIcon) && (
-        <div className="flex flex-row gap-[5px]">
-          {titleText && <span className="font-bold">{titleText}</span>}
+        <div className="flex flex-row items-center gap-[5px]">
+          {titleText && (
+            <span
+              className={cn(
+                'min-w-0 break-words',
+                titleClassName ?? 'font-bold',
+              )}
+            >
+              {titleText}
+            </span>
+          )}
           {titleIcon}
         </div>
       )}
       {linkComponent ?? (
         <WrapperLink
-          className={cn('flex flex-row items-center gap-1', {
-            'underline hover:text-gray-900': onClick || link,
-          })}
+          className={cn(
+            'flex max-w-full min-w-0 flex-row items-center gap-1 wrap-anywhere',
+            {
+              'underline hover:text-gray-900': onClick || link,
+            },
+          )}
           href={link}
           target="_blank"
           rel="noreferrer"

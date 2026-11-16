@@ -15,11 +15,13 @@ import type { ISection } from './Section';
 export const getLogspecSection = ({
   misc,
   title,
+  parserTitle,
   setSheetType,
   setJsonContent,
 }: {
   misc?: object;
   title: string;
+  parserTitle?: string;
   setSheetType?: Dispatch<SetStateAction<SheetType>>;
   setJsonContent?: Dispatch<SetStateAction<IJsonContent | undefined>>;
 }): ISection | undefined => {
@@ -36,7 +38,7 @@ export const getLogspecSection = ({
     rightIcon: <LogspecInfoIcon />,
     subsections: [
       {
-        // General subsection
+        title: parserTitle,
         infos: [],
       },
     ],
@@ -51,7 +53,10 @@ export const getLogspecSection = ({
           setSheetType: setSheetType,
           setJsonContent: setJsonContent,
         });
-        return content;
+        // Object values are already one click away in the JSON sheet; inline text only repeats them.
+        return content?.copyValue
+          ? { ...content, linkText: undefined }
+          : content;
       });
 
       logspecSection.subsections?.push({

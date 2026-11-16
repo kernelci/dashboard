@@ -31,6 +31,7 @@ export const getMiscSection = ({
         fieldValue: fieldValue,
         setSheetType: setSheetType,
         setJsonContent: setJsonContent,
+        inlineJson: true,
       }),
     )
     .filter(info => info !== undefined);

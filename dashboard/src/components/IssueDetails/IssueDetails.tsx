@@ -5,7 +5,7 @@ import { useMemo, useState, type JSX } from 'react';
 import { useParams, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
-import type { ISection } from '@/components/Section/Section';
+import Section, { type ISection } from '@/components/Section/Section';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 import { shouldTruncate, valueOrEmpty } from '@/lib/string';
@@ -31,8 +31,6 @@ import {
 import { BranchBadge } from '@/components/Badge/BranchBadge';
 
 import { getLogspecSection } from '@/components/Section/LogspecSection';
-import { getIncidentsSection } from '@/components/Section/FirstIncidentSection';
-import { getNextCheckoutSection } from '@/components/Section/NextCheckoutSection';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
@@ -98,25 +96,10 @@ export const IssueDetails = ({
     return getLogspecSection({
       misc: data?.misc,
       title: formatMessage({ id: 'issueDetails.logspecData' }),
+      parserTitle: formatMessage({ id: 'logspec.parser' }),
       setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
-
-  const firstIncidentSection: ISection | undefined = useMemo(() => {
-    return getIncidentsSection({
-      firstIncident: data?.extra?.[issueId]?.first_incident,
-      lastIncident: data?.extra?.[issueId]?.last_incident,
-      title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
-      lastIncidentTitle: formatMessage({ id: 'issueDetails.lastIncident' }),
-    });
-  }, [data?.extra, formatMessage, issueId]);
-
-  const nextCheckoutSection: ISection | undefined = useMemo(() => {
-    return getNextCheckoutSection({
-      nextCheckout: data?.extra?.[issueId]?.next_checkout,
-      title: formatMessage({ id: 'issueDetails.nextCheckout' }),
-    });
-  }, [data?.extra, formatMessage, issueId]);
 
   const tagPills = useMemo(() => {
     const branchTags: JSX.Element[] = [];
@@ -267,7 +250,7 @@ export const IssueDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet>
-            <div className="flex flex-col gap-4 pb-10">
+            <div className="flex flex-col gap-6 pb-10">
               {breadcrumb}
               <div className="flex flex-wrap justify-end gap-2">
                 <MemoizedKcidevCommandButton
@@ -280,15 +263,19 @@ export const IssueDetails = ({
                 />
               </div>
               <SectionGroup sections={generalSections} />
-              <IncidentsSection perTree={data?.extra?.[issueId]?.per_tree} />
-              <SectionGroup
-                sections={[
-                  firstIncidentSection,
-                  nextCheckoutSection,
-                  logspecSection,
-                  miscSection,
-                ].filter(section => !!section)}
-              />
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="flex flex-col gap-4">
+                  <IncidentsSection
+                    card
+                    firstIncident={data?.extra?.[issueId]?.first_incident}
+                    lastIncident={data?.extra?.[issueId]?.last_incident}
+                    nextCheckout={data?.extra?.[issueId]?.next_checkout}
+                    perTree={data?.extra?.[issueId]?.per_tree}
+                  />
+                  {miscSection && <Section {...miscSection} card />}
+                </div>
+                {logspecSection && <Section {...logspecSection} card />}
+              </div>
               <IssueDetailsTestSection
                 issueId={issueId}
                 versionNumber={versionNumber}
