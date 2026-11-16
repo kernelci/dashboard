@@ -10,12 +10,10 @@ import type { LabsListingRoutesMap } from '@/utils/constants/labsListing';
 import { RequestData } from './commonRequest';
 
 const fetchLabsListing = async (
-  origin: string,
   intervalInDays: number,
 ): Promise<LabListingResponse> => {
   return RequestData.get<LabListingResponse>('/api/labs/', {
     params: {
-      origin,
       interval_in_days: intervalInDays,
     },
   });
@@ -24,11 +22,11 @@ const fetchLabsListing = async (
 export const useLabsListing = (
   searchFrom: LabsListingRoutesMap['search'],
 ): UseQueryResult<LabListingResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: searchFrom });
+  const { intervalInDays } = useSearch({ from: searchFrom });
 
   return useQuery({
-    queryKey: ['labsListing', origin, intervalInDays],
-    queryFn: () => fetchLabsListing(origin, intervalInDays),
+    queryKey: ['labsListing', intervalInDays],
+    queryFn: () => fetchLabsListing(intervalInDays),
     refetchOnWindowFocus: false,
   });
 };
