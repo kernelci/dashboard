@@ -3,26 +3,6 @@ from django.db import connection
 from kernelCI_app.cache import get_query_cache, set_query_cache
 
 
-def get_lab_origins(*, interval_in_days: int) -> list[str]:
-    cache_key = f"lab_origins_query_{interval_in_days}"
-    cached = get_query_cache(key=cache_key)
-    if cached is not None:
-        return cached
-
-    query = """
-        SELECT DISTINCT origin
-        FROM lab_daily
-        WHERE day >= CURRENT_DATE - %(interval_in_days)s
-    """
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, {"interval_in_days": interval_in_days})
-        origins = [row[0] for row in cursor.fetchall() if row[0]]
-        if origins:
-            set_query_cache(key=cache_key, rows=origins)
-        return origins
-
-
 def get_lab_listing_data(
     *,
     interval_in_days: int,
