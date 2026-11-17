@@ -28,11 +28,12 @@ export const isUrl = (possibleUrl: string): boolean => {
 };
 
 export const isHttpUrl = (value: string): boolean => {
-  if (!URL.canParse(value)) {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
     return false;
   }
-  const protocol = new URL(value).protocol;
-  return protocol === 'http:' || protocol === 'https:';
 };
 
 export const truncateUrl = (

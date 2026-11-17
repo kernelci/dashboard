@@ -62,7 +62,7 @@ import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 const urlLink = (
   title: MessagesKey,
   url: string,
-  link: string | undefined = url,
+  link?: string,
 ): ILinkWithIcon => ({
   title,
   linkText: shouldTruncate(url) ? (
@@ -211,9 +211,15 @@ export const IssueDetails = ({
                 title: 'global.origin',
                 linkText: valueOrEmpty(data.origin),
               },
-              urlLink('issueDetails.loreUrl', loreUrl),
+              urlLink('issueDetails.loreUrl', loreUrl, loreUrl),
               ...(data.regzbot_url
-                ? [urlLink('issueDetails.regzbotUrl', data.regzbot_url)]
+                ? [
+                    urlLink(
+                      'issueDetails.regzbotUrl',
+                      data.regzbot_url,
+                      data.regzbot_url,
+                    ),
+                  ]
                 : []),
               urlLink(
                 'issueDetails.reportUrl',
