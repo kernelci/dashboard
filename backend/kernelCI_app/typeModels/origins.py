@@ -16,7 +16,3 @@ class OriginsQueryParameters(BaseModel):
 class OriginsResponse(BaseModel):
     checkout_origins: list[Origin]
     test_origins: list[Origin]
-
-
-class LabOriginsResponse(BaseModel):
-    origins: list[Origin]

@@ -182,7 +182,6 @@ urlpatterns = [
         name="hardwareDetailsTests",
     ),
     path("hardware/", view_cache(views.HardwareView), name="hardware"),
-    path("labs/origins/", views.LabOriginsView.as_view(), name="labOriginsView"),
     path(
         "labs/<str:lab_name>/lab-attention/",
         view_cache(views.LabDetailsAttentionView),
