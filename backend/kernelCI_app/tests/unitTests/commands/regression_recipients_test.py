@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from django.conf import settings
+from django.db import DatabaseError
 
 from kernelCI_app.management.commands.helpers.common import (
     REGRESSION_FOLDER,
@@ -460,3 +461,41 @@ def test_mail_to_the_regressions_list_is_recorded_without_mailing_lists(
 
     assert sent[0]["to"] == "Regressions <regressions@lists.linux.dev>"
     assert stored == {issue["id"]: "direct@kernelci.org"}
+
+
+@pytest.mark.parametrize("failure", ["missing_default", "database_error"])
+def test_sent_report_is_marked_when_recording_the_message_id_fails(
+    tmp_path, monkeypatch, failure
+):
+    if failure == "missing_default":
+        monkeypatch.setattr(settings, "BACKEND_DATA_DIR", str(tmp_path))
+    else:
+        _write_regressions_default(tmp_path, monkeypatch)
+    issue, incidents = _qualifying_issue()
+    email_args = SimpleNamespace(
+        send=True,
+        add_mailing_lists=False,
+        ignore_recipients=True,
+        cc=None,
+        yes=True,
+        to="regressions@lists.linux.dev",
+        in_reply_to=None,
+        update=True,
+    )
+    with (
+        patch(f"{MODULE}.kcidb_issue_details", return_value=[issue]),
+        patch(f"{MODULE}.kcidb_build_incidents", return_value=incidents),
+        patch(f"{MODULE}.kcidb_last_build_without_issue", return_value=[]),
+        patch(
+            "kernelCI_app.management.commands.helpers.common.smtp_send_email",
+            side_effect=lambda *args: args[8],
+        ),
+        patch(
+            f"{MODULE}.record_regzbot_message",
+            side_effect=DatabaseError("write failed"),
+        ),
+        patch(f"{MODULE}.mark_issue_notification_sent") as mark_sent,
+    ):
+        generate_issue_report(service=None, issue_id=issue["id"], email_args=email_args)
+
+    mark_sent.assert_called_once()

@@ -10,6 +10,7 @@ import CopyButton from '@/components/Button/CopyButton';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import { LinkIcon } from '@/components/Icons/Link';
+import { isHttpUrl } from '@/lib/string';
 
 import { cn } from '@/lib/utils';
 import { isUrl } from '@/lib/string';
@@ -77,7 +78,7 @@ export const Subsection = ({
             linkText={url ?? info.linkText}
             unformattedTitle={info.unformattedTitle}
             icon={
-              info.link && !info.icon ? (
+              info.link && isHttpUrl(info.link) && !info.icon ? (
                 <LinkIcon className="text-blue text-xl" />
               ) : (
                 info.icon

@@ -12,6 +12,7 @@ from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import DatabaseError
 
 from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.hardwares import sanitize_hardware
@@ -66,6 +67,7 @@ from kernelCI_app.typeModels.metricsRules import load_metrics_rules, scope_metri
 from kernelCI_app.typeModels.notificationRecipients import (
     NEW_ISSUES_FOLDER,
     RecipientEntry,
+    RecipientFileError,
     load_new_issue_files,
 )
 from kernelCI_app.utils import group_status, is_boot
@@ -442,13 +444,6 @@ def generate_issue_report(
         message_id=message_id,
     )
 
-    if (
-        msg_id
-        and report["is_regzbot_issue"]
-        and addressed_to_regressions(email_args.delivered_to, email_args.delivered_cc)
-    ):
-        record_regzbot_message(issue_id=issue_id, message_id=msg_id)
-
     if msg_id and email_args.update:
         mark_issue_notification_sent(
             msg_id=msg_id,
@@ -456,6 +451,15 @@ def generate_issue_report(
             issue_version=issue_version,
             issue_type=issue_type,
         )
+
+    if msg_id and report["is_regzbot_issue"]:
+        try:
+            if addressed_to_regressions(
+                email_args.delivered_to, email_args.delivered_cc
+            ):
+                record_regzbot_message(issue_id=issue_id, message_id=msg_id)
+        except (RecipientFileError, DatabaseError) as e:
+            log_message(f"Could not record regzbot Message-ID for {issue_id}: {e}")
 
 
 # TODO: Unify with process_test_status_history
