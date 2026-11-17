@@ -15,8 +15,8 @@ import { groupStatus } from '@/utils/status';
 interface IStatusCard {
   title: IBaseCard['title'];
   statusCounts?: Summary['builds']['status'] | Summary['tests']['status'];
-  filterStatusKey: TFilterObjectsKeys;
-  toggleFilterBySection: (
+  filterStatusKey?: TFilterObjectsKeys;
+  toggleFilterBySection?: (
     value: string,
     filterSection: TFilterObjectsKeys,
   ) => void;
@@ -65,6 +65,9 @@ const StatusCard = ({
 
   const handleLegendClick = useCallback(
     (value: string) => {
+      if (!toggleFilterBySection || !filterStatusKey) {
+        return;
+      }
       switch (value) {
         case formatMessage({ id: 'global.success' }):
           toggleFilterBySection('PASS', filterStatusKey);
@@ -89,7 +92,11 @@ const StatusCard = ({
         <StatusChartMemoized
           pieCentralLabel={formatMessage({ id: 'global.executed' })}
           pieCentralDescription={<>{totalCount}</>}
-          onLegendClick={handleLegendClick}
+          onLegendClick={
+            toggleFilterBySection && filterStatusKey
+              ? handleLegendClick
+              : undefined
+          }
           elements={[
             {
               value: groupedStatusCounts.successCount,

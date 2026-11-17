@@ -66,18 +66,15 @@ import type {
   LabDetailsTree,
   LabTestRow,
 } from '@/types/labDetails';
-import {
-  DEFAULT_DIFF_FILTER,
-  type RequiredStatusCount,
-  type TestHistory,
-} from '@/types/general';
+import type { RequiredStatusCount, TestHistory } from '@/types/general';
 import type { TIssue } from '@/types/issues';
-import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 import {
-  defaultTableStatusSelection,
+  zPossibleTabValidator,
+  zTableFilterInfoDefault,
+} from '@/types/tree/TreeDetails';
+import {
   toggleTableStatus,
   type TableStatusOption,
-  type TableStatusSelection,
 } from '@/utils/tableStatusFilter';
 import { status } from '@/utils/constants/database';
 import { formatDate } from '@/utils/utils';
@@ -246,13 +243,48 @@ const toTestHistory = (row: LabTestRow): TestHistory => {
 };
 
 const LabTestsTable = ({ rows }: { rows: LabTestRow[] }): JSX.Element => {
-  const [filter, setFilter] = useState<TableStatusSelection>(() => [
-    ...defaultTableStatusSelection,
-  ]);
-  const [pathFilter, setPathFilter] = useState('');
-  const onToggleFilter = useCallback((option: TableStatusOption) => {
-    setFilter(current => toggleTableStatus(current, option));
-  }, []);
+  const { tableFilter, diffFilter } = useSearch({
+    from: '/_main/labs/$labName',
+  });
+  const navigate = useNavigate({ from: '/labs/$labName' });
+  const testPath = diffFilter.testPath
+    ? Object.keys(diffFilter.testPath)[0]
+    : undefined;
+  const onToggleFilter = useCallback(
+    (option: TableStatusOption) => {
+      navigate({
+        search: previous => ({
+          ...previous,
+          tableFilter: {
+            ...(previous.tableFilter ?? zTableFilterInfoDefault),
+            testsTable: toggleTableStatus(
+              previous.tableFilter?.testsTable,
+              option,
+            ),
+          },
+        }),
+        state: s => s,
+        resetScroll: false,
+      });
+    },
+    [navigate],
+  );
+  const updatePathFilter = useCallback(
+    (pathFilter: string) => {
+      navigate({
+        search: previous => ({
+          ...previous,
+          diffFilter: {
+            ...previous.diffFilter,
+            testPath: pathFilter === '' ? undefined : { [pathFilter]: true },
+          },
+        }),
+        state: s => s,
+        resetScroll: false,
+      });
+    },
+    [navigate],
+  );
   const getRowLink = useCallback(
     (testId: string): LinkProps => ({
       to: '/test/$testId',
@@ -266,11 +298,11 @@ const LabTestsTable = ({ rows }: { rows: LabTestRow[] }): JSX.Element => {
     <TestsTable
       tableKey="treeDetailsTests"
       testHistory={rows.map(toTestHistory)}
-      filter={filter}
+      filter={tableFilter.testsTable}
       onToggleFilter={onToggleFilter}
       getRowLink={getRowLink}
-      updatePathFilter={setPathFilter}
-      currentPathFilter={pathFilter}
+      updatePathFilter={updatePathFilter}
+      currentPathFilter={testPath}
     />
   );
 };
@@ -461,8 +493,6 @@ const StatusPane = ({
   titleId,
   counts,
   issues,
-  filterKey,
-  issueFilterSection,
   points,
   chartTitleId,
   table,
@@ -470,8 +500,6 @@ const StatusPane = ({
   titleId: MessagesKey;
   counts: RequiredStatusCount;
   issues: TIssue[];
-  filterKey: 'buildStatus' | 'bootStatus' | 'testStatus';
-  issueFilterSection: 'buildIssue' | 'bootIssue' | 'testIssue';
   points: LabDailyPoint[];
   chartTitleId: MessagesKey;
   table: ReactNode;
@@ -482,14 +510,10 @@ const StatusPane = ({
         <MemoizedStatusCard
           title={<FormattedMessage id={titleId} />}
           statusCounts={counts}
-          filterStatusKey={filterKey}
-          toggleFilterBySection={() => undefined}
         />
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
           issues={issues}
-          diffFilter={DEFAULT_DIFF_FILTER}
-          issueFilterSection={issueFilterSection}
         />
       </div>
       <LabDailyGraph points={points} titleId={chartTitleId} />
@@ -644,8 +668,6 @@ const LabDetails = (): JSX.Element => {
                         titleId="buildTab.buildStatus"
                         counts={summary.builds}
                         issues={summary.buildIssues}
-                        filterKey="buildStatus"
-                        issueFilterSection="buildIssue"
                         points={summary.daily.builds}
                         chartTitleId="labDetails.buildsPerDay"
                         table={
@@ -690,8 +712,6 @@ const LabDetails = (): JSX.Element => {
                         titleId="bootsTab.bootStatus"
                         counts={summary.boots}
                         issues={summary.bootIssues}
-                        filterKey="bootStatus"
-                        issueFilterSection="bootIssue"
                         points={summary.daily.boots}
                         chartTitleId="labDetails.bootsPerDay"
                         table={
@@ -732,8 +752,6 @@ const LabDetails = (): JSX.Element => {
                         titleId="testsTab.testStatus"
                         counts={summary.tests}
                         issues={summary.testIssues}
-                        filterKey="testStatus"
-                        issueFilterSection="testIssue"
                         points={summary.daily.tests}
                         chartTitleId="labDetails.testsPerDay"
                         table={
