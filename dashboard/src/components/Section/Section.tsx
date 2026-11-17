@@ -16,6 +16,7 @@ export interface ISection {
   subtitle?: string | ReactElement;
   rightIcon?: JSX.Element;
   leftIcon?: JSX.Element;
+  actions?: JSX.Element;
   subsections?: ISubsection[];
   eyebrow?: string | ReactElement;
   card?: boolean;
@@ -121,6 +122,7 @@ const Section = ({
   eyebrow,
   rightIcon,
   leftIcon,
+  actions,
   card = false,
 }: ISection): JSX.Element => {
   const sections: JSX.Element[] | undefined = useMemo(
@@ -138,16 +140,21 @@ const Section = ({
   const header = (
     <div className="flex flex-col gap-1 pr-3 font-normal">
       {eyebrow && <span className="text-sm">{eyebrow}</span>}
-      <div className="flex items-start gap-2">
-        {leftIcon && (
-          <span className="mt-0.5 shrink-0 [&_svg]:h-6 [&_svg]:w-6">
-            {leftIcon}
-          </span>
-        )}
-        {title && (
-          <span className="min-w-0 text-xl font-bold break-words">{title}</span>
-        )}
-        {rightIcon && <span className="shrink-0">{rightIcon}</span>}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="inline-flex w-fit max-w-full shrink-0 items-start gap-2">
+          {leftIcon && (
+            <span className="mt-0.5 shrink-0 [&_svg]:h-6 [&_svg]:w-6">
+              {leftIcon}
+            </span>
+          )}
+          {title && (
+            <span className="min-w-0 text-xl font-bold break-words">
+              {title}
+            </span>
+          )}
+        </span>
+        {rightIcon && <span className="max-w-full shrink-0">{rightIcon}</span>}
+        {actions && <span className="ml-auto shrink-0">{actions}</span>}
       </div>
       {subtitle}
     </div>

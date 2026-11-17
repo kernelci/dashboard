@@ -304,7 +304,6 @@ export const messages = {
     'issueDetails.firstGoodCheckout': 'First Good Checkout',
     'issueDetails.firstIncidentData': 'First Incident Data',
     'issueDetails.id': 'Issue Id',
-    'issueDetails.incidents': 'Incidents per Tree',
     'issueDetails.incidentsTitle': 'Incidents',
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.issueListingInfo':

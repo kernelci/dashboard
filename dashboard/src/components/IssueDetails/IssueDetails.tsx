@@ -165,6 +165,16 @@ export const IssueDetails = ({
       {
         title: data.comment ?? data.id,
         subtitle: tagPills,
+        actions: (
+          <MemoizedKcidevCommandButton
+            command={createIssueDetailsCommand({
+              id: issueId,
+              origin: data.origin,
+              omittedFilters:
+                versionNumber === undefined ? [] : ['issue version'],
+            })}
+          />
+        ),
         subsections: [
           {
             infos: [
@@ -220,7 +230,7 @@ export const IssueDetails = ({
         ],
       },
     ];
-  }, [data, tagPills, issueCulprit]);
+  }, [data, issueCulprit, issueId, tagPills, versionNumber]);
 
   const issueDetailsTabTitle = useMemo(() => {
     return formatMessage(
@@ -252,21 +262,10 @@ export const IssueDetails = ({
           <Sheet>
             <div className="flex flex-col gap-6 pb-10">
               {breadcrumb}
-              <div className="flex flex-wrap justify-end gap-2">
-                <MemoizedKcidevCommandButton
-                  command={createIssueDetailsCommand({
-                    id: issueId,
-                    origin: data?.origin,
-                    omittedFilters:
-                      versionNumber === undefined ? [] : ['issue version'],
-                  })}
-                />
-              </div>
               <SectionGroup sections={generalSections} />
               <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 <div className="flex flex-col gap-4">
                   <IncidentsSection
-                    card
                     firstIncident={data?.extra?.[issueId]?.first_incident}
                     lastIncident={data?.extra?.[issueId]?.last_incident}
                     nextCheckout={data?.extra?.[issueId]?.next_checkout}

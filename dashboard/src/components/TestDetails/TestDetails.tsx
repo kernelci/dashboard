@@ -36,7 +36,7 @@ import type {
   SheetType,
 } from '@/components/Sheet/LogOrJsonSheetContent';
 import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
-import type { ISection } from '@/components/Section/Section';
+import Section, { type ISection } from '@/components/Section/Section';
 import IssueSection from '@/components/Issue/IssueSection';
 import SectionGroup from '@/components/Section/SectionGroup';
 import { getMiscSection } from '@/components/Section/MiscSection';
@@ -87,6 +87,7 @@ const TestDetailsSections = ({
   statusHistoryError,
   setSheetType,
   setJsonContent,
+  actions,
 }: {
   test: TTestDetails;
   statusHistory?: TestStatusHistory;
@@ -94,6 +95,7 @@ const TestDetailsSections = ({
   statusHistoryError: UseQueryResult['error'];
   setSheetType: Dispatch<SetStateAction<SheetType>>;
   setJsonContent: Dispatch<SetStateAction<IJsonContent | undefined>>;
+  actions?: JSX.Element;
 }): JSX.Element => {
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
@@ -316,6 +318,7 @@ const TestDetailsSections = ({
     return {
       title: test.path ?? test.id,
       subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
+      actions,
       leftIcon: <StatusIcon status={test.status} showTooltip />,
       rightIcon: (
         <span className="text-dark-gray2 text-sm font-normal">
@@ -445,6 +448,7 @@ const TestDetailsSections = ({
     hardware,
     hardwareDetailsLink,
     buildDetailsLink,
+    actions,
     compatiblesLink,
   ]);
 
@@ -465,8 +469,10 @@ const TestDetailsSections = ({
     return getMiscSection({
       misc: test.environment_misc,
       title: formatMessage({ id: 'commonDetails.environmentMiscData' }),
+      setSheetType: setSheetType,
+      setJsonContent: setJsonContent,
     });
-  }, [formatMessage, test.environment_misc]);
+  }, [formatMessage, test.environment_misc, setSheetType, setJsonContent]);
 
   const filesSection: ISection | undefined = useMemo(():
     | ISection
@@ -479,22 +485,39 @@ const TestDetailsSections = ({
   }, [formatMessage, test.input_files, test.output_files]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [
-      generalSection,
-      regressionSection,
-      miscSection,
-      environmentMiscSection,
-      filesSection,
-    ].filter(section => section !== undefined);
-  }, [
-    generalSection,
-    regressionSection,
-    miscSection,
-    environmentMiscSection,
-    filesSection,
-  ]);
+    return [generalSection, regressionSection].filter(
+      section => section !== undefined,
+    );
+  }, [generalSection, regressionSection]);
 
-  return <SectionGroup sections={sectionsData} />;
+  const miscCards = [miscSection, environmentMiscSection].filter(
+    section => section !== undefined,
+  );
+  const paired = miscCards.length > 0 && filesSection !== undefined;
+
+  return (
+    <>
+      <SectionGroup sections={sectionsData} />
+      {(miscCards.length > 0 || filesSection) && (
+        <div
+          className={
+            paired
+              ? 'grid grid-cols-1 items-start gap-4 lg:grid-cols-2'
+              : 'flex flex-col gap-4'
+          }
+        >
+          {miscCards.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {miscCards.map(section => (
+                <Section key={section.title} {...section} card />
+              ))}
+            </div>
+          )}
+          {filesSection && <Section {...filesSection} card />}
+        </div>
+      )}
+    </>
+  );
 };
 
 interface TestsDetailsProps {
@@ -619,12 +642,9 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
         <Sheet open={logOpen} onOpenChange={logOpenChange}>
           <div className="flex flex-col gap-4 pb-10">
             {breadcrumb ?? fallbackBreadcrumb}
-            <div className="flex flex-wrap justify-end gap-2">
-              {kcidevComponent}
-            </div>
-
             {data && (
               <TestDetailsSections
+                actions={kcidevComponent}
                 test={data}
                 statusHistory={statusHistoryData}
                 statusHistoryStatus={statusHistoryStatus}

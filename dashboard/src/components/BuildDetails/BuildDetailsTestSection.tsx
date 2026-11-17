@@ -51,15 +51,13 @@ const BuildDetailsTestSection = ({
                     />
                   }
                 >
-                  <div className="flex flex-col gap-6">
-                    <TestsTable
-                      tableKey="buildDetailsTests"
-                      testHistory={data}
-                      onToggleFilter={onToggleFilter}
-                      filter={tableFilter.testsTable}
-                      getRowLink={getRowLink}
-                    />
-                  </div>
+                  <TestsTable
+                    tableKey="buildDetailsTests"
+                    testHistory={data}
+                    onToggleFilter={onToggleFilter}
+                    filter={tableFilter.testsTable}
+                    getRowLink={getRowLink}
+                  />
                 </QuerySwitcher>
               ),
             },

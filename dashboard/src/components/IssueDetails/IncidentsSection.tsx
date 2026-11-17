@@ -44,7 +44,7 @@ const SeenColumn = ({
   emptyLabel?: MessagesKey;
   showTree?: boolean;
 }): JSX.Element => (
-  <div className="flex min-w-0 flex-col items-start gap-1">
+  <div className="flex w-full min-w-0 flex-col items-start gap-1">
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className="font-bold">
         <FormattedMessage id={label} />
@@ -64,27 +64,25 @@ const SeenColumn = ({
       )}
     </div>
     {data ? (
-      <>
-        <div className="flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-          <TreeDetailsLink
-            className="inline-flex max-w-full min-w-0 items-center gap-1 text-sm [&_svg]:shrink-0"
-            treeName={data.tree_name}
-            gitBranch={data.git_repository_branch}
-            commitHash={data.git_commit_hash}
-            gitUrl={data.git_repository_url}
-            commitName={data.git_commit_name}
-            showFullLabel={showTree}
-          />
-          {data.git_commit_name && (
-            <Badge
-              variant="blueTag"
-              className="max-w-full font-normal whitespace-normal normal-case"
-            >
-              {data.git_commit_name}
-            </Badge>
-          )}
-        </div>
-      </>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <TreeDetailsLink
+          className="inline-flex max-w-full min-w-0 items-center gap-1 text-sm [&_svg]:shrink-0"
+          treeName={data.tree_name}
+          gitBranch={data.git_repository_branch}
+          commitHash={data.git_commit_hash}
+          gitUrl={data.git_repository_url}
+          commitName={data.git_commit_name}
+          showFullLabel={showTree}
+        />
+        {data.git_commit_name && (
+          <Badge
+            variant="blueTag"
+            className="max-w-full font-normal whitespace-normal normal-case"
+          >
+            {data.git_commit_name}
+          </Badge>
+        )}
+      </div>
     ) : (
       emptyLabel && (
         <span className="text-dark-gray2 text-sm">
@@ -166,7 +164,7 @@ const SummaryIncidents = ({
   lastIncident?: Incident;
   nextCheckout?: NextCheckout | null;
 }): JSX.Element => (
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
     {firstIncident && (
       <SeenColumn
         label="issueDetails.firstIncidentData"
@@ -200,13 +198,11 @@ export const IncidentsSection = ({
   lastIncident,
   nextCheckout,
   perTree,
-  card = false,
 }: {
   firstIncident?: Incident;
   lastIncident?: Incident;
   nextCheckout?: NextCheckout | null;
   perTree?: TreeSeenData[];
-  card?: boolean;
 }): JSX.Element | undefined => {
   const { formatMessage } = useIntl();
   const unmatchedNext =
@@ -221,7 +217,7 @@ export const IncidentsSection = ({
 
   return (
     <Section
-      card={card}
+      card
       title={formatMessage({ id: 'issueDetails.incidentsTitle' })}
       subsections={[
         {

@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
-import type { ISection } from '@/components/Section/Section';
+import Section, { type ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
@@ -144,6 +144,11 @@ const BuildDetails = ({
       {
         title: buildDetailsTitle,
         subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
+        actions: (
+          <MemoizedKcidevCommandButton
+            command={createResultDetailsCommand('build', buildId)}
+          />
+        ),
         leftIcon: <StatusIcon status={data.status} showTooltip />,
         rightIcon: (
           <span className="text-dark-gray2 text-sm font-normal">
@@ -297,15 +302,6 @@ const BuildDetails = ({
     isLoading,
   ]);
 
-  const kcidevComponent = useMemo(
-    () => (
-      <MemoizedKcidevCommandButton
-        command={createResultDetailsCommand('build', buildId)}
-      />
-    ),
-    [buildId],
-  );
-
   return (
     <PageWithTitle title={buildDetailsTabTitle}>
       <MemoizedBuildDetailsOGTags
@@ -328,9 +324,6 @@ const BuildDetails = ({
           <Sheet open={logOpen} onOpenChange={logOpenChange}>
             <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
-              <div className="flex flex-wrap justify-end gap-2">
-                {kcidevComponent}
-              </div>
               <SectionGroup sections={generalSections} />
               <BuildDetailsTestSection
                 buildId={buildId ?? ''}
@@ -338,7 +331,18 @@ const BuildDetails = ({
                 tableFilter={tableFilter}
                 getRowLink={getTestTableRowLink}
               />
-              {miscSection && <SectionGroup sections={[miscSection]} />}
+              {(miscSection || filesSection) && (
+                <div
+                  className={
+                    miscSection && filesSection
+                      ? 'grid grid-cols-1 items-start gap-4 lg:grid-cols-2'
+                      : undefined
+                  }
+                >
+                  {miscSection && <Section {...miscSection} card />}
+                  {filesSection && <Section {...filesSection} card />}
+                </div>
+              )}
               {issueData && (
                 <IssueSection
                   data={issueData}
@@ -346,7 +350,6 @@ const BuildDetails = ({
                   error={issueError?.message}
                 />
               )}
-              {filesSection && <SectionGroup sections={[filesSection]} />}
             </div>
             <LogOrJsonSheetContent
               type={sheetType}

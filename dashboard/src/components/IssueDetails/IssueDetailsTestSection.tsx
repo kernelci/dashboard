@@ -58,17 +58,15 @@ export const IssueDetailsTestSection = ({
   }
 
   const body = data ? (
-    <div className="flex flex-col gap-6">
-      <TestsTable
-        tableKey="issueDetailsTests"
-        testHistory={data}
-        onToggleFilter={onToggleFilter}
-        filter={testTableFilter}
-        getRowLink={getTableRowLink}
-        innerColumns={innerColumns}
-        sortKey="testsTable"
-      />
-    </div>
+    <TestsTable
+      tableKey="issueDetailsTests"
+      testHistory={data}
+      onToggleFilter={onToggleFilter}
+      filter={testTableFilter}
+      getRowLink={getTableRowLink}
+      innerColumns={innerColumns}
+      sortKey="testsTable"
+    />
   ) : (
     <MemoizedSectionError
       isLoading={isLoading}
