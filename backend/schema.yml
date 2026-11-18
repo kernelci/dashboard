@@ -4152,12 +4152,6 @@ components:
           - type: 'null'
           default: null
           title: Url
-        form_factor:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Form Factor
       required:
       - id
       title: HardwareRegistryNamedLink
@@ -4191,12 +4185,6 @@ components:
           - type: 'null'
           default: null
           title: Url
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Description
       required:
       - id
       title: HardwareRegistryProcessorInfo

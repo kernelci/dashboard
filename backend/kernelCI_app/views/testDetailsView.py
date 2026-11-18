@@ -29,13 +29,17 @@ class TestDetails(APIView):
             )
 
         try:
-            valid_response = TestDetailsResponse(**response[0])
-            environment_misc = valid_response.environment_misc or {}
-            valid_response.registry = get_first_hardware_registry(
-                [
-                    environment_misc.get("platform"),
-                    *(valid_response.environment_compatible or []),
-                ]
+            draft = TestDetailsResponse(**response[0])
+            environment_misc = draft.environment_misc or {}
+            valid_response = draft.model_copy(
+                update={
+                    "registry": get_first_hardware_registry(
+                        [
+                            environment_misc.get("platform"),
+                            *(draft.environment_compatible or []),
+                        ]
+                    )
+                }
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

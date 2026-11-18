@@ -6,7 +6,6 @@ from pydantic import BaseModel
 class HardwareRegistryNamedLink(BaseModel):
     id: str
     url: Optional[str] = None
-    form_factor: Optional[str] = None
 
 
 class HardwareRegistryProcessorInfo(BaseModel):
@@ -15,7 +14,6 @@ class HardwareRegistryProcessorInfo(BaseModel):
     cores: Optional[int] = None
     max_clock_speed_mhz: Optional[int] = None
     url: Optional[str] = None
-    description: Optional[str] = None
 
 
 class HardwareRegistryInfo(BaseModel):

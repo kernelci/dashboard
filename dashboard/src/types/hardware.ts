@@ -3,7 +3,6 @@ import type { ShortStatusCount } from './general';
 export type HardwareRegistryNamedLink = {
   id: string;
   url?: string | null;
-  form_factor?: string | null;
 };
 
 export type HardwareRegistryProcessorInfo = {
@@ -12,7 +11,6 @@ export type HardwareRegistryProcessorInfo = {
   cores?: number | null;
   max_clock_speed_mhz?: number | null;
   url?: string | null;
-  description?: string | null;
 };
 
 export type HardwareRegistryInfo = {

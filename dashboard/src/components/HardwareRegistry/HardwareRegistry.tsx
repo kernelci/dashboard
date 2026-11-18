@@ -71,27 +71,35 @@ const boardFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => [
   },
 ];
 
-const fieldByTitle = (
-  fields: ILinkWithIcon[],
-  title: MessagesKey,
-): ILinkWithIcon | undefined => fields.find(field => field.title === title);
-
-const listingFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
-  const processor = processorFields(info);
-  const board = boardFields(info);
-  return [
-    {
-      title: 'global.platform',
-      linkText: valueOrEmpty(info.platform_id),
-      link: info.url,
-    },
-    fieldByTitle(processor, 'global.soc'),
-    fieldByTitle(processor, 'global.architecture'),
-    fieldByTitle(board, 'global.vendor'),
-    fieldByTitle(board, 'global.boardType'),
-    fieldByTitle(board, 'global.formFactor'),
-  ].filter((field): field is ILinkWithIcon => field !== undefined);
-};
+const listingFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => [
+  {
+    title: 'global.platform',
+    linkText: valueOrEmpty(info.platform_id),
+    link: info.url,
+  },
+  {
+    title: 'global.soc',
+    linkText: valueOrEmpty(info.processor?.id),
+    link: info.processor?.url,
+  },
+  {
+    title: 'global.architecture',
+    linkText: valueOrEmpty(info.processor?.architecture),
+  },
+  {
+    title: 'global.vendor',
+    linkText: valueOrEmpty(info.vendor?.id),
+    link: info.vendor?.url,
+  },
+  {
+    title: 'global.boardType',
+    linkText: valueOrEmpty(humanize(info.board_type)),
+  },
+  {
+    title: 'global.formFactor',
+    linkText: valueOrEmpty(humanize(info.form_factor)),
+  },
+];
 
 const SpecGroup = ({
   label,
