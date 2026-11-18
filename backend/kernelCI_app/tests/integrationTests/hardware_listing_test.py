@@ -227,3 +227,55 @@ def test_registry_filter_narrows_the_listing_and_options_list_its_platforms():
     assert options["architecture"] == ["arm64", "x86_64"]
     assert options["processor"] == ["soc-arm64", "soc-x86_64"]
     assert options["platform"] == listed
+
+
+@pytest.mark.django_db
+def test_registry_catalog_matches_a_compatible_name():
+    build = BuildFactory(checkout=_checkout(origin="maestro"), status="PASS")
+    for platform in ("ti,am62p5-sk", "ti,am62p5", "am62p-sk", "ti,am62-sk"):
+        _test_on(build, platform)
+    _recompute()
+    vendor = HardwareRegistryPlatformVendor.objects.create(id="ti")
+    silicon = HardwareRegistrySiliconVendor.objects.create(
+        id="ti-soc", type="silicon_vendor"
+    )
+    HardwareRegistryPlatform.objects.create(
+        id="am62p-sk",
+        type="evaluation_board",
+        vendor=vendor,
+        processor=HardwareRegistryProcessor.objects.create(
+            id="am62p5", vendor=silicon, architecture="arm64"
+        ),
+        compatible=["ti,am62p5-sk", "ti,am62p5"],
+    )
+
+    def platforms(**registry):
+        rows = get_hardware_listing_data(
+            start_date=WINDOW[0],
+            end_date=WINDOW[1],
+            checkout_origin=None,
+            build_origin=None,
+            test_origin=None,
+            build_lab=None,
+            test_lab=None,
+            registry_filter=HardwareRegistryFilter(**registry),
+        )
+        return [row[0] for row in rows]
+
+    assert platforms(architecture=("arm64",)) == [
+        "am62p-sk",
+        "ti,am62p5",
+        "ti,am62p5-sk",
+    ]
+    assert platforms(platform=("am62p-sk",)) == ["am62p-sk"]
+    assert platforms(platform=("ti,am62p5-sk",)) == ["ti,am62p5-sk"]
+
+    options = get_hardware_registry_filter_options(platforms())
+    assert options["architecture"] == ["arm64"]
+    assert options["processor"] == ["am62p5"]
+    assert options["platform"] == [
+        "am62p-sk",
+        "ti,am62-sk",
+        "ti,am62p5",
+        "ti,am62p5-sk",
+    ]
