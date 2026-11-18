@@ -147,6 +147,11 @@ urlpatterns = [
         name="hardwareFilters",
     ),
     path(
+        "hardware/registry-filters/",
+        view_cache(views.HardwareRegistryFiltersView),
+        name="hardwareRegistryFilters",
+    ),
+    path(
         "hardware/<str:hardware_id>",
         view_cache(views.HardwareDetails),
         name="hardwareDetails",
@@ -242,4 +247,9 @@ urlpatterns = [
     path("origins/", views.OriginsView.as_view(), name="originsView"),
     path("tree-report/", views.TreeReport.as_view(), name="treeReportView"),
     path("metrics/", views.MetricsView.as_view(), name="metricsView"),
+    path(
+        "analytics/visible/",
+        views.VisibleTimeView.as_view(),
+        name="visibleTime",
+    ),
 ]

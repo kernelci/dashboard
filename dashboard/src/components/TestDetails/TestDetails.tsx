@@ -76,6 +76,7 @@ import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
 import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
 
 import CopyButton from '@/components/Button/CopyButton';
+import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 import { StatusHistoryItem } from './StatusHistoryItem';
 
@@ -579,6 +580,30 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
     );
   }, [data?.path, testId]);
 
+  const fallbackBreadcrumb = useMemo(
+    () =>
+      data && (
+        <MemoizedTreeBreadcrumb
+          locationMessage="test.details"
+          tree={{
+            treeName: data.tree_name,
+            branch: data.git_repository_branch,
+            id: data.git_commit_hash,
+          }}
+          searchParams={{
+            origin: data.origin,
+            treeInfo: {
+              treeName: data.tree_name,
+              gitBranch: data.git_repository_branch,
+              gitUrl: data.git_repository_url,
+              headCommitHash: data.git_commit_hash,
+            },
+          }}
+        />
+      ),
+    [data],
+  );
+
   return (
     <PageWithTitle title={testDetailsTabTitle}>
       <MemoizedTestDetailsOGTags title={testDetailsTabTitle} data={data} />
@@ -595,7 +620,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
       >
         <Sheet open={logOpen} onOpenChange={logOpenChange}>
           <div className="flex flex-col gap-4 pb-10">
-            {breadcrumb}
+            {breadcrumb ?? fallbackBreadcrumb}
             <div className="flex flex-wrap justify-end gap-2">
               {kcidevComponent}
             </div>

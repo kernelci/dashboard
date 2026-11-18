@@ -1,6 +1,7 @@
 from queue import Queue
 from unittest.mock import MagicMock, call, mock_open, patch
 
+import jsonschema
 import pytest
 
 from kernelCI_app.constants.ingester import (
@@ -13,7 +14,6 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     _standardize_lab_field,
     consume_buffer,
     flush_buffers,
-    ingest_submissions_parallel,
     prepare_file_data,
     process_batch,
     standardize_labs,
@@ -123,6 +123,27 @@ class TestExtractOriginsInfo:
         }
         result = _extract_origins_info(data)
         assert result == " [origins: lab1]"
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            [1],
+            "invalid",
+            1,
+            {"checkouts": ["a"]},
+            {"tests": None},
+            {"builds": {}},
+            {"issues": [{"origin": []}, {"origin": 1}]},
+        ],
+    )
+    def test_extract_origins_info_malformed_data(self, data):
+        assert _extract_origins_info(data) == ""
+
+    def test_extract_origins_info_keeps_valid_origins(self):
+        assert (
+            _extract_origins_info({"tests": [None, {"origin": []}, {"origin": "lab1"}]})
+            == " [origins: lab1]"
+        )
 
 
 class TestStandardizeTreeNames:
@@ -462,6 +483,14 @@ class TestPrepareFileData:
             "File %s is empty, skipping, deleting", SUBMISSION_PATH_MOCK
         )
 
+    def test_prepare_file_data_vanished_empty_file(self, tmp_path):
+        """A file removed between the spool scan and the batch is not an error."""
+        mock_file = SubmissionFileMetadata(
+            name="gone.json", path=str(tmp_path / "gone.json"), size=0
+        )
+
+        assert prepare_file_data(mock_file, {}) == (None, None)
+
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.CONVERT_LOG_EXCERPT",
         True,
@@ -529,6 +558,112 @@ class TestPrepareFileData:
         mock_logger.error.assert_called()
         mock_file_open.assert_called_once()
 
+    @pytest.mark.parametrize(
+        "read_data, validate_side_effect, expected_reason",
+        [
+            ("{not json", None, "json_decode"),
+            (
+                SUBMISSION_FILE_MOCK,
+                jsonschema.ValidationError("bad schema"),
+                "schema_validation",
+            ),
+            (SUBMISSION_FILE_MOCK, RuntimeError("boom"), "other"),
+        ],
+    )
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.FILE_FAILURES_COUNTER"
+    )
+    @patch("kcidb_io.schema.V5_3.validate")
+    def test_prepare_file_data_failure_reason(
+        self,
+        mock_validate,
+        mock_failures_counter,
+        mock_logger,
+        read_data,
+        validate_side_effect,
+        expected_reason,
+    ):
+        """Preparation returns a reason without counting an unmoved file."""
+        mock_validate.side_effect = validate_side_effect
+        mock_file = SubmissionFileMetadata(
+            name=SUBMISSION_FILENAME_MOCK,
+            path=SUBMISSION_PATH_MOCK,
+            size=100,
+        )
+
+        with patch("builtins.open", mock_open(read_data=read_data)):
+            result_data, result_metadata = prepare_file_data(mock_file, {})
+
+        assert result_data is None
+        assert "error" in result_metadata
+        assert "retry" not in result_metadata
+        assert result_metadata["reason"] == expected_reason
+        mock_failures_counter.labels.assert_not_called()
+        mock_logger.error.assert_called()
+
+
+@pytest.mark.parametrize("move_succeeds", [True, False])
+@pytest.mark.parametrize(
+    "read_data, validate_side_effect, expected_reason",
+    [
+        ("{not json", None, "json_decode"),
+        ("[1]", None, "other"),
+        ('{"checkouts": ["a"]}', None, "other"),
+        (
+            SUBMISSION_FILE_MOCK,
+            jsonschema.ValidationError("bad schema"),
+            "schema_validation",
+        ),
+        (SUBMISSION_FILE_MOCK, RuntimeError("boom"), "other"),
+    ],
+)
+def test_process_batch_counts_only_moved_failures(
+    tmp_path, move_succeeds, read_data, validate_side_effect, expected_reason
+):
+    path = tmp_path / "bad.json"
+    path.write_text(read_data)
+    failed_dir = tmp_path / "failed"
+    if move_succeeds:
+        failed_dir.mkdir()
+    file = SubmissionFileMetadata(
+        name=path.name, path=str(path), size=path.stat().st_size
+    )
+    queue = Queue()
+    queue.put([file])
+    if not move_succeeds:
+        queue.put([file])
+    queue.put(None)
+    module = "kernelCI_app.management.commands.helpers.kcidbng_ingester"
+    with (
+        patch(f"{module}.connections.close_all"),
+        patch(f"{module}.CONVERT_LOG_EXCERPT", False),
+        patch(f"{module}.flush_buffers"),
+        patch("kcidb_io.schema.V5_3.validate", side_effect=validate_side_effect),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
+    ):
+        processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
+        process_batch(
+            queue,
+            {},
+            {"failed": str(failed_dir)},
+            processed,
+            stat_ok,
+            stat_fail,
+            MagicMock(),
+        )
+
+    assert path.exists() is not move_succeeds
+    assert (failed_dir / path.name).exists() is move_succeeds
+    assert processed.value == stat_fail.value == (1 if move_succeeds else 2)
+    if move_succeeds:
+        counter.labels.assert_called_once_with(
+            ingester=INGESTER_GRAFANA_LABEL, reason=expected_reason
+        )
+        counter.labels.return_value.inc.assert_called_once()
+    else:
+        counter.labels.assert_not_called()
+
 
 @pytest.mark.parametrize("retry", [True, False])
 def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
@@ -556,7 +691,10 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
         patch(f"{module}.connections.close_all"),
         patch(
             f"{module}.prepare_file_data",
-            side_effect=[(None, {"error": "unavailable", "retry": retry}), ({}, {})],
+            side_effect=[
+                (None, {"error": "unavailable", "retry": retry, "reason": "other"}),
+                ({}, {}),
+            ],
         ),
         patch(
             f"{module}.build_instances_from_submission",
@@ -566,6 +704,7 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
             },
         ),
         patch(f"{module}.flush_buffers", side_effect=flush),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
     ):
         processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
         process_batch(queue, {}, dirs, processed, stat_ok, stat_fail, MagicMock())
@@ -577,6 +716,50 @@ def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
     assert buffers == [{("good.json", str(tmp_path / "good.json"))}]
     assert processed.value == 2
     assert stat_fail.value == 1
+    if retry:
+        counter.labels.assert_not_called()
+    else:
+        counter.labels.assert_called_once_with(
+            ingester=INGESTER_GRAFANA_LABEL, reason="other"
+        )
+        counter.labels.return_value.inc.assert_called_once()
+
+
+def test_instance_build_failure_is_counted_after_move(tmp_path):
+    path = tmp_path / "bad.json"
+    path.write_text("{}")
+    failed_dir = tmp_path / "failed"
+    failed_dir.mkdir()
+    queue = Queue()
+    queue.put([SubmissionFileMetadata(name=path.name, path=str(path), size=2)])
+    queue.put(None)
+    module = "kernelCI_app.management.commands.helpers.kcidbng_ingester"
+    with (
+        patch(f"{module}.prepare_file_data", return_value=({}, {})),
+        patch(
+            f"{module}.build_instances_from_submission",
+            side_effect=RuntimeError("invalid instance"),
+        ),
+        patch(f"{module}.FILE_FAILURES_COUNTER") as counter,
+    ):
+        processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
+        process_batch(
+            queue,
+            {},
+            {"failed": str(failed_dir)},
+            processed,
+            stat_ok,
+            stat_fail,
+            MagicMock(),
+        )
+
+    assert not path.exists()
+    assert (failed_dir / path.name).exists()
+    assert processed.value == stat_fail.value == 1
+    counter.labels.assert_called_once_with(
+        ingester=INGESTER_GRAFANA_LABEL, reason="other"
+    )
+    counter.labels.return_value.inc.assert_called_once()
 
 
 class TestConsumeBuffer:
@@ -859,226 +1042,3 @@ class TestFlushBuffers:
             "Error during buffer flush: %s", mock_consume.side_effect
         )
         mock_aggregate.assert_not_called()
-
-
-class TestIngestSubmissionsParallel:
-    """Test cases for ingest_submissions_parallel function."""
-
-    # Test cases:
-    # - successful ingestion
-
-    FILE1_SIZE = 1000
-    FILE2_SIZE = 2000
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch("multiprocessing.get_context")
-    @patch("time.sleep")
-    @patch("time.time", side_effect=TIME_MOCK)
-    @patch("os.path.getsize")
-    def test_ingest_submissions_parallel_success(
-        self,
-        mock_getsize,
-        mock_time,
-        mock_sleep,
-        mock_get_context,
-        mock_out,
-    ):
-        """Test successful parallel ingestion."""
-        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
-        file2_path = SUBMISSION_FILEPATH_MOCK + "file2.json"
-
-        file_sizes = {file1_path: self.FILE1_SIZE, file2_path: self.FILE2_SIZE}
-        mock_getsize.side_effect = lambda p: file_sizes[p]
-
-        mock_queue = MagicMock()
-        mock_queue.empty.return_value = True
-        mock_queue.qsize.return_value = 0
-
-        json_files = [file1_path, file2_path]
-
-        mock_ok = MagicMock()
-        mock_ok.value = 1
-        mock_fail = MagicMock()
-        mock_fail.value = 1
-        mock_processed = MagicMock()
-        mock_processed.value = len(json_files)
-
-        mock_process_instance = MagicMock(exitcode=0)
-        mock_context = MagicMock()
-        mock_context.Queue.return_value = mock_queue
-        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
-        mock_context.Process.return_value = mock_process_instance
-        mock_get_context.return_value = mock_context
-
-        ingest_submissions_parallel(
-            json_files=json_files,
-            tree_names={},
-            dirs=SUBMISSION_DIRS_MOCK,
-            max_workers=2,
-        )
-
-        mock_get_context.assert_called_once_with("fork")
-        assert mock_process_instance.start.call_count == 2
-        assert mock_process_instance.join.call_count == 2
-
-        stat_ok = 1
-        stat_fail = 1
-        total_elapsed = 1
-
-        total_bytes = self.FILE1_SIZE + self.FILE2_SIZE
-        mb = total_bytes / (1024 * 1024)
-
-        # We verify only the final call
-        mock_out.assert_called_with(
-            "Ingest cycle: %d files (ok=%d, fail=%d) in %.2fs | "
-            "%.2f files/s | %.2f MB processed (%.2f MB/s)"
-            % (
-                len(json_files),
-                stat_ok,
-                stat_fail,
-                total_elapsed,
-                len(json_files) / total_elapsed,
-                mb,
-                mb / total_elapsed,
-            ),
-        )
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out", MagicMock())
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
-    )
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
-    @patch("multiprocessing.get_context")
-    @patch("time.sleep", MagicMock())
-    @patch("time.time", MagicMock(side_effect=TIME_MOCK))
-    @patch("os.path.getsize")
-    def test_ingest_submissions_parallel_worker_failure(
-        self,
-        mock_getsize,
-        mock_get_context,
-        mock_logger,
-        mock_failures_counter,
-    ):
-        """Test that all workers failing breaks the loop and logs errors."""
-        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
-
-        mock_getsize.return_value = self.FILE1_SIZE
-
-        mock_queue = MagicMock()
-
-        # Queue not empty on first check, triggers the is_alive guard
-        mock_queue.empty.return_value = False
-        mock_queue.qsize.return_value = 1
-
-        mock_ok = MagicMock(value=0)
-        mock_fail = MagicMock(value=1)
-        mock_processed = MagicMock(value=0)
-
-        # Two workers: one crashed (exitcode=1), one killed (exitcode=-9)
-        crashed_worker = MagicMock(exitcode=1, pid=1001)
-        crashed_worker.is_alive.return_value = False
-
-        killed_worker = MagicMock(exitcode=-9, pid=1002)
-        killed_worker.is_alive.return_value = False
-
-        mock_context = MagicMock()
-        mock_context.Queue.return_value = mock_queue
-        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
-        mock_context.Process.side_effect = [crashed_worker, killed_worker]
-        mock_get_context.return_value = mock_context
-
-        ingest_submissions_parallel(
-            json_files=[file1_path],
-            tree_names={},
-            dirs=SUBMISSION_DIRS_MOCK,
-            max_workers=2,
-        )
-
-        # Loop should break because no workers are alive
-        mock_logger.error.assert_any_call(
-            "All workers exited while queue still has items"
-        )
-
-        # Both workers should be joined and their exit codes logged
-        crashed_worker.join.assert_called_once()
-        killed_worker.join.assert_called_once()
-
-        mock_logger.error.assert_any_call(
-            "Worker %s exited with code %s (%s)", 1001, 1, "exception"
-        )
-        mock_logger.error.assert_any_call(
-            "Worker %s exited with code %s (%s)", 1002, -9, "signal"
-        )
-
-        # Prometheus counter incremented with correct labels
-        mock_failures_counter.labels.assert_any_call(
-            ingester=INGESTER_GRAFANA_LABEL, reason="exception"
-        )
-        mock_failures_counter.labels.assert_any_call(
-            ingester=INGESTER_GRAFANA_LABEL, reason="signal"
-        )
-        assert mock_failures_counter.labels.return_value.inc.call_count == 2
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out", MagicMock())
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
-    )
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
-    @patch("multiprocessing.get_context")
-    @patch("time.sleep", MagicMock())
-    @patch("time.time", MagicMock(side_effect=TIME_MOCK))
-    @patch("os.path.getsize")
-    def test_ingest_submissions_parallel_partial_worker_failure(
-        self,
-        mock_getsize,
-        mock_get_context,
-        mock_logger,
-        mock_failures_counter,
-    ):
-        """Test that partial worker failure still completes when a worker survives."""
-        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
-
-        mock_getsize.return_value = self.FILE1_SIZE
-
-        mock_queue = MagicMock()
-
-        # Queue non-empty on first iteration, then empty (surviving worker drained it)
-        mock_queue.empty.side_effect = [False, True]
-        mock_queue.qsize.return_value = 1
-
-        mock_ok = MagicMock(value=0)
-        mock_fail = MagicMock(value=0)
-        mock_processed = MagicMock(value=0)
-
-        # One worker crashed, one is still alive and draining the queue
-        crashed_worker = MagicMock(exitcode=1, pid=1001)
-        crashed_worker.is_alive.return_value = False
-
-        alive_worker = MagicMock(exitcode=0, pid=1002)
-        alive_worker.is_alive.return_value = True
-
-        mock_context = MagicMock()
-        mock_context.Queue.return_value = mock_queue
-        mock_context.Value.side_effect = [mock_ok, mock_fail, mock_processed]
-        mock_context.Process.side_effect = [crashed_worker, alive_worker]
-        mock_get_context.return_value = mock_context
-
-        ingest_submissions_parallel(
-            json_files=[file1_path],
-            tree_names={},
-            dirs=SUBMISSION_DIRS_MOCK,
-            max_workers=2,
-        )
-
-        # Both workers should be joined
-        crashed_worker.join.assert_called_once()
-        alive_worker.join.assert_called_once()
-
-        # Only the crashed worker should trigger an error log and counter
-        mock_logger.error.assert_called_once_with(
-            "Worker %s exited with code %s (%s)", 1001, 1, "exception"
-        )
-        mock_failures_counter.labels.assert_called_once_with(
-            ingester=INGESTER_GRAFANA_LABEL, reason="exception"
-        )
-        mock_failures_counter.labels.return_value.inc.assert_called_once()

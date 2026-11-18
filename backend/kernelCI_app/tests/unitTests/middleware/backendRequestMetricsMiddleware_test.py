@@ -52,6 +52,7 @@ def _fake_metrics(monkeypatch) -> tuple[MagicMock, MagicMock]:
             kci_dev_requests_by_version=MagicMock(),
             visitors_by_request_count=MagicMock(),
             request_latency=histogram,
+            route_visible_seconds=MagicMock(),
         ),
     )
     monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.cache.add", lambda *args, **kwargs: False)
@@ -94,6 +95,7 @@ class TestMiddlewareCall:
             "dashboard_kci_dev_requests_by_version_total",
             "dashboard_visitors_by_request_count_total",
             "dashboard_backend_request_latency_seconds",
+            "dashboard_route_visible_seconds",
         ]
 
 
@@ -128,6 +130,18 @@ def test_admin_request_stays_on_django_latency_histogram(monkeypatch):
 
     django_latency.labels.assert_called_once()
     django_latency.labels.return_value.observe.assert_called_once()
+    counter.labels.assert_not_called()
+    histogram.labels.assert_not_called()
+
+
+def test_visible_time_beacon_skips_client_analytics(monkeypatch):
+    from django.urls import resolve
+
+    counter, histogram = _fake_metrics(monkeypatch)
+    request = RequestFactory().post("/api/analytics/visible/")
+    request.resolver_match = resolve("/api/analytics/visible/")
+    _middleware()(request)
+
     counter.labels.assert_not_called()
     histogram.labels.assert_not_called()
 
@@ -326,6 +340,7 @@ def _visitor_metrics(monkeypatch):
         kci_dev_requests_by_version=MagicMock(),
         visitors_by_request_count=bands,
         request_latency=MagicMock(),
+        route_visible_seconds=MagicMock(),
     )
     monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.get_metrics", lambda: metrics)
     monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.get_analytics_date", lambda: "2026-09-30")

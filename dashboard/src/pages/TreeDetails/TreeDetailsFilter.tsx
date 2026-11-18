@@ -132,79 +132,65 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
 const sectionTrees: ISectionItem[] = [
   {
     title: 'filter.buildStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'buildStatus',
   },
   {
     title: 'filter.bootStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'bootStatus',
   },
   {
     title: 'filter.testStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'testStatus',
   },
   {
     title: 'filter.buildIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'buildIssue',
   },
   {
     title: 'filter.bootIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'bootIssue',
   },
   {
     title: 'filter.testIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'testIssue',
   },
   {
     title: 'filter.hardware',
-    subtitle: 'filter.hardwareSubtitle',
     sectionKey: 'hardware',
     isGlobal: true,
   },
   {
     title: 'global.configs',
-    subtitle: 'filter.configsSubtitle',
     sectionKey: 'configs',
     isGlobal: true,
   },
   {
     title: 'global.architecture',
-    subtitle: 'filter.architectureSubtitle',
     sectionKey: 'archs',
     isGlobal: true,
   },
   {
     title: 'global.compilers',
-    subtitle: 'filter.compilersSubtitle',
     sectionKey: 'compilers',
     isGlobal: true,
   },
   {
     title: 'filter.labs',
-    subtitle: 'filter.labsSubtitle',
     sectionKey: 'labs',
     isGlobal: true,
   },
   {
     title: 'filter.buildOrigin',
-    subtitle: 'filter.originsSubtitle',
     sectionKey: 'buildOrigin',
     isGlobal: false,
   },
   {
     title: 'filter.bootOrigin',
-    subtitle: 'filter.originsSubtitle',
     sectionKey: 'bootOrigin',
     isGlobal: false,
   },
   {
     title: 'filter.testOrigin',
-    subtitle: 'filter.originsSubtitle',
     sectionKey: 'testOrigin',
     isGlobal: false,
   },

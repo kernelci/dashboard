@@ -144,61 +144,50 @@ export const createFilter = (
 const sectionHardware: ISectionItem[] = [
   {
     title: 'filter.buildStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'buildStatus',
   },
   {
     title: 'filter.bootStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'bootStatus',
   },
   {
     title: 'filter.testStatus',
-    subtitle: 'filter.statusSubtitle',
     sectionKey: 'testStatus',
   },
   {
     title: 'filter.buildIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'buildIssue',
   },
   {
     title: 'filter.bootIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'bootIssue',
   },
   {
     title: 'filter.testIssue',
-    subtitle: 'filter.issueSubtitle',
     sectionKey: 'testIssue',
   },
   {
     title: 'global.configs',
-    subtitle: 'filter.configsSubtitle',
     sectionKey: 'configs',
     isGlobal: true,
   },
   {
     title: 'global.architecture',
-    subtitle: 'filter.architectureSubtitle',
     sectionKey: 'archs',
     isGlobal: true,
   },
   {
     title: 'global.compilers',
-    subtitle: 'filter.compilersSubtitle',
     sectionKey: 'compilers',
     isGlobal: true,
   },
   {
     title: 'global.compatibles',
-    subtitle: 'filter.compatiblesSubtitle',
     sectionKey: 'hardware',
     isGlobal: true,
   },
   {
     title: 'filter.labs',
-    subtitle: 'filter.labsSubtitle',
     sectionKey: 'labs',
     isGlobal: true,
   },
@@ -257,18 +246,14 @@ const HardwareDetailsFilter = ({
     [paramFilter],
   );
 
-  const handleSelectTree = useCallback(
-    (value: string) => {
-      const key = value.split('__')[1] ?? '';
-
-      if (treeIndexes.includes(key)) {
-        setTreeIndexes(treeIndexes.filter(k => k !== key));
-      } else {
-        setTreeIndexes([...treeIndexes, key]);
-      }
-    },
-    [treeIndexes],
-  );
+  const handleSelectTree = useCallback((value: string) => {
+    const key = value.split('__')[1] ?? '';
+    setTreeIndexes(current =>
+      current.includes(key)
+        ? current.filter(item => item !== key)
+        : [...current, key],
+    );
+  }, []);
 
   const drawerLink: IDrawerLink = useMemo(
     () => ({

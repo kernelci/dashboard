@@ -34,6 +34,8 @@ interface IFilterDrawer {
   onFilter?: () => void;
   showLegend?: boolean;
   link?: IDrawerLink;
+  // The hardware page shows two drawers, so their triggers need distinct names.
+  labelId?: MessageDescriptor['id'];
 }
 
 const DrawerHeader = (): JSX.Element => {
@@ -85,7 +87,7 @@ export const DrawerSection = ({
   return (
     <>
       {!hideSeparator && <Separator />}
-      <div className="not-first:pt-10 not-last:pb-10">{children}</div>
+      <div className="not-first:pt-4 not-last:pb-4">{children}</div>
     </>
   );
 };
@@ -122,7 +124,7 @@ export const FilterTypeIcon = ({ type }: FilterTypeIconProps): JSX.Element => {
 
 const Legend = (): JSX.Element => {
   return (
-    <div className="flex items-center gap-1 pb-10">
+    <div className="flex items-center gap-1 pb-4">
       <span className="mr-1 font-semibold">
         <FormattedMessage id="global.legend" />
       </span>
@@ -145,6 +147,7 @@ const Drawer = ({
   onFilter,
   onOpenChange,
   showLegend = true,
+  labelId = 'global.filters',
 }: IFilterDrawer): JSX.Element => {
   const drawerLinkComponent = useMemo(() => {
     if (link) {
@@ -159,7 +162,7 @@ const Drawer = ({
     <UIDrawer onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
         <ButtonWithIcon
-          label={<FormattedMessage id="global.filters" />}
+          label={<FormattedMessage id={labelId} />}
           icon={<IoChevronDown />}
         />
       </DrawerTrigger>

@@ -6,7 +6,7 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 
 | Scenario | Compose File | Database | Profiles |
 |----------|-------------|----------|----------|
-| Development | `docker-compose.yml` | Local (always on) | `with_commands` (for ingester) |
+| Development | `docker-compose.dev.yml` | Local PostgreSQL | none |
 | Production | `docker-compose-next.yml` | External PostgreSQL | none (or `with_commands`) |
 | Staging | `docker-compose.yml` | External PostgreSQL (shared with production) | none (or `with_commands`) |
 
@@ -63,8 +63,8 @@ policy.
 
 Anubis uses secure cookies by default in `docker-compose-next.yml`. Set
 `ANUBIS_COOKIE_SECURE=false` only when the public dashboard is intentionally
-served over plain HTTP. `docker-compose.yml` defaults this setting to `false`
-for local development.
+served over plain HTTP. Staging (`docker-compose.yml`) defaults this setting
+to `false`.
 
 ### Accessing production database
 
@@ -96,35 +96,9 @@ use the same PostgreSQL database, so schema changes affect both environments onc
 
 ## 1. Development
 
-This is the minimal guide for development using
-the fully containerized (Docker Compose) alternative.
-Images are built locally and use a global `.env` file.
+Local development uses [`docker-compose.dev.yml`](docs/dev-environment.md). That file has its own PostgreSQL, Redis, Django, and Vite services. Setup, ports, and database access are in [docs/dev-environment.md](docs/dev-environment.md).
 
-### Setup
-
-```bash
-# Copy all example env files
-cp .env.example .env
-
-# Edit the env variables
-# DB_PASSWORD and DJANGO_SECRET_KEY
-
-# Start all core services (builds images from source)
-docker compose up --build -d
-
-# Include ingester and aggregation processor
-docker compose --profile=with_commands up --build -d
-```
-
-### Rebuilding after code changes
-
-```bash
-# Rebuild and restart just the backend
-docker compose up --build -d backend
-
-# Rebuild everything
-docker compose up --build -d
-```
+`docker-compose.yml` is the staging stack. `docker compose` with no `-f` uses that file. Do not use it for local development.
 
 ### Local Frontend development
 
@@ -165,9 +139,8 @@ The backend connects to a PostgreSQL instance using the environment variables:
 
 ## 2. Production
 
-Unlike the development deployment, our production environment connects to a
-pre-existing external PostgreSQL instance and use pre-built docker images
-stored in the GitHub Container Registry (GHCR).
+Production connects to a pre-existing external PostgreSQL instance and uses
+pre-built docker images stored in the GitHub Container Registry (GHCR).
 
 Production images are automatically built via GitHub Workflow,
 to every new commit in the main branch, or when

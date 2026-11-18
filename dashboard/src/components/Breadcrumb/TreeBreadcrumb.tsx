@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { memo, useMemo, type JSX } from 'react';
 
-import type { LinkProps } from '@tanstack/react-router';
+import type { HistoryState, LinkProps } from '@tanstack/react-router';
 import { useRouterState } from '@tanstack/react-router';
 
 import {
@@ -18,17 +18,16 @@ import {
 const TreeBreadcrumb = ({
   searchParams,
   locationMessage,
+  tree,
 }: {
   searchParams: LinkProps['search'];
   locationMessage: MessageDescriptor['id'];
+  tree?: Pick<HistoryState, 'treeName' | 'branch' | 'id'>;
 }): JSX.Element => {
-  const {
-    treeName,
-    branch,
-    id: treeId,
-  } = useRouterState({
+  const historyState = useRouterState({
     select: s => s.location.state,
   });
+  const { treeName, branch, id: treeId } = tree ?? historyState;
   const canGoDirect = treeName && branch && treeId;
 
   const treeParams = useMemo(
@@ -43,17 +42,22 @@ const TreeBreadcrumb = ({
   );
 
   const breadcrumbLink = useMemo(
-    () => (
-      <BreadcrumbLink
-        to={treeParams.to}
-        params={treeParams.params}
-        search={searchParams}
-        state={s => s}
-      >
-        <FormattedMessage id="tree.details" />
-      </BreadcrumbLink>
-    ),
-    [treeParams, searchParams],
+    () =>
+      treeId ? (
+        <BreadcrumbLink
+          to={treeParams.to}
+          params={treeParams.params}
+          search={searchParams}
+          state={s => (tree ? {} : s)}
+        >
+          <FormattedMessage id="tree.details" />
+        </BreadcrumbLink>
+      ) : (
+        <span>
+          <FormattedMessage id="tree.details" />
+        </span>
+      ),
+    [treeId, treeParams, searchParams, tree],
   );
 
   return (
@@ -65,7 +69,7 @@ const TreeBreadcrumb = ({
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        {breadcrumbLink}
+        <BreadcrumbItem>{breadcrumbLink}</BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>

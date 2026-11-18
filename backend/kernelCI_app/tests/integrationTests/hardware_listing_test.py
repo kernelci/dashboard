@@ -4,11 +4,22 @@ from datetime import timedelta
 
 import pytest
 
-from kernelCI_app.models import HardwareDailyBuilds, HardwareDailyTests
+from kernelCI_app.models import (
+    HardwareDailyBuilds,
+    HardwareDailyTests,
+    HardwareRegistryPlatform,
+    HardwareRegistryPlatformVendor,
+    HardwareRegistryProcessor,
+    HardwareRegistrySiliconVendor,
+)
 from kernelCI_app.queries.hardware import (
     get_hardware_filters,
     get_hardware_listing_data,
     get_hardware_listing_data_by_revision,
+)
+from kernelCI_app.queries.hardwareRegistryFilters import (
+    HardwareRegistryFilter,
+    get_hardware_registry_filter_options,
 )
 from kernelCI_app.tests.factories import BuildFactory
 from kernelCI_app.tests.integrationTests.recompute_hardware_daily_test import (
@@ -44,16 +55,16 @@ def _independent_filter_fixture():
     _test_on(
         selected_build,
         "pA",
-        origin="other-test-origin",
-        lab="other-test-lab",
-        status="FAIL",
+        origin="selected-test-origin",
+        lab="selected-test-lab",
+        status="PASS",
     )
     _test_on(
         other_build,
         "pA",
-        origin="selected-test-origin",
-        lab="selected-test-lab",
-        status="PASS",
+        origin="other-test-origin",
+        lab="other-test-lab",
+        status="FAIL",
     )
     _recompute()
     return checkout
@@ -166,3 +177,53 @@ def test_unknown_checkout_origin_is_listed_until_an_origin_is_chosen():
 
     assert [row[0] for row in listing(None)] == ["pA"]
     assert listing(["maestro"]) == []
+
+
+@pytest.mark.django_db
+def test_registry_filter_narrows_the_listing_and_options_list_its_platforms():
+    build = BuildFactory(checkout=_checkout(origin="maestro"), status="PASS")
+    # Daily rows carry the vendor prefix; the registry holds the board alone.
+    for platform in ("ti,arm-board", "x86-board", "unregistered"):
+        _test_on(build, platform)
+    _recompute()
+    vendor = HardwareRegistryPlatformVendor.objects.create(id="pv")
+    silicon = HardwareRegistrySiliconVendor.objects.create(
+        id="sv", type="silicon_vendor"
+    )
+    for platform, architecture in (("arm-board", "arm64"), ("x86-board", "x86_64")):
+        HardwareRegistryPlatform.objects.create(
+            id=platform,
+            type="evaluation_board",
+            vendor=vendor,
+            processor=HardwareRegistryProcessor.objects.create(
+                id=f"soc-{architecture}", vendor=silicon, architecture=architecture
+            ),
+        )
+
+    def platforms(**registry):
+        rows = get_hardware_listing_data(
+            start_date=WINDOW[0],
+            end_date=WINDOW[1],
+            checkout_origin=None,
+            build_origin=None,
+            test_origin=None,
+            build_lab=None,
+            test_lab=None,
+            registry_filter=HardwareRegistryFilter(**registry),
+        )
+        return [row[0] for row in rows]
+
+    listed = platforms()
+    assert listed == ["ti,arm-board", "unregistered", "x86-board"]
+    assert platforms(architecture=("arm64",)) == ["ti,arm-board"]
+    assert platforms(platform=("ti,arm-board",)) == ["ti,arm-board"]
+    assert platforms(platform=("unregistered",)) == ["unregistered"]
+    assert platforms(architecture=("arm64",), platform=("unregistered",)) == []
+    assert platforms(architecture=("arm64",), platform=("ti,arm-board",)) == [
+        "ti,arm-board"
+    ]
+
+    options = get_hardware_registry_filter_options(listed)
+    assert options["architecture"] == ["arm64", "x86_64"]
+    assert options["processor"] == ["soc-arm64", "soc-x86_64"]
+    assert options["platform"] == listed

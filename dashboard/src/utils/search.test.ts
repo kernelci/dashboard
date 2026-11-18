@@ -388,6 +388,15 @@ describe('stringifySearch', () => {
     assertSearchParams(result, flatObjectMinify);
   });
 
+  it('round-trips a platform id holding the array separator', () => {
+    const platform = ['ti,am335x-bone-black', 'qemu'];
+    const query = stringifySearch({ registryFilter: { platform } });
+
+    expect(parseSearch(query as string)).toMatchObject({
+      registryFilter: { platform },
+    });
+  });
+
   it('round-trips diffFilter duration fields', () => {
     const buildDurationMin = 42;
     const search = { diffFilter: { buildDurationMin } };

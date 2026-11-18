@@ -556,7 +556,10 @@ export function HardwareTable({
       </QuerySwitcher>
       <div className="flex flex-wrap items-start justify-between gap-4">
         {!selection && (
-          <FilterLabel days={intervalInDays ?? REDUCED_TIME_SEARCH} />
+          <FilterLabel
+            days={intervalInDays ?? REDUCED_TIME_SEARCH}
+            messageId="filter.everyCheckoutFilterLabel"
+          />
         )}
         <div className="ml-auto">
           <PaginationInfo

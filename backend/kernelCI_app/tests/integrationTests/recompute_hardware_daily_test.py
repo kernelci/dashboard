@@ -13,6 +13,7 @@ from kernelCI_app.models import (
     HardwareDailyTests,
     Tests,
 )
+from kernelCI_app.queries.hardware import get_hardware_listing_data
 from kernelCI_app.tests.factories import BuildFactory, CheckoutFactory, TestFactory
 
 DAY = date(2026, 7, 15)
@@ -48,6 +49,10 @@ def _recompute():
     call_command("recompute_hardware_daily", day=DAY)
 
 
+def _distinct_builds():
+    return HardwareDailyBuilds.objects.filter(test_origin="")
+
+
 @pytest.mark.django_db
 def test_boot_and_test_counters_are_split():
     """Boot paths, plain tests and anything but PASS/FAIL land in their own counter."""
@@ -80,7 +85,7 @@ def test_dummy_build_is_not_counted_but_its_tests_are():
 
     _recompute()
 
-    assert HardwareDailyBuilds.objects.get().build_pass == 1
+    assert _distinct_builds().get().build_pass == 1
     assert HardwareDailyTests.objects.get().boot_pass == 2
 
 
@@ -93,7 +98,7 @@ def test_build_is_counted_once_per_platform():
 
     _recompute()
 
-    counted = HardwareDailyBuilds.objects.order_by("platform")
+    counted = _distinct_builds().order_by("platform")
     assert [(row.platform, row.build_pass) for row in counted] == [("pA", 1), ("pB", 1)]
 
 
@@ -113,8 +118,8 @@ def test_lab_comes_from_misc_and_falls_back_to_origin():
 
     assert HardwareDailyTests.objects.get(platform="pA").test_lab == "maestro"
     assert HardwareDailyTests.objects.get(platform="pB").test_lab == "test-lab"
-    assert HardwareDailyBuilds.objects.get(platform="pA").build_lab == "build-lab"
-    assert HardwareDailyBuilds.objects.get(platform="pB").build_lab == "run-lab"
+    assert _distinct_builds().get(platform="pA").build_lab == "build-lab"
+    assert _distinct_builds().get(platform="pB").build_lab == "run-lab"
 
 
 @pytest.mark.django_db
@@ -125,7 +130,7 @@ def test_checkout_origin_is_stored_on_both_tables():
 
     _recompute()
 
-    assert HardwareDailyBuilds.objects.get().checkout_origin == "maestro"
+    assert _distinct_builds().get().checkout_origin == "maestro"
     test_row = HardwareDailyTests.objects.get()
     assert test_row.checkout_origin == "maestro"
     assert test_row.test_origin == "linaro"
@@ -139,7 +144,7 @@ def test_rerun_replaces_the_day_without_duplicating():
     _recompute()
 
     assert HardwareDailyTests.objects.get().boot_pass == 1
-    assert HardwareDailyBuilds.objects.get().build_pass == 1
+    assert _distinct_builds().get().build_pass == 1
 
 
 @pytest.mark.django_db
@@ -152,7 +157,7 @@ def test_compatibles_resolve_to_the_most_specific_chain():
 
     _recompute()
 
-    assert HardwareDailyBuilds.objects.get().compatibles == ["rockchip", "rk3399"]
+    assert _distinct_builds().get().compatibles == ["rockchip", "rk3399"]
     labelled = HardwareDailyTests.objects.values_list("compatibles", flat=True)
     assert list(labelled) == [["rockchip", "rk3399"]] * 3
 
@@ -182,4 +187,46 @@ def test_pruned_raw_data_keeps_the_existing_rows():
     _recompute()
 
     assert HardwareDailyTests.objects.get().boot_pass == 1
-    assert HardwareDailyBuilds.objects.get().build_pass == 1
+    assert _distinct_builds().get().build_pass == 1
+
+
+def _listed_build_pass(test_origin):
+    rows = get_hardware_listing_data(
+        start_date=DAY_START,
+        end_date=DAY_START + timedelta(days=1),
+        checkout_origin=None,
+        build_origin=None,
+        test_origin=[test_origin] if test_origin else None,
+        build_lab=None,
+        test_lab=None,
+    )
+    assert len(rows) == 1
+    return rows[0][2]
+
+
+@pytest.mark.django_db
+def test_each_origin_counts_only_the_build_it_tested():
+    checkout = _checkout()
+    first = BuildFactory(checkout=checkout, status="PASS", origin="maestro")
+    second = BuildFactory(checkout=checkout, status="PASS", origin="maestro")
+    _test_on(first, "pA", origin="maestro")
+    _test_on(second, "pA", origin="ti")
+
+    _recompute()
+
+    assert _listed_build_pass("maestro") == 1
+    assert _listed_build_pass("ti") == 1
+    assert _listed_build_pass(None) == 2
+
+
+@pytest.mark.django_db
+def test_a_build_tested_by_two_origins_is_counted_once():
+    build = BuildFactory(checkout=_checkout(), status="PASS", origin="maestro")
+    _test_on(build, "pA", origin="maestro")
+    _test_on(build, "pA", origin="ti")
+
+    _recompute()
+
+    assert _listed_build_pass("maestro") == 1
+    assert _listed_build_pass("ti") == 1
+    assert _listed_build_pass(None) == 1

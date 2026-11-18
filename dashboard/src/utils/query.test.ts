@@ -44,6 +44,12 @@ describe('isBadRequestError', () => {
 });
 
 describe('retryHandler', () => {
+  it('does not retry a missing resource', () => {
+    expect(retryHandler()(0, createAxiosError(HttpStatusCode.NotFound))).toBe(
+      false,
+    );
+  });
+
   it('defaults to DEFAULT_QUERY_RETRY_COUNT', () => {
     const shouldRetry = retryHandler();
     const error = new Error('500:Server error');

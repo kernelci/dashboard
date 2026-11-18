@@ -104,3 +104,55 @@ def test_retry_stat_error_does_not_clear_tracking(retry_dirs):
         with pytest.raises(CommandError, match="Could not inspect deferred file"):
             check_backlog(spool, pending, tracked, 30)
     assert tracked == {"old.json": 0}
+
+
+def test_prometheus_file_count_is_sampled_once_per_minute(tmp_path):
+    from kernelCI_app.management.commands import monitor_submissions as monitor
+
+    (tmp_path / "counter_1.db").touch()
+    (tmp_path / "gauge_livemax_1.db").touch()
+    (tmp_path / "notes.txt").touch()
+    command = Command()
+    with (
+        patch.object(monitor, "PROMETHEUS_MULTIPROC_DIR", str(tmp_path)),
+        patch.object(monitor, "PROMETHEUS_FILES_GAUGE") as metric,
+        patch("time.monotonic", side_effect=[0, 59, 60]),
+    ):
+        command._update_prometheus_file_count()
+        metric.labels.return_value.set.assert_called_once_with(2)
+        (tmp_path / "histogram_2.db").touch()
+        command._update_prometheus_file_count()
+        assert metric.labels.return_value.set.call_count == 1
+        command._update_prometheus_file_count()
+        metric.labels.return_value.set.assert_called_with(3)
+
+
+def test_monitor_reuses_one_worker_group_across_cycles(tmp_path):
+    from kernelCI_app.management.commands import monitor_submissions as monitor
+
+    command = Command()
+    cycles = 0
+
+    def next_cycle(_):
+        nonlocal cycles
+        cycles += 1
+        if cycles == 2:
+            command.running = False
+
+    with (
+        patch.object(command, "_setup_prometheus"),
+        patch.object(command, "_update_prometheus_file_count"),
+        patch.object(command, "_scan_spool_dir", return_value=["file.json"]),
+        patch.object(command, "_check_retry_backlog", return_value=0),
+        patch.object(monitor, "load_tree_names", return_value={}),
+        patch.object(monitor, "sweep_pending_retry", return_value=0),
+        patch.object(monitor, "IngestionWorkers") as pool,
+        patch.object(monitor.signal, "signal"),
+        patch.object(monitor.time, "sleep", side_effect=next_cycle),
+    ):
+        command.handle(
+            spool_dir=str(tmp_path), max_workers=2, interval=5, trees_file=None
+        )
+    pool.assert_called_once()
+    assert pool.return_value.__enter__.return_value.ingest.call_count == 2
+    pool.return_value.__exit__.assert_called_once_with(None, None, None)

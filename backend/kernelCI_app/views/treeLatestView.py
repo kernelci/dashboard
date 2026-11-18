@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import ClientStrings
-from kernelCI_app.queries.tree import get_latest_tree
+from kernelCI_app.queries.tree import get_latest_tree, get_tree_not_found
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     GIT_BRANCH_PATH_PARAM,
     TREE_NAME_PATH_PARAM,
@@ -19,12 +19,13 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
     TreeLatestQueryParameters,
     TreeLatestResponse,
+    TreeLatestResponseOrError,
 )
 
 
 class TreeLatest(APIView):
     @extend_schema(
-        responses=TreeLatestResponse,
+        responses=TreeLatestResponseOrError,
         parameters=[
             TREE_NAME_PATH_PARAM,
             GIT_BRANCH_PATH_PARAM,
@@ -56,6 +57,14 @@ class TreeLatest(APIView):
         )
 
         if tree_data is None:
+            not_found = get_tree_not_found(
+                origin=origin,
+                tree_name=parsed_params.tree_name,
+                git_branch=parsed_params.git_branch,
+                commit_hash=query_params.commit_hash,
+            )
+            if not_found is not None:
+                return Response(not_found.model_dump(), status=HTTPStatus.OK)
             tree_not_found_error_message = ClientStrings.TREE_NOT_FOUND
             if request.GET.get("origin") is None:
                 tree_not_found_error_message += (

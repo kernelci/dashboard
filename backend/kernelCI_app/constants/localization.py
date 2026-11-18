@@ -56,6 +56,8 @@ class ClientStrings:
     BUILD_ISSUES_NOT_FOUND = "No issues found for this build"
     BUILD_DETAILS_NOT_FOUND = "Build not found"
     TREE_NOT_FOUND = "Tree not found."
+    TREE_BRANCH_NOT_FOUND = "Branch not found."
+    TREE_COMMIT_NOT_FOUND = "Commit not found."
     TREE_LATEST_DEFAULT_ORIGIN = "No origin was provided so it was defaulted to"
     METRICS_INVALID_INTERVAL = (
         "start_days_ago must be greater than end_days_ago to define a valid interval"
@@ -121,6 +123,13 @@ class DocStrings:
     HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION = (
         "Optional comma-separated git commit identifiers: full SHA(s) "
         "and/or tag strings that appear in checkout.git_commit_tags."
+    )
+    HARDWARE_REGISTRY_FILTER_DESCRIPTION = (
+        "Registry value. Repeat the parameter to select more than one, since "
+        "a platform id can hold a comma. Values in one field are OR; "
+        "different fields are AND. A platform that is not in the registry "
+        "matches only the platform filter, and only when no other registry "
+        "field is set."
     )
 
     LAB_LISTING_ORIGIN_DESCRIPTION = "Origin of the lab results"

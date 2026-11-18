@@ -149,6 +149,90 @@ class HardwareQueryParamsDocumentationOnly(BaseModel):
         default=None,
         description=DocStrings.HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION,
     )
+    architecture: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    processor: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    platformVendor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    siliconVendor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    platform: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    systemModule: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    formFactor: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+    boardType: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_REGISTRY_FILTER_DESCRIPTION,
+    )
+
+
+class HardwareRegistryFilterOptions(BaseModel):
+    architecture: list[str]
+    processor: list[str]
+    platform_vendor: list[str]
+    silicon_vendor: list[str]
+    platform: list[str]
+    system_module: list[str]
+    form_factor: list[str]
+    board_type: list[str]
+
+
+class HardwareRegistryFilterOptionsDocumentationOnly(BaseModel):
+    """Takes the listing filters, so the options match the listed boards."""
+
+    checkoutOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    buildOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    testOrigin: Optional[str] = None  # noqa: N815
+    buildLab: Optional[str] = None  # noqa: N815
+    testLab: Optional[str] = None  # noqa: N815
+    origin: Optional[str] = Field(
+        default=None,
+        deprecated=True,
+        description="Deprecated alias for checkoutOrigin and buildOrigin",
+    )
+    startTimestampInSeconds: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description="Required without git_commit_hash. "
+        + DocStrings.DEFAULT_START_TS_DESCRIPTION,
+    )
+    endTimestampInSeconds: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description="Required without git_commit_hash. "
+        + DocStrings.DEFAULT_END_TS_DESCRIPTION,
+    )
+    commitsList: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION,
+    )
+    tree_name: Optional[str] = Field(
+        default=None, description=DocStrings.TREE_NAME_PATH_DESCRIPTION
+    )
+    git_repository_url: Optional[str] = Field(
+        default=None, description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION
+    )
+    git_repository_branch: Optional[str] = Field(
+        default=None, description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION
+    )
+    git_commit_hash: Optional[str] = Field(
+        default=None, description=DocStrings.COMMIT_HASH_PATH_DESCRIPTION
+    )
 
 
 class HardwareQueryParams(HardwareFilterParams):

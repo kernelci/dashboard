@@ -8,6 +8,7 @@ import type {
   HardwareFiltersResponse,
   HardwareListingResponse,
   HardwareRegistrySyncResponse,
+  HardwareRegistryFilterOptions,
   HardwareRevisionSelection,
   HardwareSelectorsResponse,
 } from '@/types/hardware';
@@ -19,6 +20,9 @@ const selectedFilterValues = (section?: Record<string, boolean>): string =>
     .filter(([, checked]) => checked)
     .map(([key]) => key)
     .join(',');
+
+// A registry field repeats its parameter, so a value may be a list.
+export type HardwareListingParams = Record<string, string | string[]>;
 
 export const hardwareListingParams = (
   diffFilter: TFilter,
@@ -36,7 +40,7 @@ export const buildOriginForSelectors = (diffFilter: TFilter): string =>
 const fetchHardwareListing = async (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList?: string[],
 ): Promise<HardwareListingResponse> => {
   return await RequestData.get<HardwareListingResponse>('/api/hardware/', {
@@ -68,7 +72,7 @@ export const useHardwareRegistrySync =
 export const useHardwareListing = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  params: Record<string, string>,
+  params: HardwareListingParams,
   commitsList?: string[],
   enabled = true,
 ): UseQueryResult<HardwareListingResponse> => {
@@ -127,6 +131,63 @@ const fetchHardwareSelectors = async (
   );
 };
 
+const fetchHardwareRegistryFilterOptions = async (
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+  params: HardwareListingParams,
+  commitsList: string[] | undefined,
+  selection: HardwareRevisionSelection | null,
+): Promise<HardwareRegistryFilterOptions> =>
+  RequestData.get<HardwareRegistryFilterOptions>(
+    '/api/hardware/registry-filters/',
+    {
+      params: {
+        ...params,
+        ...(selection
+          ? {
+              tree_name: selection.treeName,
+              git_repository_url: selection.gitRepositoryUrl,
+              git_repository_branch: selection.gitBranch,
+              git_commit_hash: selection.gitCommitHash,
+            }
+          : {
+              startTimestampInSeconds,
+              endTimestampInSeconds,
+              ...(commitsList?.length
+                ? { commitsList: commitsList.join(',') }
+                : {}),
+            }),
+      },
+    },
+  );
+
+export const useHardwareRegistryFilterOptions = (
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+  params: HardwareListingParams,
+  commitsList: string[] | undefined,
+  selection: HardwareRevisionSelection | null,
+): UseQueryResult<HardwareRegistryFilterOptions> =>
+  useQuery({
+    queryKey: [
+      'hardwareRegistryFilterOptions',
+      startTimestampInSeconds,
+      endTimestampInSeconds,
+      params,
+      commitsList ?? null,
+      selection,
+    ],
+    queryFn: () =>
+      fetchHardwareRegistryFilterOptions(
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+        params,
+        commitsList,
+        selection,
+      ),
+    refetchOnWindowFocus: false,
+  });
+
 export const useHardwareSelectors = (
   buildOrigin: string,
 ): UseQueryResult<HardwareSelectorsResponse> => {
@@ -139,7 +200,7 @@ export const useHardwareSelectors = (
 
 const fetchHardwareListingByRevision = async (
   selection: HardwareRevisionSelection,
-  params: Record<string, string>,
+  params: HardwareListingParams,
 ): Promise<HardwareListingResponse> => {
   return await RequestData.get<HardwareListingResponse>(
     '/api/hardware-by-revision/',
@@ -157,7 +218,7 @@ const fetchHardwareListingByRevision = async (
 
 export const useHardwareListingByRevision = (
   selection: HardwareRevisionSelection | null,
-  params: Record<string, string>,
+  params: HardwareListingParams,
 ): UseQueryResult<HardwareListingResponse> => {
   return useQuery({
     queryKey: ['hardwareListingByRevision', params, selection],

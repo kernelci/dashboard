@@ -169,7 +169,7 @@ test.describe('Hardware Listing Page Tests', () => {
     const filterLabel = page.locator(HARDWARE_LISTING_SELECTORS.filterLabel);
     await expect(filterLabel).toBeVisible();
     await expect(filterLabel).toContainText(
-      /Showing latest checkout for trees updated in the last \d+ days/,
+      /Showing every checkout for trees updated in the last \d+ days/,
     );
 
     const url = new URL(page.url());

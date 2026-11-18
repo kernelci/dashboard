@@ -4,6 +4,30 @@ info:
   version: 0.9.0
   description: API for the KernelCI dashboard
 paths:
+  /api/analytics/visible/:
+    post:
+      operationId: analytics_visible_create
+      tags:
+      - analytics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisibleTime'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VisibleTime'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VisibleTime'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+        '400':
+          description: No response body
   /api/build/{build_id}:
     get:
       operationId: build_retrieve
@@ -78,6 +102,30 @@ paths:
       operationId: hardware_retrieve
       parameters:
       - in: query
+        name: architecture
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: boardType
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Boardtype
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
         name: buildLab
         schema:
           anyOf:
@@ -121,6 +169,18 @@ paths:
         description: Interval end timestamp in seconds for the results
         required: true
       - in: query
+        name: formFactor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Formfactor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
         name: origin
         schema:
           anyOf:
@@ -131,12 +191,72 @@ paths:
           title: Origin
         description: Deprecated alias for checkoutOrigin and buildOrigin
       - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: platformVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platformvendor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: processor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Processor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: siliconVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Siliconvendor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
         name: startTimestampInSeconds
         schema:
           title: Starttimestampinseconds
           type: string
         description: Interval start timestamp in seconds for the results
         required: true
+      - in: query
+        name: systemModule
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Systemmodule
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: testLab
         schema:
@@ -171,6 +291,30 @@ paths:
       operationId: hardware_by_revision_retrieve
       parameters:
       - in: query
+        name: architecture
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: boardType
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Boardtype
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
         name: buildLab
         schema:
           anyOf:
@@ -194,6 +338,18 @@ paths:
           - type: 'null'
           default: maestro
           title: Checkoutorigin
+      - in: query
+        name: formFactor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Formfactor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: git_commit_hash
         schema:
@@ -225,6 +381,66 @@ paths:
           deprecated: true
           title: Origin
         description: Deprecated alias for checkoutOrigin and buildOrigin
+      - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: platformVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platformvendor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: processor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Processor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: siliconVendor
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Siliconvendor
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
+      - in: query
+        name: systemModule
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Systemmodule
+        description: Registry value. Repeat the parameter to select more than one,
+          since a platform id can hold a comma. Values in one field are OR; different
+          fields are AND. A platform that is not in the registry matches only the
+          platform filter, and only when no other registry field is set.
       - in: query
         name: testLab
         schema:
@@ -517,6 +733,141 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareFiltersResponse'
+          description: ''
+  /api/hardware/registry-filters/:
+    get:
+      operationId: hardware_registry_filters_retrieve
+      description: Options come from the listing rows, so the drawer offers the same
+        boards.
+      parameters:
+      - in: query
+        name: buildLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildlab
+      - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Buildorigin
+      - in: query
+        name: checkoutOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Checkoutorigin
+      - in: query
+        name: commitsList
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commitslist
+        description: 'Optional comma-separated git commit identifiers: full SHA(s)
+          and/or tag strings that appear in checkout.git_commit_tags.'
+      - in: query
+        name: endTimestampInSeconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Endtimestampinseconds
+        description: Required without git_commit_hash. Interval end timestamp in seconds
+          for the results
+      - in: query
+        name: git_commit_hash
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Commit Hash
+        description: Commit hash of the tree
+      - in: query
+        name: git_repository_branch
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Repository Branch
+        description: Git branch name of the tree
+      - in: query
+        name: git_repository_url
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Repository Url
+        description: Git repository URL of the tree
+      - in: query
+        name: origin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          deprecated: true
+          title: Origin
+        description: Deprecated alias for checkoutOrigin and buildOrigin
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Starttimestampinseconds
+        description: Required without git_commit_hash. Interval start timestamp in
+          seconds for the results
+      - in: query
+        name: testLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testlab
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
+      - in: query
+        name: tree_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Tree Name
+        description: Name of the tree
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareRegistryFilterOptions'
           description: ''
   /api/hardware/registry-sync/:
     get:
@@ -1748,7 +2099,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{commit_hash}/summary:
     get:
@@ -1792,7 +2143,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{commit_hash}/tests:
     get:
@@ -1889,7 +2240,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeLatestResponse'
+                $ref: '#/components/schemas/TreeLatestResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/boots:
     get:
@@ -2102,7 +2453,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreeDetailsFullResponse'
+                $ref: '#/components/schemas/TreeDetailsFullResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/summary:
     get:
@@ -2144,7 +2495,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SummaryResponse'
+                $ref: '#/components/schemas/SummaryResponseOrError'
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/tests:
     get:
@@ -3674,6 +4025,59 @@ components:
       - hardware
       title: HardwareListingResponse
       type: object
+    HardwareRegistryFilterOptions:
+      properties:
+        architecture:
+          items:
+            type: string
+          title: Architecture
+          type: array
+        processor:
+          items:
+            type: string
+          title: Processor
+          type: array
+        platform_vendor:
+          items:
+            type: string
+          title: Platform Vendor
+          type: array
+        silicon_vendor:
+          items:
+            type: string
+          title: Silicon Vendor
+          type: array
+        platform:
+          items:
+            type: string
+          title: Platform
+          type: array
+        system_module:
+          items:
+            type: string
+          title: System Module
+          type: array
+        form_factor:
+          items:
+            type: string
+          title: Form Factor
+          type: array
+        board_type:
+          items:
+            type: string
+          title: Board Type
+          type: array
+      required:
+      - architecture
+      - processor
+      - platform_vendor
+      - silicon_vendor
+      - platform
+      - system_module
+      - form_factor
+      - board_type
+      title: HardwareRegistryFilterOptions
+      type: object
     HardwareRegistrySyncFile:
       properties:
         name:
@@ -5173,6 +5577,12 @@ components:
       - status
       title: RegressionHistoryItem
       type: object
+    ResourceEnum:
+      enum:
+      - tree
+      - branch
+      - commit
+      type: string
     StatusCount:
       properties:
         PASS:
@@ -5257,6 +5667,11 @@ components:
       - filters
       title: SummaryResponse
       type: object
+    SummaryResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/SummaryResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: SummaryResponseOrError
     TestArchSummaryItem:
       properties:
         arch:
@@ -5943,6 +6358,11 @@ components:
       - builds
       title: TreeDetailsFullResponse
       type: object
+    TreeDetailsFullResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeDetailsFullResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeDetailsFullResponseOrError
     TreeEntityTypes:
       enum:
       - builds
@@ -5983,6 +6403,11 @@ components:
       - git_repository_branch
       title: TreeLatestResponse
       type: object
+    TreeLatestResponseOrError:
+      anyOf:
+      - $ref: '#/components/schemas/TreeLatestResponse'
+      - $ref: '#/components/schemas/TreeNotFoundResponse'
+      title: TreeLatestResponseOrError
     TreeListingItem:
       properties:
         id:
@@ -6029,6 +6454,20 @@ components:
         $ref: '#/components/schemas/TreeListingItem'
       title: TreeListingResponse
       type: array
+    TreeNotFoundResponse:
+      properties:
+        error:
+          title: Error
+          type: string
+        resource:
+          allOf:
+          - $ref: '#/components/schemas/ResourceEnum'
+          title: Resource
+      required:
+      - error
+      - resource
+      title: TreeNotFoundResponse
+      type: object
     TreeReportIssues:
       properties:
         builds:
@@ -6142,6 +6581,18 @@ components:
       - git_repository_branch
       title: TreeSetItem
       type: object
+    VisibleTime:
+      type: object
+      properties:
+        route:
+          type: string
+          maxLength: 2000
+        time_ms:
+          type: integer
+          minimum: 0
+      required:
+      - route
+      - time_ms
   securitySchemes:
     basicAuth:
       type: http

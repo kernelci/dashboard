@@ -21,10 +21,7 @@ from kernelCI_app.management.commands.helpers.file_utils import (
 )
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     INGESTER_DIRS,
-    ingest_submissions_parallel,
-)
-from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
-    cache_logs_maintenance,
+    IngestionWorkers,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,6 +38,13 @@ QUEUE_SIZE_GAUGE = Gauge(
 PENDING_RETRY_GAUGE = Gauge(
     "kcidb_ingestion_pending_retry",
     "Number of submissions waiting to be ingested again after a deferred failure",
+    ["ingester"],
+    multiprocess_mode="livemax",
+)
+
+PROMETHEUS_FILES_GAUGE = Gauge(
+    "kcidb_ingester_prometheus_files",
+    "Number of Prometheus multiprocess .db files; should stay stable across ingest cycles",
     ["ingester"],
     multiprocess_mode="livemax",
 )
@@ -71,6 +75,7 @@ def check_positive_int(value) -> bool:
 class Command(BaseCommand):
     help = "Monitor a folder for new files and print when found"
     running = True
+    _last_metrics_scan = float("-inf")
 
     def signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully when running on Docker"""
@@ -90,6 +95,20 @@ class Command(BaseCommand):
             logger.warning(
                 "PROMETHEUS_MULTIPROC_DIR is not set, skipping Prometheus metrics"
             )
+
+    def _update_prometheus_file_count(self) -> None:
+        if not PROMETHEUS_MULTIPROC_DIR:
+            return
+        now = time.monotonic()
+        if now - self._last_metrics_scan < 60:
+            return
+        gauge = PROMETHEUS_FILES_GAUGE.labels(INGESTER_GRAFANA_LABEL)
+        try:
+            with os.scandir(PROMETHEUS_MULTIPROC_DIR) as entries:
+                gauge.set(sum(entry.name.endswith(".db") for entry in entries))
+        except OSError:
+            logger.warning("Could not count Prometheus files", exc_info=True)
+        self._last_metrics_scan = now
 
     def _scan_spool_dir(self, spool_dir: str) -> list[str]:
         """Scan spool directory, returning only path strings to keep memory bounded."""
@@ -239,54 +258,58 @@ class Command(BaseCommand):
         retry_started: dict[str, float] = {}
 
         try:
-            while self.running:
-                # Requeue deferred submissions once the spool is drained, so
-                # they never delay new ones, and eventually regardless in case
-                # it never drains.
-                spool_drained = cache_pos >= len(cached_files)
-                since_sweep = time.monotonic() - last_sweep
-                if (spool_drained and since_sweep >= RETRY_SWEEP_INTERVAL_SEC) or (
-                    since_sweep >= RETRY_SWEEP_MAX_INTERVAL_SEC
-                ):
-                    backlog = self._check_retry_backlog(
-                        spool_dir, dirs["pending_retry"], retry_started, grace_minutes
-                    )
-                    PENDING_RETRY_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(backlog)
+            with IngestionWorkers(tree_names, dirs, max_workers) as workers:
+                while self.running:
+                    workers.check_workers()
+                    # Requeue deferred submissions once the spool is drained, so
+                    # they never delay new ones, and eventually regardless in case
+                    # it never drains.
+                    spool_drained = cache_pos >= len(cached_files)
+                    since_sweep = time.monotonic() - last_sweep
+                    if (spool_drained and since_sweep >= RETRY_SWEEP_INTERVAL_SEC) or (
+                        since_sweep >= RETRY_SWEEP_MAX_INTERVAL_SEC
+                    ):
+                        backlog = self._check_retry_backlog(
+                            spool_dir,
+                            dirs["pending_retry"],
+                            retry_started,
+                            grace_minutes,
+                        )
+                        PENDING_RETRY_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(backlog)
 
-                    requeued = sweep_pending_retry(
-                        spool_dir, dirs["pending_retry"], RETRY_SWEEP_LIMIT
-                    )
-                    last_sweep = time.monotonic()
-                    if requeued:
-                        self.stdout.write(f"Requeued {requeued} deferred submissions")
+                        requeued = sweep_pending_retry(
+                            spool_dir, dirs["pending_retry"], RETRY_SWEEP_LIMIT
+                        )
+                        last_sweep = time.monotonic()
+                        if requeued:
+                            self.stdout.write(
+                                f"Requeued {requeued} deferred submissions"
+                            )
 
-                # Only re-scan directory when cache is depleted
-                if cache_pos >= len(cached_files):
-                    cached_files = self._scan_spool_dir(spool_dir)
-                    cache_pos = 0
+                    # Only re-scan directory when cache is depleted
+                    if cache_pos >= len(cached_files):
+                        cached_files = self._scan_spool_dir(spool_dir)
+                        cache_pos = 0
 
-                remaining = len(cached_files) - cache_pos
-                QUEUE_SIZE_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(remaining)
+                    remaining = len(cached_files) - cache_pos
+                    QUEUE_SIZE_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(remaining)
 
-                if remaining > 0:
-                    end = min(cache_pos + INGEST_CYCLE_BATCH_SIZE, len(cached_files))
-                    batch = cached_files[cache_pos:end]
-                    cache_pos = end
-                    self.stdout.write(
-                        f"Processing {len(batch)} files"
-                        f" ({len(cached_files) - cache_pos}"
-                        " remaining in cache)"
-                    )
-                    ingest_submissions_parallel(
-                        batch,
-                        tree_names,
-                        dirs,
-                        max_workers,
-                    )
+                    if remaining > 0:
+                        end = min(
+                            cache_pos + INGEST_CYCLE_BATCH_SIZE, len(cached_files)
+                        )
+                        batch = cached_files[cache_pos:end]
+                        cache_pos = end
+                        self.stdout.write(
+                            f"Processing {len(batch)} files"
+                            f" ({len(cached_files) - cache_pos}"
+                            " remaining in cache)"
+                        )
+                        workers.ingest(batch)
 
-                cache_logs_maintenance()
+                    self._update_prometheus_file_count()
 
-                time.sleep(interval)
+                    time.sleep(interval)
 
         except KeyboardInterrupt:
             logger.info("File monitoring stopped by user")

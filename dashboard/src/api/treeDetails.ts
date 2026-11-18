@@ -149,7 +149,16 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
       }),
     enabled,
     refetchOnWindowFocus: false,
-    // TODO: check the cases when the real previous data is null/undefined
-    placeholderData: previousData => previousData,
+    placeholderData: (previousData, previousQuery) => {
+      const previousKey = previousQuery?.queryKey;
+      return previousKey?.[1] === treeName &&
+        previousKey[2] === gitBranch &&
+        previousKey[3] === treeId &&
+        JSON.stringify(previousKey[4]) ===
+          JSON.stringify(treeSearchParameters) &&
+        previousKey[8] === urlFrom
+        ? previousData
+        : undefined;
+    },
   });
 };
