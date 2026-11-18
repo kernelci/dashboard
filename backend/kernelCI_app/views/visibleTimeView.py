@@ -40,6 +40,7 @@ DASHBOARD_ROUTES = frozenset(
         "/issue/$issueId",
         "/issues",
         "/labs",
+        "/labs/$labName",
         "/log-viewer",
         "/metrics",
         "/privacy",
