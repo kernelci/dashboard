@@ -49,7 +49,7 @@ class TestUploadLogexcerpt:
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.STORAGE_BASE_URL",
         STORAGE_URL_MOCK,
     )
-    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.requests.post")
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.http.post")
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.tempfile.NamedTemporaryFile"
     )
@@ -101,7 +101,7 @@ class TestUploadLogexcerpt:
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.STORAGE_TOKEN",
         STORAGE_TOKEN_MOCK,
     )
-    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.requests.post")
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.http.post")
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.tempfile.NamedTemporaryFile"
     )
@@ -152,7 +152,7 @@ class TestUploadLogexcerpt:
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.STORAGE_BASE_URL",
         STORAGE_URL_MOCK,
     )
-    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.requests.post")
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.http.post")
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.tempfile.NamedTemporaryFile"
     )

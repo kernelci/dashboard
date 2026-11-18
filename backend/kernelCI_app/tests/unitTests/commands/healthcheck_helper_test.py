@@ -26,7 +26,7 @@ class TestRunWithHealthcheckMonitoring(SimpleTestCase):
         result = _resolve_monitoring_url(monitoring_id="job-1", status="success")
         self.assertEqual(result, f"{TEST_BASE_URL}/private-token")
 
-    @patch("kernelCI_app.management.commands.helpers.healthcheck.requests.get")
+    @patch("kernelCI_app.management.commands.helpers.healthcheck.http.get")
     def test_success_path_pings_start_and_success(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
@@ -41,7 +41,7 @@ class TestRunWithHealthcheckMonitoring(SimpleTestCase):
         mock_get.assert_any_call(f"{TEST_BASE_URL}/private-token/start", timeout=10)
         mock_get.assert_any_call(f"{TEST_BASE_URL}/private-token", timeout=10)
 
-    @patch("kernelCI_app.management.commands.helpers.healthcheck.requests.get")
+    @patch("kernelCI_app.management.commands.helpers.healthcheck.http.get")
     def test_failure_path_pings_start_and_fail(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
@@ -57,14 +57,14 @@ class TestRunWithHealthcheckMonitoring(SimpleTestCase):
         mock_get.assert_any_call(f"{TEST_BASE_URL}/private-token/start", timeout=10)
         mock_get.assert_any_call(f"{TEST_BASE_URL}/private-token/fail", timeout=10)
 
-    @patch("kernelCI_app.management.commands.helpers.healthcheck.requests.get")
+    @patch("kernelCI_app.management.commands.helpers.healthcheck.http.get")
     def test_no_monitoring_id_skips_pings(self, mock_get):
         result = run_with_healthcheck_monitoring(monitoring_id=None, action=lambda: 42)
 
         assert result == 42
         mock_get.assert_not_called()
 
-    @patch("kernelCI_app.management.commands.helpers.healthcheck.requests.get")
+    @patch("kernelCI_app.management.commands.helpers.healthcheck.http.get")
     def test_unknown_monitoring_id_skips_network_and_runs_action(self, mock_get):
         result = run_with_healthcheck_monitoring(
             monitoring_id="missing-id", action=lambda: "ran"

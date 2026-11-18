@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 import requests
 from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers import http
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.commonOpenApiParameters import URL_QUERY_PARAM
 
@@ -82,7 +83,7 @@ class ProxyView(APIView):
             )
 
         try:
-            response = requests.get(url, stream=True, timeout=TIMEOUT_TIME_IN_SECONDS)
+            response = http.get(url, stream=True, timeout=TIMEOUT_TIME_IN_SECONDS)
 
             if response.status_code != HTTPStatus.OK:
                 return create_api_error_response(

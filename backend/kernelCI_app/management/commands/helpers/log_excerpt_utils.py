@@ -7,7 +7,6 @@ import threading
 import time
 from typing import Any, Literal, Optional
 
-import requests
 from kernelCI_app.constants.general import REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS
 from kernelCI_app.constants.ingester import (
     CACHE_LOGS_SIZE_LIMIT,
@@ -17,6 +16,7 @@ from kernelCI_app.constants.ingester import (
     UPLOAD_URL,
     VERBOSE,
 )
+from kernelCI_app.helpers import http
 
 CACHE_LOGS = {}
 cache_logs_lock = threading.Lock()
@@ -64,7 +64,7 @@ def upload_logexcerpt(logexcerpt: str, id: str) -> Optional[str]:
             with open(logexcerpt_filename, "rb") as f:
                 files = {"file0": ("logexcerpt.txt.gz", f), "path": f"logexcerpt/{id}"}
                 try:
-                    r = requests.post(
+                    r = http.post(
                         UPLOAD_URL,
                         headers=hdr,
                         files=files,

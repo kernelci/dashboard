@@ -86,9 +86,23 @@ max-line-length = 110
 [lint.mccabe]
 max-complexity = 10
 
+[lint.flake8-tidy-imports.banned-api]
+"requests.get".msg = "Use kernelCI_app.helpers.http.get"
+"requests.post".msg = "Use kernelCI_app.helpers.http.post"
+"requests.put".msg = "Use kernelCI_app.helpers.http"
+"requests.patch".msg = "Use kernelCI_app.helpers.http"
+"requests.delete".msg = "Use kernelCI_app.helpers.http"
+"requests.head".msg = "Use kernelCI_app.helpers.http"
+"requests.request".msg = "Use kernelCI_app.helpers.http"
+"requests.Session".msg = "Use kernelCI_app.helpers.http"
+
 [lint.per-file-ignores]
 # Ignore the commands as they can get complex with sub-actions and _handle functions
 "kernelCI_app/management/commands/**/*.py" = ["C901"]
+# The helper is the only place that calls requests. Tests call the local API.
+"kernelCI_app/helpers/http.py" = ["TID251"]
+"kernelCI_app/tests/**/*.py" = ["TID251"]
+"scripts/**/*.py" = ["TID251"]
 
 [format]
 quote-style = "double"
