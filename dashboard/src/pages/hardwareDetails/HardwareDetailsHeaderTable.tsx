@@ -119,13 +119,6 @@ const CommitSelector = ({
     return values;
   }, [selectableCommits, treeIndex]);
 
-  const sortedSelectableCommits = useMemo(() => {
-    return selectableCommits.sort(
-      (a, b) =>
-        new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
-    );
-  }, [selectableCommits]);
-
   if (selectableCommits.length < 1 || isCommitsLoading) {
     return (
       <CommitTagTooltip
@@ -156,7 +149,7 @@ const CommitSelector = ({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {sortedSelectableCommits.map(commit => (
+            {selectableCommits.map(commit => (
               <SelectItem
                 key={commit.git_commit_hash}
                 value={commit.git_commit_hash}
