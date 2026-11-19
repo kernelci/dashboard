@@ -30,7 +30,9 @@ export const TreeDetailsLink = ({
   const linkClassName = cn('min-w-0', className);
   const label = (
     <>
-      <span className="min-w-0 truncate">{linkText}</span>
+      <span className="min-w-0 truncate" title={commitHash}>
+        {linkText}
+      </span>
       {linkIcon}
     </>
   );
@@ -52,7 +54,6 @@ export const TreeDetailsLink = ({
           origin: s.origin,
         })}
         className={linkClassName}
-        title={commitHash}
       >
         {label}
       </MemoizedLinkItem>
@@ -62,7 +63,6 @@ export const TreeDetailsLink = ({
   return (
     <MemoizedLinkItem
       className={linkClassName}
-      title={commitHash}
       to="/tree/$treeId"
       params={{ treeId: commitHash }}
       state={s => s}
