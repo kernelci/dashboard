@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { trackVisibleTime } from './visibleTime';
@@ -97,7 +101,11 @@ describe('trackVisibleTime', () => {
 
   const body = (call: number): VisibleTimeBody => {
     const init = fetchMock.mock.calls[call]?.[1];
-    if (init?.credentials !== 'omit' || typeof init.body !== 'string') {
+    if (
+      init === undefined ||
+      init.credentials !== 'same-origin' ||
+      typeof init.body !== 'string'
+    ) {
       throw new Error('missing beacon');
     }
     const parsed: unknown = JSON.parse(init.body);
@@ -221,5 +229,19 @@ describe('trackVisibleTime', () => {
     expect(body(1)).toMatchObject({
       time_ms: ELEVEN_SECONDS_MS - EIGHT_SECONDS_MS,
     });
+  });
+});
+
+describe('production build', () => {
+  it('registers the beacon when VITE_API_BASE_URL is unset', () => {
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../main.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('trackVisibleTime(');
+    expect(source).not.toMatch(
+      /if\s*\(\s*import\.meta\.env\.VITE_API_BASE_URL/,
+    );
   });
 });

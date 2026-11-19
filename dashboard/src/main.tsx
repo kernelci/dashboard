@@ -88,12 +88,8 @@ const router = createRouter({
   stringifySearch: stringifySearch,
 });
 
-if (import.meta.env.VITE_API_BASE_URL) {
-  trackVisibleTime(
-    router,
-    `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')}/api/analytics/visible/`,
-  );
-}
+const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+trackVisibleTime(router, `${apiBase}/api/analytics/visible/`);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
