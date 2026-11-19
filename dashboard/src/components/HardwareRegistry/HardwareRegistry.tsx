@@ -193,12 +193,8 @@ export const HardwareRegistryCard = ({
 
   return (
     <DetailsInfoCard
-      title={
-        <div className="flex items-center gap-2">
-          <MdDeveloperBoard className="text-blue text-xl" />
-          <FormattedMessage id="testDetails.hardwareInfo" />
-        </div>
-      }
+      cardTitle="testDetails.hardwareInfo"
+      leftIcon={<MdDeveloperBoard className="text-blue text-xl" />}
       data={[
         {
           title: 'global.platform' as MessagesKey,

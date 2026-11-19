@@ -1,4 +1,4 @@
-import type { JSX, ReactNode } from 'react';
+import type { JSX } from 'react';
 
 import { useIntl } from 'react-intl';
 
@@ -7,18 +7,21 @@ import type { MessagesKey } from '@/locales/messages';
 
 export const DetailsInfoCard = ({
   cardTitle,
-  title,
+  leftIcon,
   data,
 }: {
-  cardTitle?: MessagesKey;
-  title?: ReactNode;
+  cardTitle: MessagesKey;
+  leftIcon?: JSX.Element;
   data: SubsectionLink[];
 }): JSX.Element => {
   const { formatMessage } = useIntl();
-  const sectionTitle =
-    title ?? (cardTitle ? formatMessage({ id: cardTitle }) : '');
 
   return (
-    <Section card title={sectionTitle} subsections={[{ infos: data }]} />
+    <Section
+      card
+      title={formatMessage({ id: cardTitle })}
+      leftIcon={leftIcon}
+      subsections={[{ infos: data }]}
+    />
   );
 };
