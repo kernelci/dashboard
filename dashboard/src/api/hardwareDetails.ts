@@ -167,6 +167,13 @@ const fetchCommitHistory = async (
     body,
   );
 
+  for (const rows of Object.values(data.commit_history_table ?? {})) {
+    rows.sort(
+      (a, b) =>
+        new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+    );
+  }
+
   return data;
 };
 
