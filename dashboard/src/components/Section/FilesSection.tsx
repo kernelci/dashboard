@@ -1,5 +1,3 @@
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
-
 import type { ISection, ISubsection, SubsectionLink } from './Section';
 
 export const getFilesSection = ({
@@ -27,7 +25,8 @@ export const getFilesSection = ({
         inputFilesInfo.push({
           unformattedTitle: file['name'],
           link: file['url'],
-          linkText: <TruncatedValueTooltip value={file['url']} isUrl={true} />,
+          linkText: file['url'],
+          span: 4,
         });
       });
       filesSubsections.push({
@@ -43,7 +42,8 @@ export const getFilesSection = ({
         outputFilesInfo.push({
           unformattedTitle: file['name'],
           link: file['url'],
-          linkText: <TruncatedValueTooltip value={file['url']} isUrl={true} />,
+          linkText: file['url'],
+          span: 4,
         });
       });
     }

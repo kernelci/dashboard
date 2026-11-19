@@ -15,12 +15,7 @@ import { MdChevronRight } from 'react-icons/md';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import {
-  EMPTY_VALUE,
-  shouldTruncate,
-  truncateBigText,
-  valueOrEmpty,
-} from '@/lib/string';
+import { EMPTY_VALUE, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails, TestStatusHistory } from '@/types/tree/TestDetails';
 import { Sheet } from '@/components/Sheet';
 import {
@@ -31,18 +26,14 @@ import {
 
 import { RedirectFrom } from '@/types/general';
 
-import type {
-  IJsonContent,
-  SheetType,
-} from '@/components/Sheet/LogOrJsonSheetContent';
+import type { SheetType } from '@/components/Sheet/LogOrJsonSheetContent';
 import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
-import type { ISection } from '@/components/Section/Section';
+import Section, { type ISection } from '@/components/Section/Section';
 import IssueSection from '@/components/Issue/IssueSection';
 import SectionGroup from '@/components/Section/SectionGroup';
 import { getMiscSection } from '@/components/Section/MiscSection';
 import { getFilesSection } from '@/components/Section/FilesSection';
 
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LinkIcon } from '@/components/Icons/Link';
@@ -86,14 +77,14 @@ const TestDetailsSections = ({
   statusHistoryStatus,
   statusHistoryError,
   setSheetType,
-  setJsonContent,
+  actions,
 }: {
   test: TTestDetails;
   statusHistory?: TestStatusHistory;
   statusHistoryStatus: UseQueryResult['status'];
   statusHistoryError: UseQueryResult['error'];
   setSheetType: Dispatch<SetStateAction<SheetType>>;
-  setJsonContent: Dispatch<SetStateAction<IJsonContent | undefined>>;
+  actions?: JSX.Element;
 }): JSX.Element => {
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
@@ -315,15 +306,14 @@ const TestDetailsSections = ({
 
     return {
       title: test.path ?? test.id,
-      subtitle: (
-        <div>
-          <span className="text-[18px]">
-            {formatDate(valueOrEmpty(test.start_time), false, true)}
-          </span>
-          <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />
-        </div>
-      ),
+      subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
+      actions,
       leftIcon: <StatusIcon status={test.status} showTooltip />,
+      rightIcon: (
+        <span className="text-dark-gray2 text-sm font-normal">
+          {formatDate(valueOrEmpty(test.start_time), false, true)}
+        </span>
+      ),
       subsections: [
         {
           infos: [
@@ -337,6 +327,21 @@ const TestDetailsSections = ({
                         title: 'global.status',
                         linkText: test.status,
                         icon: <StatusIcon status={test.status} />,
+                      },
+                      {
+                        title: 'testDetails.testOrigin',
+                        linkText: valueOrEmpty(test.test_origin),
+                      },
+                      {
+                        title: 'testDetails.testId',
+                        linkText: test.id,
+                        span: 2,
+                      },
+                      {
+                        title: 'testDetails.buildInfo',
+                        linkText: truncateBigText(test.build_id),
+                        linkComponent: buildDetailsLink,
+                        span: 2,
                       },
                       {
                         title: 'global.hardware',
@@ -354,15 +359,7 @@ const TestDetailsSections = ({
                       {
                         title: 'global.config',
                         linkText: valueOrEmpty(test.config_name),
-                      },
-                      {
-                        title: 'testDetails.testOrigin',
-                        linkText: valueOrEmpty(test.test_origin),
-                      },
-                      {
-                        title: 'testDetails.buildInfo',
-                        linkText: truncateBigText(test.build_id),
-                        linkComponent: buildDetailsLink,
+                        span: 2,
                       },
                       {
                         title: 'global.compatibles',
@@ -370,22 +367,13 @@ const TestDetailsSections = ({
                           test.environment_compatible?.join(' | '),
                         ),
                         linkComponent: compatiblesLink,
+                        span: 4,
                       },
                       {
                         title: 'global.logs',
-                        linkText: shouldTruncate(logUrl) ? (
-                          <TruncatedValueTooltip value={logUrl} isUrl />
-                        ) : (
-                          logUrl
-                        ),
+                        linkText: logUrl,
                         link: test.log_url,
-                        icon: test.log_url ? (
-                          <LinkIcon className="text-blue text-xl" />
-                        ) : undefined,
-                      },
-                      {
-                        title: 'testDetails.testId',
-                        linkText: test.id,
+                        span: 4,
                       },
                     ]}
                   />
@@ -402,9 +390,11 @@ const TestDetailsSections = ({
                       },
                       {
                         title: 'global.commitHash',
+                        span: 2,
                         linkComponent: (
-                          <span className="flex">
+                          <span className="flex w-full min-w-0 items-center">
                             <TreeDetailsLink
+                              className="min-w-0 flex-1"
                               treeName={test.tree_name}
                               gitBranch={test.git_repository_branch}
                               commitHash={test.git_commit_hash}
@@ -417,20 +407,15 @@ const TestDetailsSections = ({
                         ),
                       },
                       {
-                        title: 'global.repository',
-                        linkText: shouldTruncate(gitUrl) ? (
-                          <TruncatedValueTooltip value={gitUrl} isUrl />
-                        ) : (
-                          gitUrl
-                        ),
-                        link: test.git_repository_url,
-                        icon: test.git_repository_url ? (
-                          <LinkIcon className="text-blue text-xl" />
-                        ) : undefined,
-                      },
-                      {
                         title: 'global.commitTags',
                         linkText: valueOrEmpty(test.git_commit_tags?.[0]),
+                        span: 2,
+                      },
+                      {
+                        title: 'global.repository',
+                        linkText: gitUrl,
+                        link: test.git_repository_url,
+                        span: 4,
                       },
                     ]}
                   />
@@ -447,6 +432,7 @@ const TestDetailsSections = ({
     hardware,
     hardwareDetailsLink,
     buildDetailsLink,
+    actions,
     compatiblesLink,
   ]);
 
@@ -456,10 +442,8 @@ const TestDetailsSections = ({
     return getMiscSection({
       misc: test.misc,
       title: formatMessage({ id: 'commonDetails.miscData' }),
-      setSheetType: setSheetType,
-      setJsonContent: setJsonContent,
     });
-  }, [formatMessage, test.misc, setSheetType, setJsonContent]);
+  }, [formatMessage, test.misc]);
 
   const environmentMiscSection: ISection | undefined = useMemo(():
     | ISection
@@ -481,22 +465,39 @@ const TestDetailsSections = ({
   }, [formatMessage, test.input_files, test.output_files]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [
-      generalSection,
-      regressionSection,
-      miscSection,
-      environmentMiscSection,
-      filesSection,
-    ].filter(section => section !== undefined);
-  }, [
-    generalSection,
-    regressionSection,
-    miscSection,
-    environmentMiscSection,
-    filesSection,
-  ]);
+    return [generalSection, regressionSection].filter(
+      section => section !== undefined,
+    );
+  }, [generalSection, regressionSection]);
 
-  return <SectionGroup sections={sectionsData} />;
+  const miscCards = [miscSection, environmentMiscSection].filter(
+    section => section !== undefined,
+  );
+  const paired = miscCards.length > 0 && filesSection !== undefined;
+
+  return (
+    <>
+      <SectionGroup sections={sectionsData} />
+      {(miscCards.length > 0 || filesSection) && (
+        <div
+          className={
+            paired
+              ? 'grid grid-cols-1 items-start gap-4 lg:grid-cols-2'
+              : 'flex flex-col gap-4'
+          }
+        >
+          {miscCards.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {miscCards.map(section => (
+                <Section key={section.title} {...section} card />
+              ))}
+            </div>
+          )}
+          {filesSection && <Section {...filesSection} card />}
+        </div>
+      )}
+    </>
+  );
 };
 
 interface TestsDetailsProps {
@@ -556,7 +557,6 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
   }, [testId, data]);
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
-  const [jsonContent, setJsonContent] = useState<IJsonContent>();
   const logOpenChange = useCallback(
     (isOpen: boolean) =>
       navigate({ search: s => ({ ...s, logOpen: isOpen }), state: s => s }),
@@ -621,18 +621,14 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
         <Sheet open={logOpen} onOpenChange={logOpenChange}>
           <div className="flex flex-col gap-4 pb-10">
             {breadcrumb ?? fallbackBreadcrumb}
-            <div className="flex flex-wrap justify-end gap-2">
-              {kcidevComponent}
-            </div>
-
             {data && (
               <TestDetailsSections
+                actions={kcidevComponent}
                 test={data}
                 statusHistory={statusHistoryData}
                 statusHistoryStatus={statusHistoryStatus}
                 statusHistoryError={statusHistoryError}
                 setSheetType={setSheetType}
-                setJsonContent={setJsonContent}
               />
             )}
             <IssueSection
@@ -643,7 +639,6 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
           </div>
           <LogOrJsonSheetContent
             type={sheetType}
-            jsonContent={jsonContent}
             logData={logData}
             hideIssueSection
           />

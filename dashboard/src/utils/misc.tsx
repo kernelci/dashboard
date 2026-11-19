@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { match, P } from 'ts-pattern';
 
-import { isUrl, shouldTruncate } from '@/lib/string';
+import { isUrl } from '@/lib/string';
 
 import type {
   IJsonContent,
@@ -11,7 +11,6 @@ import type {
 import type { SubsectionLink } from '@/components/Section/Section';
 import { SheetTrigger } from '@/components/Sheet';
 import CodeBlock from '@/components/Filter/CodeBlock';
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import { JsonViewIcon } from '@/components/Icons/JsonView';
 
 import { isStringRecord } from './utils';
@@ -48,20 +47,12 @@ export const miscContentHandler = ({
     .with({ log_excerpt: '' }, _ => false)
     .with({ log_excerpt: P.string }, field => {
       children = (
-        <CodeBlock code={field.log_excerpt} className="max-h-[80vh]" />
+        <CodeBlock code={field.log_excerpt} compact className="max-h-40" />
       );
       return true;
     })
-    .otherwise(_ => {
-      linkText = !shouldTruncate(stringField) ? (
-        stringField
-      ) : (
-        <TruncatedValueTooltip
-          value={stringField}
-          isUrl={isUrlResult}
-          isClickable={isObjectField}
-        />
-      );
+    .otherwise(() => {
+      linkText = stringField;
       return true;
     });
 

@@ -4,7 +4,7 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import type { JSX } from 'react';
 
-import { Separator } from '@/components/ui/separator';
+import Section from '@/components/Section/Section';
 
 import { useBuildTests } from '@/api/buildTests';
 
@@ -32,34 +32,39 @@ const BuildDetailsTestSection = ({
   const { data, error, status, isLoading } = useBuildTests(buildId);
 
   return (
-    <div>
-      <span className="text-2xl font-bold">
-        {intl.formatMessage({ id: 'buildDetails.testResults' })}
-      </span>
-      <Separator className="bg-dark-gray my-4" />
-      <QuerySwitcher
-        skeletonClassname="h-[100px]"
-        status={status}
-        data={data}
-        customError={
-          <MemoizedSectionError
-            isLoading={isLoading}
-            errorMessage={error?.message}
-            emptyLabel="buildDetails.noTestResults"
-          />
-        }
-      >
-        <div className="flex flex-col gap-6">
-          <TestsTable
-            tableKey="buildDetailsTests"
-            testHistory={data}
-            onToggleFilter={onToggleFilter}
-            filter={tableFilter.testsTable}
-            getRowLink={getRowLink}
-          />
-        </div>
-      </QuerySwitcher>
-    </div>
+    <Section
+      title={intl.formatMessage({ id: 'buildDetails.testResults' })}
+      subsections={[
+        {
+          infos: [
+            {
+              children: (
+                <QuerySwitcher
+                  skeletonClassname="h-[100px]"
+                  status={status}
+                  data={data}
+                  customError={
+                    <MemoizedSectionError
+                      isLoading={isLoading}
+                      errorMessage={error?.message}
+                      emptyLabel="buildDetails.noTestResults"
+                    />
+                  }
+                >
+                  <TestsTable
+                    tableKey="buildDetailsTests"
+                    testHistory={data}
+                    onToggleFilter={onToggleFilter}
+                    filter={tableFilter.testsTable}
+                    getRowLink={getRowLink}
+                  />
+                </QuerySwitcher>
+              ),
+            },
+          ],
+        },
+      ]}
+    />
   );
 };
 

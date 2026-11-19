@@ -303,10 +303,10 @@ export const messages = {
     'issueDetails.culpritTool': 'Tool',
     'issueDetails.firstGoodCheckout': 'First Good Checkout',
     'issueDetails.firstIncidentData': 'First Incident Data',
-    'issueDetails.firstIncidentVersion': 'First Incident Version',
     'issueDetails.id': 'Issue Id',
-    'issueDetails.incidents': 'Incidents per Tree',
+    'issueDetails.incidentsTitle': 'Incidents',
     'issueDetails.issueDetails': 'Issue Details',
+    'issueDetails.issueInfo': 'Issue Info',
     'issueDetails.issueListingInfo':
       'The culprit for all issues listed is code',
     'issueDetails.lastIncident': 'Last Incident Data',
@@ -320,6 +320,7 @@ export const messages = {
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.stillFailing': 'Still failing',
     'issueDetails.version': 'Version',
+    'issueDetails.versionNumber': 'version {versionNumber}',
     'issueListing.culpritInfo':
       'Layers of the execution stack responsible for the issue.\nIf all are false, the issue is considered invalid.',
     'issueListing.description': 'List of issues from builds and tests',
@@ -353,6 +354,7 @@ export const messages = {
     'logViewer.viewFullLog': 'View full log for {fileName}',
     'logspec.info':
       "This is the same logspec data that's in the misc data section",
+    'logspec.parser': 'Parser',
     'messages.newerPageVersion':
       'This is the new, optimized version of the {page}. If you find any bugs, please file a {gitHubLink} and you can still access the old version {oldVersionLink}. Please note that some historical data might be missing, but it should be updated with recent data.',
     'messages.olderPageVersion':

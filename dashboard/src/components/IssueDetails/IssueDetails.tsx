@@ -5,12 +5,13 @@ import { useMemo, useState, type JSX } from 'react';
 import { useParams, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
-import type { ISection } from '@/components/Section/Section';
+import Section, {
+  type ISection,
+  type SubsectionLink,
+} from '@/components/Section/Section';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
-import { shouldTruncate, valueOrEmpty } from '@/lib/string';
-
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
+import { valueOrEmpty } from '@/lib/string';
 
 import { getMiscSection } from '@/components/Section/MiscSection';
 
@@ -31,8 +32,6 @@ import {
 import { BranchBadge } from '@/components/Badge/BranchBadge';
 
 import { getLogspecSection } from '@/components/Section/LogspecSection';
-import { getIncidentsSection } from '@/components/Section/FirstIncidentSection';
-import { getNextCheckoutSection } from '@/components/Section/NextCheckoutSection';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
@@ -48,6 +47,8 @@ import { Badge } from '@/components/ui/badge';
 
 import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import { createIssueDetailsCommand } from '@/components/Footer/kcidevCommand';
+
+import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
 
 import { IncidentsSection } from './IncidentsSection';
 
@@ -90,7 +91,6 @@ export const IssueDetails = ({
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'commonDetails.miscData' }),
-      setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
 
@@ -98,25 +98,10 @@ export const IssueDetails = ({
     return getLogspecSection({
       misc: data?.misc,
       title: formatMessage({ id: 'issueDetails.logspecData' }),
+      parserTitle: formatMessage({ id: 'logspec.parser' }),
       setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
-
-  const firstIncidentSection: ISection | undefined = useMemo(() => {
-    return getIncidentsSection({
-      firstIncident: data?.extra?.[issueId]?.first_incident,
-      lastIncident: data?.extra?.[issueId]?.last_incident,
-      title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
-      lastIncidentTitle: formatMessage({ id: 'issueDetails.lastIncident' }),
-    });
-  }, [data?.extra, formatMessage, issueId]);
-
-  const nextCheckoutSection: ISection | undefined = useMemo(() => {
-    return getNextCheckoutSection({
-      nextCheckout: data?.extra?.[issueId]?.next_checkout,
-      title: formatMessage({ id: 'issueDetails.nextCheckout' }),
-    });
-  }, [data?.extra, formatMessage, issueId]);
 
   const tagPills = useMemo(() => {
     const branchTags: JSX.Element[] = [];
@@ -170,74 +155,76 @@ export const IssueDetails = ({
     formatMessage,
   ]);
 
-  const generalSections: ISection[] = useMemo(() => {
+  const issueInfo = useMemo((): SubsectionLink[] | undefined => {
     if (!data) {
-      return [];
+      return;
     }
+
     const reportUrl = valueOrEmpty(data.report_url);
     const loreUrl = `https://lore.kernel.org/all/?q=${encodeURIComponent(data.id)}`;
     const reportSubject = valueOrEmpty(data.report_subject);
 
     return [
       {
-        title: data.comment ?? data.id,
-        subtitle: tagPills,
-        subsections: [
-          {
-            infos: [
-              {
-                title: 'issueDetails.version',
-                linkText: data.version.toString(),
-              },
-              {
-                title: 'global.origin',
-                linkText: valueOrEmpty(data.origin),
-              },
-              {
-                title: 'issueDetails.loreUrl',
-                linkText: shouldTruncate(loreUrl) ? (
-                  <TruncatedValueTooltip value={loreUrl} isUrl={true} />
-                ) : (
-                  loreUrl
-                ),
-                link: loreUrl,
-              },
-              {
-                title: 'issueDetails.reportUrl',
-                linkText: shouldTruncate(reportUrl) ? (
-                  <TruncatedValueTooltip value={reportUrl} isUrl={true} />
-                ) : (
-                  reportUrl
-                ),
-                link: data.report_url ?? undefined,
-              },
-              {
-                title: 'issueDetails.reportSubject',
-                linkText: shouldTruncate(reportSubject) ? (
-                  <TruncatedValueTooltip value={reportSubject} />
-                ) : (
-                  reportSubject
-                ),
-              },
-              {
-                title: 'issueDetails.culpritTitle',
-                linkText: issueCulprit,
-                titleIcon: <TooltipIcon tooltipId="issueListing.culpritInfo" />,
-              },
-              {
-                title: 'issueDetails.id',
-                linkText: shouldTruncate(valueOrEmpty(data.id)) ? (
-                  <TruncatedValueTooltip value={data.id} />
-                ) : (
-                  data.id
-                ),
-              },
-            ],
-          },
-        ],
+        title: 'issueDetails.version',
+        linkText: data.version.toString(),
+      },
+      {
+        title: 'global.origin',
+        linkText: valueOrEmpty(data.origin),
+      },
+      {
+        title: 'issueDetails.loreUrl',
+        linkText: loreUrl,
+        link: loreUrl,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.reportUrl',
+        linkText: reportUrl,
+        link: data.report_url ?? undefined,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.reportSubject',
+        linkText: reportSubject,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.culpritTitle',
+        linkText: issueCulprit,
+        titleIcon: <TooltipIcon tooltipId="issueListing.culpritInfo" />,
+      },
+      {
+        title: 'issueDetails.id',
+        linkText: valueOrEmpty(data.id),
+        span: 3,
       },
     ];
-  }, [data, tagPills, issueCulprit]);
+  }, [data, issueCulprit]);
+
+  const generalSections: ISection[] = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+
+    return [
+      {
+        title: data.comment ?? data.id,
+        subtitle: tagPills,
+        actions: (
+          <MemoizedKcidevCommandButton
+            command={createIssueDetailsCommand({
+              id: issueId,
+              origin: data.origin,
+              omittedFilters:
+                versionNumber === undefined ? [] : ['issue version'],
+            })}
+          />
+        ),
+      },
+    ];
+  }, [data, issueId, tagPills, versionNumber]);
 
   const issueDetailsTabTitle = useMemo(() => {
     return formatMessage(
@@ -267,28 +254,29 @@ export const IssueDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet>
-            <div className="flex flex-col gap-4 pb-10">
+            <div className="flex flex-col gap-6 pb-10">
               {breadcrumb}
-              <div className="flex flex-wrap justify-end gap-2">
-                <MemoizedKcidevCommandButton
-                  command={createIssueDetailsCommand({
-                    id: issueId,
-                    origin: data?.origin,
-                    omittedFilters:
-                      versionNumber === undefined ? [] : ['issue version'],
-                  })}
-                />
-              </div>
               <SectionGroup sections={generalSections} />
-              <IncidentsSection perTree={data?.extra?.[issueId]?.per_tree} />
-              <SectionGroup
-                sections={[
-                  firstIncidentSection,
-                  nextCheckoutSection,
-                  logspecSection,
-                  miscSection,
-                ].filter(section => !!section)}
-              />
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+                <div className="flex flex-col gap-4">
+                  {issueInfo && (
+                    <DetailsInfoCard
+                      cardTitle="issueDetails.issueInfo"
+                      data={issueInfo}
+                    />
+                  )}
+                  <IncidentsSection
+                    firstIncident={data?.extra?.[issueId]?.first_incident}
+                    lastIncident={data?.extra?.[issueId]?.last_incident}
+                    nextCheckout={data?.extra?.[issueId]?.next_checkout}
+                    perTree={data?.extra?.[issueId]?.per_tree}
+                  />
+                  {miscSection && <Section {...miscSection} card />}
+                </div>
+                <div className="flex flex-col gap-4">
+                  {logspecSection && <Section {...logspecSection} card />}
+                </div>
+              </div>
               <IssueDetailsTestSection
                 issueId={issueId}
                 versionNumber={versionNumber}

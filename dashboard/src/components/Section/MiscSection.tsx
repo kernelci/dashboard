@@ -1,45 +1,40 @@
-import { type Dispatch, type SetStateAction } from 'react';
+import ReactJsonView from '@microlink/react-json-view';
 
-import type {
-  IJsonContent,
-  SheetType,
-} from '@/components/Sheet/LogOrJsonSheetContent';
+import CopyButton from '@/components/Button/CopyButton';
 
-import { miscContentHandler } from '@/utils/misc';
-
-import type { ISection, SubsectionLink } from './Section';
+import type { ISection } from './Section';
 
 export const getMiscSection = ({
   misc,
   title,
-  setSheetType,
-  setJsonContent,
 }: {
   misc?: object;
   title: string;
-  setSheetType?: Dispatch<SetStateAction<SheetType>>;
-  setJsonContent?: Dispatch<SetStateAction<IJsonContent | undefined>>;
 }): ISection | undefined => {
   if (!misc || Object.keys(misc).length === 0) {
     return;
   }
 
-  const miscInfos: SubsectionLink[] = Object.entries(misc)
-    .map(([fieldKey, fieldValue]) =>
-      miscContentHandler({
-        fieldKey: fieldKey,
-        fieldValue: fieldValue,
-        setSheetType: setSheetType,
-        setJsonContent: setJsonContent,
-      }),
-    )
-    .filter(info => info !== undefined);
-
   return {
     title: title,
     subsections: [
       {
-        infos: miscInfos,
+        infos: [
+          {
+            children: (
+              <div className="flex items-start gap-1">
+                <ReactJsonView
+                  src={misc}
+                  name={false}
+                  collapsed={1}
+                  displayDataTypes={false}
+                  style={{ fontSize: 12 }}
+                />
+                <CopyButton value={JSON.stringify(misc)} />
+              </div>
+            ),
+          },
+        ],
       },
     ],
   };

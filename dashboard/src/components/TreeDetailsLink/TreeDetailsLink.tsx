@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 
 import { EMPTY_VALUE, truncateBigText, valueOrEmpty } from '@/lib/string';
+import { cn } from '@/lib/utils';
 
 import { LinkIcon } from '@/components/Icons/Link';
 import MemoizedLinkItem from '@/components/DetailsLink';
@@ -12,6 +13,7 @@ export const TreeDetailsLink = ({
   gitUrl,
   commitName,
   showFullLabel = false,
+  className,
 }: {
   treeName?: string;
   gitBranch?: string;
@@ -19,11 +21,21 @@ export const TreeDetailsLink = ({
   gitUrl?: string;
   commitName?: string;
   showFullLabel?: boolean;
+  className?: string;
 }): JSX.Element => {
   const linkText = showFullLabel
     ? `${valueOrEmpty(treeName)} / ${valueOrEmpty(gitBranch)} / ${truncateBigText(commitHash)}`
     : `${truncateBigText(commitHash)}`;
-  const linkIcon = <LinkIcon className="text-blue text-xl" />;
+  const linkIcon = <LinkIcon className="text-blue shrink-0 text-xl" />;
+  const linkClassName = cn('min-w-0', className);
+  const label = (
+    <>
+      <span className="min-w-0 truncate" title={commitHash}>
+        {linkText}
+      </span>
+      {linkIcon}
+    </>
+  );
 
   if (!commitHash) {
     if (!treeName && !gitBranch) {
@@ -41,15 +53,16 @@ export const TreeDetailsLink = ({
         search={s => ({
           origin: s.origin,
         })}
+        className={linkClassName}
       >
-        {linkText}
-        {linkIcon}
+        {label}
       </MemoizedLinkItem>
     );
   }
 
   return (
     <MemoizedLinkItem
+      className={linkClassName}
       to="/tree/$treeId"
       params={{ treeId: commitHash }}
       state={s => s}
@@ -64,8 +77,7 @@ export const TreeDetailsLink = ({
         },
       })}
     >
-      {linkText}
-      {linkIcon}
+      {label}
     </MemoizedLinkItem>
   );
 };

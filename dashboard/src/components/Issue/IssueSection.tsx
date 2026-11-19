@@ -1,12 +1,13 @@
 import { useMemo, type JSX } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
 import { Link } from '@tanstack/react-router';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
+import Section from '@/components/Section/Section';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { TErrorVariant } from '@/components/DetailsPages/SectionError';
@@ -29,6 +30,7 @@ const IssueSection = ({
   error?: string;
   variant?: TErrorVariant;
 }): JSX.Element => {
+  const { formatMessage } = useIntl();
   const issueList = useMemo(
     () =>
       data?.map(issue => {
@@ -70,29 +72,35 @@ const IssueSection = ({
   );
 
   return (
-    <div>
-      <div className="mb-3 flex items-center gap-4 border-b border-gray-300 pb-4">
-        <h2 className="text-2xl font-semibold">
-          <FormattedMessage id="global.issues" />
-        </h2>
-        <IssueTooltip />
-      </div>
-      <QuerySwitcher
-        skeletonClassname="h-[100px]"
-        status={status}
-        data={data}
-        customError={
-          <MemoizedSectionError
-            isLoading={status === 'pending'}
-            errorMessage={error}
-            emptyLabel="issue.noIssueFound"
-            variant={variant}
-          />
-        }
-      >
-        {issueList}
-      </QuerySwitcher>
-    </div>
+    <Section
+      title={formatMessage({ id: 'global.issues' })}
+      rightIcon={<IssueTooltip />}
+      subsections={[
+        {
+          infos: [
+            {
+              children: (
+                <QuerySwitcher
+                  skeletonClassname="h-[100px]"
+                  status={status}
+                  data={data}
+                  customError={
+                    <MemoizedSectionError
+                      isLoading={status === 'pending'}
+                      errorMessage={error}
+                      emptyLabel="issue.noIssueFound"
+                      variant={variant}
+                    />
+                  }
+                >
+                  {issueList}
+                </QuerySwitcher>
+              ),
+            },
+          ],
+        },
+      ]}
+    />
   );
 };
 
