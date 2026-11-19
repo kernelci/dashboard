@@ -109,6 +109,27 @@ type UseTreeDetailsParameters<T extends TreeDetailsVariants> = {
   variant: T;
 } & UseTreeDetailsWithoutVariant;
 
+// TanStack Query passes the last query that had data, skipping failed ones,
+// so an unguarded placeholder shows an older checkout while another loads.
+export const sameCheckoutPlaceholder =
+  (queryKey: readonly unknown[]) =>
+  <T>(
+    previousData: T | undefined,
+    previousQuery?: { queryKey: readonly unknown[] },
+  ): T | undefined => {
+    const previousKey = previousQuery?.queryKey;
+    if (!previousKey) {
+      return undefined;
+    }
+    return previousKey[1] === queryKey[1] &&
+      previousKey[2] === queryKey[2] &&
+      previousKey[3] === queryKey[3] &&
+      JSON.stringify(previousKey[4]) === JSON.stringify(queryKey[4]) &&
+      previousKey[8] === queryKey[8]
+      ? previousData
+      : undefined;
+  };
+
 export const useTreeDetails = <T extends TreeDetailsVariants>({
   treeId,
   treeName,
@@ -122,18 +143,20 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
   const treeSearchParameters = useTreeInfoSearchParameters(urlFrom);
 
+  const queryKey = [
+    'treeTests',
+    treeName,
+    gitBranch,
+    treeId,
+    treeSearchParameters,
+    testFilter,
+    treeDetailsFilter,
+    variant,
+    urlFrom,
+  ];
+
   return useQuery({
-    queryKey: [
-      'treeTests',
-      treeName,
-      gitBranch,
-      treeId,
-      treeSearchParameters,
-      testFilter,
-      treeDetailsFilter,
-      variant,
-      urlFrom,
-    ],
+    queryKey,
     queryFn: () =>
       fetchTreeDetails({
         treeName,
@@ -149,16 +172,6 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
       }),
     enabled,
     refetchOnWindowFocus: false,
-    placeholderData: (previousData, previousQuery) => {
-      const previousKey = previousQuery?.queryKey;
-      return previousKey?.[1] === treeName &&
-        previousKey[2] === gitBranch &&
-        previousKey[3] === treeId &&
-        JSON.stringify(previousKey[4]) ===
-          JSON.stringify(treeSearchParameters) &&
-        previousKey[8] === urlFrom
-        ? previousData
-        : undefined;
-    },
+    placeholderData: sameCheckoutPlaceholder(queryKey),
   });
 };
