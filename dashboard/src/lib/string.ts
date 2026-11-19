@@ -1,7 +1,7 @@
 export const EMPTY_VALUE = '-';
 
 export const valueOrEmpty = (
-  value: string | undefined,
+  value: string | null | undefined,
   emptyValue = EMPTY_VALUE,
 ): string => value || emptyValue;
 

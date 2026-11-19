@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from kernelCI_app.helpers.hardwareRegistry import get_hardware_registry_by_ids
 from kernelCI_app.queries.hardware import get_hardware_listing_data_by_revision
 from kernelCI_app.queries.hardwareRegistryFilters import (
     hardware_registry_filter_from_request,
@@ -50,9 +51,15 @@ class HardwareByRevisionView(APIView):
             registry_filter=hardware_registry_filter_from_request(request.GET),
         )
 
+        registry_by_id = get_hardware_registry_by_ids(row[0] for row in hardwares_raw)
         try:
             result = HardwareListingResponse(
-                hardware=[HardwareListingItem.from_row(row) for row in hardwares_raw]
+                hardware=[
+                    HardwareListingItem.from_row(row).model_copy(
+                        update={"registry": registry_by_id.get(row[0])}
+                    )
+                    for row in hardwares_raw
+                ]
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

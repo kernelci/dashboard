@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.hardwareRegistry import get_first_hardware_registry
 from kernelCI_app.queries.test import get_test_details_data
 from kernelCI_app.typeModels.commonOpenApiParameters import TEST_ID_PATH_PARAM
 from kernelCI_app.typeModels.testDetails import (
@@ -28,7 +29,18 @@ class TestDetails(APIView):
             )
 
         try:
-            valid_response = TestDetailsResponse(**response[0])
+            draft = TestDetailsResponse(**response[0])
+            environment_misc = draft.environment_misc or {}
+            valid_response = draft.model_copy(
+                update={
+                    "registry": get_first_hardware_registry(
+                        [
+                            environment_misc.get("platform"),
+                            *(draft.environment_compatible or []),
+                        ]
+                    )
+                }
+            )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

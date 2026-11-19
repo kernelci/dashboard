@@ -7,9 +7,11 @@ import type { MessagesKey } from '@/locales/messages';
 
 export const DetailsInfoCard = ({
   cardTitle,
+  leftIcon,
   data,
 }: {
   cardTitle: MessagesKey;
+  leftIcon?: JSX.Element;
   data: SubsectionLink[];
 }): JSX.Element => {
   const { formatMessage } = useIntl();
@@ -18,6 +20,7 @@ export const DetailsInfoCard = ({
     <Section
       card
       title={formatMessage({ id: cardTitle })}
+      leftIcon={leftIcon}
       subsections={[{ infos: data }]}
     />
   );
