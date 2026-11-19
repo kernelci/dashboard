@@ -12,6 +12,7 @@ from kernelCI_app.helpers.issueExtras import (
     assign_issue_per_tree,
     process_issues_extra_details,
 )
+from kernelCI_app.helpers.regzbot import regzbot_url_for_issue
 from kernelCI_app.queries.issues import get_issue_details, get_latest_issue_version
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
@@ -71,7 +72,9 @@ class IssueDetails(APIView):
 
         try:
             valid_response = IssueDetailsResponse(
-                **issue_data, extra=self.processed_issue_extras
+                **issue_data,
+                extra=self.processed_issue_extras,
+                regzbot_url=regzbot_url_for_issue(path_params.issue_id),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

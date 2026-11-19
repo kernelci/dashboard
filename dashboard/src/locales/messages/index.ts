@@ -316,6 +316,7 @@ export const messages = {
     'issueDetails.noBuildResults': 'No builds associated with this issue',
     'issueDetails.noTestResults': 'No tests associated with this issue',
     'issueDetails.notFound': 'Issue not found',
+    'issueDetails.regzbotUrl': 'Regzbot URL',
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.stillFailing': 'Still failing',

@@ -27,6 +27,15 @@ export const isUrl = (possibleUrl: string): boolean => {
   return protocolRegex.test(possibleUrl);
 };
 
+export const isHttpUrl = (value: string): boolean => {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 export const truncateUrl = (
   url: string | undefined,
   domainLength = 50,
