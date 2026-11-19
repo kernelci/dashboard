@@ -103,7 +103,7 @@ describe('trackVisibleTime', () => {
     const init = fetchMock.mock.calls[call]?.[1];
     if (
       init === undefined ||
-      init.credentials === 'omit' ||
+      init.credentials !== 'same-origin' ||
       typeof init.body !== 'string'
     ) {
       throw new Error('missing beacon');

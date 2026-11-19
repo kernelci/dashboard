@@ -40,6 +40,7 @@ export const trackVisibleTime = (router: VisibleRouter, url: string): void => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ route, time_ms: timeMs }),
       keepalive: true,
+      credentials: 'same-origin',
     });
   };
 
