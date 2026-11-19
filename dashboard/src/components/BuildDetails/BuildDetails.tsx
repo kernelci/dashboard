@@ -18,19 +18,14 @@ import { formatDate, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { shouldTruncate, valueOrEmpty } from '@/lib/string';
+import { valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
 import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
-import type {
-  IJsonContent,
-  SheetType,
-} from '@/components/Sheet/LogOrJsonSheetContent';
+import type { SheetType } from '@/components/Sheet/LogOrJsonSheetContent';
 import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
-
 import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { getFilesSection } from '@/components/Section/FilesSection';
@@ -52,8 +47,6 @@ import { createResultDetailsCommand } from '@/components/Footer/kcidevCommand';
 import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
 
 import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
-
-import { LinkIcon } from '@/components/Icons/Link';
 
 import CopyButton from '@/components/Button/CopyButton';
 
@@ -91,7 +84,6 @@ const BuildDetails = ({
   const { formatMessage } = useIntl();
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
-  const [jsonContent, setJsonContent] = useState<IJsonContent>();
   const logOpenChange = useCallback(
     (isOpen: boolean) =>
       navigate({ search: s => ({ ...s, logOpen: isOpen }), state: s => s }),
@@ -104,8 +96,6 @@ const BuildDetails = ({
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'commonDetails.miscData' }),
-      setSheetType: setSheetType,
-      setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
 
@@ -170,6 +160,21 @@ const BuildDetails = ({
                           icon: <StatusIcon status={data.status} />,
                         },
                         {
+                          title: 'buildDetails.buildOrigin',
+                          linkText: valueOrEmpty(data.build_origin),
+                        },
+                        {
+                          title: 'buildDetails.buildId',
+                          linkText: buildId,
+                          span: 2,
+                        },
+                        {
+                          title: 'global.buildTime',
+                          linkText: data.duration
+                            ? `${data.duration} sec`
+                            : '-',
+                        },
+                        {
                           title: 'global.architecture',
                           linkText: valueOrEmpty(data.architecture),
                         },
@@ -180,48 +185,34 @@ const BuildDetails = ({
                         {
                           title: 'global.config',
                           linkText: valueOrEmpty(data.config_name),
-                        },
-                        {
-                          title: 'buildDetails.buildOrigin',
-                          linkText: valueOrEmpty(data.build_origin),
-                        },
-                        {
-                          title: 'global.command',
-                          linkText: valueOrEmpty(data.command),
-                        },
-                        {
-                          title: 'global.buildTime',
-                          linkText: data.duration
-                            ? `${data.duration} sec`
-                            : '-',
-                        },
-                        {
-                          title: 'global.logs',
-                          linkText: shouldTruncate(logUrl) ? (
-                            <TruncatedValueTooltip value={logUrl} isUrl />
-                          ) : (
-                            logUrl
-                          ),
-                          link: data.log_url,
-                          icon: data.log_url ? (
-                            <LinkIcon className="text-blue text-xl" />
-                          ) : undefined,
+                          span: 2,
                         },
                         {
                           title: 'buildDetails.kernelConfig',
-                          linkText: shouldTruncate(configUrl) ? (
-                            <TruncatedValueTooltip value={configUrl} isUrl />
-                          ) : (
-                            configUrl
-                          ),
+                          linkText: configUrl,
                           link: data.config_url,
-                          icon: data.config_url ? (
-                            <LinkIcon className="text-blue text-xl" />
-                          ) : undefined,
+                          span: 4,
                         },
                         {
-                          title: 'buildDetails.buildId',
-                          linkText: buildId,
+                          title: 'global.command',
+                          linkText: data.command ? undefined : '-',
+                          linkComponent: data.command ? (
+                            <div className="flex w-full min-w-0 items-center">
+                              <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-slate-100 p-2 font-mono text-sm [scrollbar-color:rgb(148_163_184)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400 [&::-webkit-scrollbar-track]:bg-transparent">
+                                <code className="whitespace-nowrap">
+                                  {data.command}
+                                </code>
+                              </pre>
+                              <CopyButton value={data.command} />
+                            </div>
+                          ) : undefined,
+                          span: 4,
+                        },
+                        {
+                          title: 'global.logs',
+                          linkText: logUrl,
+                          link: data.log_url,
+                          span: 4,
                         },
                       ]}
                     />
@@ -238,9 +229,11 @@ const BuildDetails = ({
                         },
                         {
                           title: 'global.commitHash',
+                          span: 2,
                           linkComponent: (
-                            <span className="flex">
+                            <span className="flex w-full min-w-0 items-center">
                               <TreeDetailsLink
+                                className="min-w-0 flex-1"
                                 treeName={data.tree_name}
                                 gitBranch={data.git_repository_branch}
                                 commitHash={data.git_commit_hash}
@@ -254,24 +247,20 @@ const BuildDetails = ({
                           ),
                         },
                         {
-                          title: 'global.repository',
-                          linkText: shouldTruncate(gitUrl) ? (
-                            <TruncatedValueTooltip value={gitUrl} isUrl />
-                          ) : (
-                            gitUrl
-                          ),
-                          link: data.git_repository_url,
-                          icon: data.git_repository_url ? (
-                            <LinkIcon className="text-blue text-xl" />
-                          ) : undefined,
-                        },
-                        {
                           title: 'global.commitTags',
                           linkText: valueOrEmpty(data.git_commit_tags?.[0]),
+                          span: 2,
                         },
                         {
                           title: 'buildDetails.gitDescribe',
                           linkText: valueOrEmpty(data.git_commit_name),
+                          span: 2,
+                        },
+                        {
+                          title: 'global.repository',
+                          linkText: gitUrl,
+                          link: data.git_repository_url,
+                          span: 4,
                         },
                       ]}
                     />
@@ -353,7 +342,6 @@ const BuildDetails = ({
             </div>
             <LogOrJsonSheetContent
               type={sheetType}
-              jsonContent={jsonContent}
               hideIssueSection
               logData={logData}
             />

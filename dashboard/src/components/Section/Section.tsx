@@ -11,6 +11,18 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import { LinkIcon } from '@/components/Icons/Link';
 
+import { cn } from '@/lib/utils';
+import { isUrl } from '@/lib/string';
+
+const SPAN_CLASS = {
+  1: 'col-span-1',
+  2: 'col-span-2',
+  3: 'col-span-3',
+  4: 'col-span-4',
+} as const;
+
+export type FieldSpan = keyof typeof SPAN_CLASS;
+
 export interface ISection {
   title: string;
   subtitle?: string | ReactElement;
@@ -26,6 +38,7 @@ export interface SubsectionLink extends ILinkWithIcon {
   wrapperComponent?: ElementType<{ children: ReactNode } & DialogTriggerProps>;
   copyValue?: string;
   children?: JSX.Element;
+  span?: FieldSpan;
 }
 
 // TODO: move the children from inside the info to the subsection itself
@@ -34,12 +47,18 @@ export interface ISubsection {
   title?: string;
 }
 
-export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
+export const Subsection = ({
+  infos,
+  title,
+  card = false,
+}: ISubsection & { card?: boolean }): JSX.Element => {
   const [items, children] = useMemo(() => {
     const childrenList: JSX.Element[] = [];
     const itemList = infos
       .map(info => {
         const WrapperComponent = info.wrapperComponent;
+        const url = info.link && isUrl(info.link) ? info.link : undefined;
+        const span = info.span ?? 1;
         const shouldHaveLinkComponent =
           info.title !== undefined ||
           info.link !== undefined ||
@@ -55,7 +74,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             link={info.link}
             titleIcon={info.titleIcon}
             linkComponent={info.linkComponent}
-            linkText={info.linkText}
+            linkText={url ?? info.linkText}
             unformattedTitle={info.unformattedTitle}
             icon={
               info.link && !info.icon ? (
@@ -66,6 +85,8 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             }
             onClick={info.onClick ?? undefined}
             titleClassName="text-dark-gray2 text-xs font-normal"
+            className={card ? 'w-full text-sm' : undefined}
+            truncate={url !== undefined}
           />
         );
 
@@ -80,7 +101,10 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             return (
               <div
                 key={info.title}
-                className="flex max-w-full min-w-0 flex-row items-start"
+                className={cn(
+                  'flex max-w-full min-w-0 flex-row items-start',
+                  SPAN_CLASS[span],
+                )}
               >
                 {WrapperComponent ? (
                   <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
@@ -96,7 +120,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
       .filter(item => item !== undefined);
 
     return [itemList, childrenList];
-  }, [infos]);
+  }, [card, infos]);
 
   return (
     <div className="border-dark-gray flex flex-col gap-2 border-t pt-3">
@@ -106,7 +130,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
         </span>
       )}
       {items.length > 0 && (
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+        <div className="grid grid-cols-4 items-start gap-x-6 gap-y-3">
           {items}
         </div>
       )}
@@ -130,11 +154,12 @@ const Section = ({
       subsections?.map((subsection, index) => (
         <Subsection
           key={index}
+          card={card}
           infos={subsection.infos}
           title={subsection.title}
         />
       )),
-    [subsections],
+    [card, subsections],
   );
 
   const header = (

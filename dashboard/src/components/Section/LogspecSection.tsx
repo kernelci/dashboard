@@ -1,7 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import ReactJsonView from '@microlink/react-json-view';
+
 import { isStringRecord } from '@/utils/utils';
 
+import CopyButton from '@/components/Button/CopyButton';
 import type {
   SheetType,
   IJsonContent,
@@ -10,7 +13,47 @@ import { LogspecInfoIcon } from '@/components/Icons/LogspecInfo';
 
 import { miscContentHandler } from '@/utils/misc';
 
-import type { ISection } from './Section';
+import type { ISection, SubsectionLink } from './Section';
+
+const logspecField = (
+  content: SubsectionLink | undefined,
+  key: string,
+): SubsectionLink | undefined => {
+  if (content === undefined) {
+    return;
+  }
+
+  switch (key) {
+    case 'error_type':
+    case 'signature_loc':
+      return { ...content, span: 2 };
+    case 'script':
+    case 'target':
+    case 'error_summary':
+    case 'src_file':
+    case 'hardware':
+      return { ...content, span: 4 };
+    default:
+      return content;
+  }
+};
+
+const signatureFieldsLink = (value: object): SubsectionLink => ({
+  unformattedTitle: 'signature_fields',
+  span: 4,
+  linkComponent: (
+    <div className="flex w-full min-w-0 items-start gap-1">
+      <ReactJsonView
+        src={value}
+        name={false}
+        collapsed={0}
+        displayDataTypes={false}
+        style={{ fontSize: 12 }}
+      />
+      <CopyButton value={JSON.stringify(value)} />
+    </div>
+  ),
+});
 
 export const getLogspecSection = ({
   misc,
@@ -44,9 +87,17 @@ export const getLogspecSection = ({
     ],
   };
 
-  Object.entries(misc.logspec).map(([fieldKey, fieldValue]) => {
+  Object.entries(misc.logspec).forEach(([fieldKey, fieldValue]) => {
     if (typeof fieldValue === 'object' && fieldValue !== null) {
       const subInfos = Object.entries(fieldValue).map(([subKey, subValue]) => {
+        if (
+          subKey === 'signature_fields' &&
+          subValue !== null &&
+          typeof subValue === 'object'
+        ) {
+          return signatureFieldsLink(subValue);
+        }
+
         const content = miscContentHandler({
           fieldKey: subKey,
           fieldValue: subValue,
@@ -54,9 +105,8 @@ export const getLogspecSection = ({
           setJsonContent: setJsonContent,
         });
         // Object values are already one click away in the JSON sheet; inline text only repeats them.
-        return content?.copyValue
-          ? { ...content, linkText: undefined }
-          : content;
+        const field = logspecField(content, subKey);
+        return field?.copyValue ? { ...field, linkText: undefined } : field;
       });
 
       logspecSection.subsections?.push({
@@ -70,8 +120,9 @@ export const getLogspecSection = ({
         setSheetType: setSheetType,
         setJsonContent: setJsonContent,
       });
-      if (content !== undefined) {
-        logspecSection.subsections?.[0].infos.push(content);
+      const field = logspecField(content, fieldKey);
+      if (field !== undefined) {
+        logspecSection.subsections?.[0].infos.push(field);
       }
     }
   });

@@ -2,8 +2,7 @@ import type { JSX } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
-import Section from '@/components/Section/Section';
+import Section, { type SubsectionLink } from '@/components/Section/Section';
 import type { MessagesKey } from '@/locales/messages';
 
 export const DetailsInfoCard = ({
@@ -11,7 +10,7 @@ export const DetailsInfoCard = ({
   data,
 }: {
   cardTitle: MessagesKey;
-  data: ILinkWithIcon[];
+  data: SubsectionLink[];
 }): JSX.Element => {
   const { formatMessage } = useIntl();
 

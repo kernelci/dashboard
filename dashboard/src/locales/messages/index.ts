@@ -306,6 +306,7 @@ export const messages = {
     'issueDetails.id': 'Issue Id',
     'issueDetails.incidentsTitle': 'Incidents',
     'issueDetails.issueDetails': 'Issue Details',
+    'issueDetails.issueInfo': 'Issue Info',
     'issueDetails.issueListingInfo':
       'The culprit for all issues listed is code',
     'issueDetails.lastIncident': 'Last Incident Data',

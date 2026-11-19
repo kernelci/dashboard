@@ -5,12 +5,13 @@ import { useMemo, useState, type JSX } from 'react';
 import { useParams, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
-import Section, { type ISection } from '@/components/Section/Section';
+import Section, {
+  type ISection,
+  type SubsectionLink,
+} from '@/components/Section/Section';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
-import { shouldTruncate, valueOrEmpty } from '@/lib/string';
-
-import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
+import { valueOrEmpty } from '@/lib/string';
 
 import { getMiscSection } from '@/components/Section/MiscSection';
 
@@ -46,6 +47,8 @@ import { Badge } from '@/components/ui/badge';
 
 import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import { createIssueDetailsCommand } from '@/components/Footer/kcidevCommand';
+
+import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
 
 import { IncidentsSection } from './IncidentsSection';
 
@@ -88,7 +91,6 @@ export const IssueDetails = ({
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'commonDetails.miscData' }),
-      setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
 
@@ -153,13 +155,58 @@ export const IssueDetails = ({
     formatMessage,
   ]);
 
+  const issueInfo = useMemo((): SubsectionLink[] | undefined => {
+    if (!data) {
+      return;
+    }
+
+    const reportUrl = valueOrEmpty(data.report_url);
+    const loreUrl = `https://lore.kernel.org/all/?q=${encodeURIComponent(data.id)}`;
+    const reportSubject = valueOrEmpty(data.report_subject);
+
+    return [
+      {
+        title: 'issueDetails.version',
+        linkText: data.version.toString(),
+      },
+      {
+        title: 'global.origin',
+        linkText: valueOrEmpty(data.origin),
+      },
+      {
+        title: 'issueDetails.loreUrl',
+        linkText: loreUrl,
+        link: loreUrl,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.reportUrl',
+        linkText: reportUrl,
+        link: data.report_url ?? undefined,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.reportSubject',
+        linkText: reportSubject,
+        span: 4,
+      },
+      {
+        title: 'issueDetails.culpritTitle',
+        linkText: issueCulprit,
+        titleIcon: <TooltipIcon tooltipId="issueListing.culpritInfo" />,
+      },
+      {
+        title: 'issueDetails.id',
+        linkText: valueOrEmpty(data.id),
+        span: 3,
+      },
+    ];
+  }, [data, issueCulprit]);
+
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
       return [];
     }
-    const reportUrl = valueOrEmpty(data.report_url);
-    const loreUrl = `https://lore.kernel.org/all/?q=${encodeURIComponent(data.id)}`;
-    const reportSubject = valueOrEmpty(data.report_subject);
 
     return [
       {
@@ -175,62 +222,9 @@ export const IssueDetails = ({
             })}
           />
         ),
-        subsections: [
-          {
-            infos: [
-              {
-                title: 'issueDetails.version',
-                linkText: data.version.toString(),
-              },
-              {
-                title: 'global.origin',
-                linkText: valueOrEmpty(data.origin),
-              },
-              {
-                title: 'issueDetails.loreUrl',
-                linkText: shouldTruncate(loreUrl) ? (
-                  <TruncatedValueTooltip value={loreUrl} isUrl={true} />
-                ) : (
-                  loreUrl
-                ),
-                link: loreUrl,
-              },
-              {
-                title: 'issueDetails.reportUrl',
-                linkText: shouldTruncate(reportUrl) ? (
-                  <TruncatedValueTooltip value={reportUrl} isUrl={true} />
-                ) : (
-                  reportUrl
-                ),
-                link: data.report_url ?? undefined,
-              },
-              {
-                title: 'issueDetails.reportSubject',
-                linkText: shouldTruncate(reportSubject) ? (
-                  <TruncatedValueTooltip value={reportSubject} />
-                ) : (
-                  reportSubject
-                ),
-              },
-              {
-                title: 'issueDetails.culpritTitle',
-                linkText: issueCulprit,
-                titleIcon: <TooltipIcon tooltipId="issueListing.culpritInfo" />,
-              },
-              {
-                title: 'issueDetails.id',
-                linkText: shouldTruncate(valueOrEmpty(data.id)) ? (
-                  <TruncatedValueTooltip value={data.id} />
-                ) : (
-                  data.id
-                ),
-              },
-            ],
-          },
-        ],
       },
     ];
-  }, [data, issueCulprit, issueId, tagPills, versionNumber]);
+  }, [data, issueId, tagPills, versionNumber]);
 
   const issueDetailsTabTitle = useMemo(() => {
     return formatMessage(
@@ -265,6 +259,12 @@ export const IssueDetails = ({
               <SectionGroup sections={generalSections} />
               <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 <div className="flex flex-col gap-4">
+                  {issueInfo && (
+                    <DetailsInfoCard
+                      cardTitle="issueDetails.issueInfo"
+                      data={issueInfo}
+                    />
+                  )}
                   <IncidentsSection
                     firstIncident={data?.extra?.[issueId]?.first_incident}
                     lastIncident={data?.extra?.[issueId]?.last_incident}
@@ -273,7 +273,9 @@ export const IssueDetails = ({
                   />
                   {miscSection && <Section {...miscSection} card />}
                 </div>
-                {logspecSection && <Section {...logspecSection} card />}
+                <div className="flex flex-col gap-4">
+                  {logspecSection && <Section {...logspecSection} card />}
+                </div>
               </div>
               <IssueDetailsTestSection
                 issueId={issueId}

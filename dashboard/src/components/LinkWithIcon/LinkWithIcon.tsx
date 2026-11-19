@@ -16,6 +16,7 @@ export interface ILinkWithIcon {
   titleIcon?: JSX.Element;
   className?: string;
   titleClassName?: string;
+  truncate?: boolean;
 }
 
 const LinkWithIcon = ({
@@ -29,6 +30,7 @@ const LinkWithIcon = ({
   titleIcon,
   className,
   titleClassName,
+  truncate = false,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
 
@@ -66,18 +68,24 @@ const LinkWithIcon = ({
       {linkComponent ?? (
         <WrapperLink
           className={cn(
-            'flex max-w-full min-w-0 flex-row items-center gap-1 wrap-anywhere',
+            'flex max-w-full min-w-0 flex-row items-center gap-1',
+            truncate ? 'overflow-hidden' : 'wrap-anywhere',
             {
               'underline hover:text-gray-900': onClick || link,
             },
           )}
           href={link}
+          title={link}
           target="_blank"
           rel="noreferrer"
           onClick={onClick}
         >
-          {linkText}
-          {icon}
+          {truncate ? (
+            <span className="min-w-0 truncate">{linkText}</span>
+          ) : (
+            linkText
+          )}
+          {icon && <span className={cn(truncate && 'shrink-0')}>{icon}</span>}
         </WrapperLink>
       )}
     </div>

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/collapsible';
 
 import { valueOrEmpty } from '@/lib/string';
+import { cn } from '@/lib/utils';
 
 import type { MessagesKey } from '@/locales/messages';
 import type {
@@ -36,6 +37,7 @@ const SeenColumn = ({
   version,
   emptyLabel,
   showTree = false,
+  className,
 }: {
   label: MessagesKey;
   data?: SeenData;
@@ -43,8 +45,11 @@ const SeenColumn = ({
   version?: string;
   emptyLabel?: MessagesKey;
   showTree?: boolean;
+  className?: string;
 }): JSX.Element => (
-  <div className="flex w-full min-w-0 flex-col items-start gap-1">
+  <div
+    className={cn('flex w-full min-w-0 flex-col items-start gap-1', className)}
+  >
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className="font-bold">
         <FormattedMessage id={label} />
@@ -125,12 +130,14 @@ const TreeIncidents = ({
         )}
         <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4 [&_svg]:h-4 [&_svg]:w-4">
           <SeenColumn
+            className="xl:col-span-2"
             label="issue.firstSeen"
             data={tree.first_incident}
             time={tree.first_incident.first_seen}
             version={tree.first_incident.issue_version}
           />
           <SeenColumn
+            className="xl:col-span-2"
             label="issue.lastSeen"
             data={last}
             time={last.first_seen}
