@@ -34,14 +34,12 @@ export const trackVisibleTime = (router: VisibleRouter, url: string): void => {
     if (route === '' || timeMs === 0) {
       return;
     }
-    // sendBeacon always sends cookies, and this API allows any origin with
-    // Access-Control-Allow-Origin: *. A credentialed JSON request is rejected.
+    // Same-site cookies let this post through Anubis.
     void fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ route, time_ms: timeMs }),
       keepalive: true,
-      credentials: 'omit',
     });
   };
 
