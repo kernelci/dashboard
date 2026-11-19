@@ -289,6 +289,11 @@ else:
             "django.core.management.call_command",
             ["recompute_lab_daily", "--days=1"],
         ),
+        (
+            "0 4 * * 0",
+            "django.core.management.call_command",
+            ["prune_db", "--older-than", "180 days", "--yes"],
+        ),
     ]
 
 # Email settings for SMTP backend
