@@ -166,7 +166,7 @@ SKIP_CRONJOBS = is_boolean_or_string_true(os.environ.get("SKIP_CRONJOBS", False)
 if SKIP_CRONJOBS:
     CRONJOBS = []
 else:
-    # Make cron task output visible in `docker compose logs backend`.
+    # Job stdout and stderr go to the cron container (`docker compose logs cron`).
     CRONTAB_COMMAND_SUFFIX = os.environ.get(
         "CRONTAB_COMMAND_SUFFIX", ">> /proc/1/fd/1 2>&1"
     )
