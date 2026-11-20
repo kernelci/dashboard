@@ -289,6 +289,21 @@ else:
             "django.core.management.call_command",
             ["recompute_lab_daily", "--days=1"],
         ),
+        (
+            "0 4 * * *",
+            "django.core.management.call_command",
+            ["sync_commit_mirror"],
+        ),
+        (
+            "0 10 * * *",
+            "django.core.management.call_command",
+            ["sync_commit_ingest"],
+        ),
+        (
+            "0 16 * * 0",
+            "django.core.management.call_command",
+            ["sync_commit_gc"],
+        ),
     ]
 
 # Email settings for SMTP backend
@@ -305,6 +320,24 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "/volume_data")
+# Throwaway git dirs for one-shot SHA fetches (#2090). Prefer tmpfs (e.g. /dev/shm).
+GIT_SCRATCH_DIR = os.environ.get("GIT_SCRATCH_DIR", "/dev/shm/kernelci-git-scratch")
+GIT_FETCH_TIMEOUT_SECONDS = int(os.environ.get("GIT_FETCH_TIMEOUT_SECONDS", "60"))
+# One commit object is tiny; a full kernel history pack is hundreds of MB.
+GIT_FETCH_MAX_PACK_BYTES = int(
+    os.environ.get("GIT_FETCH_MAX_PACK_BYTES", str(2 * 1024 * 1024))
+)
+# Persistent treeless mirror for commit metadata sync (#2109). Not BACKEND_VOLUME_DIR.
+GIT_MIRROR_DIR = os.environ.get("GIT_MIRROR_DIR", "/var/lib/kernelci/git-mirror")
+# Empty keeps full history. A value such as "90 days ago" is passed to
+# git fetch --shallow-since once the ingest has caught up.
+GIT_MIRROR_SHALLOW_SINCE = os.environ.get("GIT_MIRROR_SHALLOW_SINCE", "").strip()
+# Unset or false: ingest still writes commits, identities, and parent edges,
+# and writes no commit_message rows. true writes subject and message for
+# commits inserted on that run. Hashes already past the tip are not revisited.
+SYNC_COMMIT_MESSAGES = is_boolean_or_string_true(
+    os.environ.get("SYNC_COMMIT_MESSAGES", False)
+)
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
