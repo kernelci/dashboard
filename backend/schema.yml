@@ -1123,13 +1123,6 @@ paths:
           title: Interval In Days
           type: integer
         description: Interval in days for the listing
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin filter
       tags:
       - labs
       security:
@@ -1327,39 +1320,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LabTestRowsResponse'
-          description: ''
-  /api/labs/origins/:
-    get:
-      operationId: labs_origins_retrieve
-      parameters:
-      - in: query
-        name: interval_in_days
-        schema:
-          default: 30
-          exclusiveMinimum: 0
-          title: Interval In Days
-          type: integer
-        description: Interval in days for the listing
-      tags:
-      - labs
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LabOriginsResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: string
           description: ''
   /api/log-downloader/:
     get:
@@ -5177,17 +5137,6 @@ components:
       - boots
       - tests
       title: LabMetricsData
-      type: object
-    LabOriginsResponse:
-      properties:
-        origins:
-          items:
-            $ref: '#/components/schemas/Origin'
-          title: Origins
-          type: array
-      required:
-      - origins
-      title: LabOriginsResponse
       type: object
     LabTestRowItem:
       properties:

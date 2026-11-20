@@ -10,7 +10,7 @@ from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.labs import get_lab_listing_data
 from kernelCI_app.typeModels.commonListing import (
-    ListingQueryParameters,
+    ListingInterval,
     ListingStatusCount,
 )
 from kernelCI_app.typeModels.labListing import (
@@ -47,20 +47,18 @@ class LabView(APIView):
         return labs
 
     @extend_schema(
-        parameters=[ListingQueryParameters],
+        parameters=[ListingInterval],
         responses=LabListingResponse,
     )
     def get(self, request: Request):
         try:
-            query_params = ListingQueryParameters(
-                origin=request.GET.get("origin"),
+            query_params = ListingInterval(
                 interval_in_days=request.GET.get("interval_in_days"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         labs_raw = get_lab_listing_data(
-            origin=query_params.origin,
             interval_in_days=query_params.interval_in_days,
         )
 
