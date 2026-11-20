@@ -20,7 +20,12 @@ import { FormattedMessage } from 'react-intl';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import {
+  TableBody,
+  TableCell,
+  TableCellWithLink,
+  TableRow,
+} from '@/components/ui/table';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import {
@@ -165,9 +170,18 @@ export function LabsTable({
       modelRows.map(row => (
         <TableRow key={row.id}>
           {row.getVisibleCells().map(cell => (
-            <TableCell key={cell.id}>
+            <TableCellWithLink
+              key={cell.id}
+              linkClassName="w-full inline-block h-full"
+              linkProps={{
+                to: '/labs/$labName',
+                params: { labName: row.original.lab_name },
+                search: previous => previous,
+                state: s => s,
+              }}
+            >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </TableCell>
+            </TableCellWithLink>
           ))}
         </TableRow>
       ))

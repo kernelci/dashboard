@@ -305,6 +305,7 @@ export type SearchParamsKeys =
   | 'listingSize'
   | 'hardwareSearch'
   | 'labsSearch'
+  | 'labDetailsPreview'
   | 'issueSearch'
   | 'treeInfo'
   | 'treeIndexes'
