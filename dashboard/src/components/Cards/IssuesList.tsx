@@ -40,14 +40,32 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { GroupedTestStatus } from '@/components/Status/Status';
 
+const withIssueFilter = (
+  diffFilter: TFilter | undefined,
+  issueFilterSection: TFilterObjectsKeys | undefined,
+  filterValue: string,
+  children: JSX.Element,
+): JSX.Element =>
+  diffFilter && issueFilterSection ? (
+    <FilterLink
+      filterSection={issueFilterSection}
+      filterValue={filterValue}
+      diffFilter={diffFilter}
+    >
+      {children}
+    </FilterLink>
+  ) : (
+    children
+  );
+
 type IssueItemProps = {
   issue: TIssue;
   extraDetails?: IssueExtraDetailsDict[string];
   extraDetailsLoading?: boolean;
   detailsId?: string;
   getIssueLink: (id: string, version: number) => LinkProps;
-  issueFilterSection: TFilterObjectsKeys;
-  diffFilter: TFilter;
+  issueFilterSection?: TFilterObjectsKeys;
+  diffFilter?: TFilter;
 };
 
 const IssueItem = ({
@@ -85,6 +103,16 @@ const IssueItem = ({
   }
 
   const hasMeta = !extraDetailsLoading && !!(firstSeen || tagPills?.length);
+  const issueText = (
+    <div className="max-w-5/6 min-w-0 text-sm sm:max-w-3/4">
+      <ListingItem
+        showNumber={false}
+        hasBottomBorder
+        text={issue.comment ?? formatMessage({ id: 'issue.uncategorized' })}
+        tooltip={issue.comment}
+      />
+    </div>
+  );
 
   return (
     <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
@@ -99,21 +127,12 @@ const IssueItem = ({
         skip={counts.SKIP}
       />
 
-      {/* Col 2: issue text — takes remaining space, truncates */}
-      <FilterLink
-        filterSection={issueFilterSection}
-        filterValue={getIssueFilterLabel(issue)}
-        diffFilter={diffFilter}
-      >
-        <div className="max-w-5/6 min-w-0 text-sm sm:max-w-3/4">
-          <ListingItem
-            showNumber={false}
-            hasBottomBorder
-            text={issue.comment ?? formatMessage({ id: 'issue.uncategorized' })}
-            tooltip={issue.comment}
-          />
-        </div>
-      </FilterLink>
+      {withIssueFilter(
+        diffFilter,
+        issueFilterSection,
+        getIssueFilterLabel(issue),
+        issueText,
+      )}
 
       {/* Col 3: action icons — fixed width */}
       <div className="flex items-center gap-3">
@@ -157,8 +176,8 @@ interface IIssuesList {
   issues: TIssue[];
   failedWithUnknownIssues?: number;
   title: IBaseCard['title'];
-  diffFilter: TFilter;
-  issueFilterSection: TFilterObjectsKeys;
+  diffFilter?: TFilter;
+  issueFilterSection?: TFilterObjectsKeys;
   detailsId?: string;
   pageFrom?: RedirectFrom;
   issueExtraDetails?: IssueExtraDetailsDict;
@@ -260,18 +279,16 @@ const IssuesList = ({
           diffFilter={diffFilter}
         />
       ))}
-      {failedWithUnknownIssues && (
-        <FilterLink
-          filterSection={issueFilterSection}
-          filterValue={UNCATEGORIZED_STRING}
-          diffFilter={diffFilter}
-        >
+      {failedWithUnknownIssues &&
+        withIssueFilter(
+          diffFilter,
+          issueFilterSection,
+          UNCATEGORIZED_STRING,
           <ListingItem
             errors={failedWithUnknownIssues}
             text={formatMessage({ id: 'issue.uncategorized' })}
-          />
-        </FilterLink>
-      )}
+          />,
+        )}
     </DumbListingContent>
   );
 

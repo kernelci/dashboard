@@ -20,6 +20,7 @@ from kernelCI_app.queries.lab_details import (
     get_lab_attention_items,
     get_lab_build_rows,
     get_lab_test_rows,
+    get_lab_test_summary,
 )
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.typeModels.labDetails import (
@@ -59,7 +60,7 @@ class LabDetailsView(APIView):
             origin=params.origin,
             interval_in_days=params.interval_in_days,
         )
-        test_rows = get_lab_test_rows(
+        test_summary = get_lab_test_summary(
             lab_name=lab_name,
             origin=params.origin,
             interval_in_days=params.interval_in_days,
@@ -69,7 +70,7 @@ class LabDetailsView(APIView):
                 lab_name=lab_name,
                 interval_in_days=params.interval_in_days,
                 build_rows=build_rows,
-                test_rows=test_rows,
+                test_summary=test_summary,
             )
         except ValidationError as e:
             return create_api_error_response(
@@ -114,6 +115,7 @@ class LabDetailsBootsView(APIView):
             origin=params.origin,
             interval_in_days=params.interval_in_days,
             tree_filters=tree_filters,
+            only_boots=True,
         )
         result = build_lab_boot_rows(test_rows)
         return Response(data=result.model_dump(), status=HTTPStatus.OK)

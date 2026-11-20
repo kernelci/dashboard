@@ -93,7 +93,6 @@ class LabBootRowItem(BaseModel):
     start_time: Optional[datetime] = None
     duration: Optional[float] = None
     log_url: Optional[str] = None
-    log_excerpt: Optional[str] = None
 
 
 class LabTestRowItem(BaseModel):
@@ -110,8 +109,6 @@ class LabTestRowItem(BaseModel):
     compiler: Optional[str] = None
     platform: Optional[str] = None
     log_url: Optional[str] = None
-    log_excerpt: Optional[str] = None
-    environment_misc: Optional[dict] = None
 
 
 class LabBuildRowsResponse(BaseModel):
