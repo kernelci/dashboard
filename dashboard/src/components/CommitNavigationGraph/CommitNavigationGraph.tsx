@@ -330,7 +330,7 @@ const CommitNavigationGraph = ({
           return '';
         }
         if (context.location === 'tooltip') {
-          return `${row.commitName ?? row.commitHash} - ${formatDate(row.earliestStartTime ?? '-', true)}`;
+          return `${row.commitName ?? row.commitHash}\n${formatDate(row.earliestStartTime ?? '-', true)}`;
         }
         return getChartXLabel(row);
       },
@@ -364,6 +364,9 @@ const CommitNavigationGraph = ({
               xAxis={xAxis}
               series={series}
               slotProps={{
+                axisContent: {
+                  sx: { '& thead': { whiteSpace: 'pre-line' } },
+                },
                 legend: {
                   itemGap: isSmallScreen ? undefined : legendItemGap,
                   position: { vertical: 'top', horizontal: 'middle' },
