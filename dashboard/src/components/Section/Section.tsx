@@ -10,10 +10,9 @@ import CopyButton from '@/components/Button/CopyButton';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import { LinkIcon } from '@/components/Icons/Link';
-import { isHttpUrl } from '@/lib/string';
 
 import { cn } from '@/lib/utils';
-import { isUrl } from '@/lib/string';
+import { isHttpUrl, isUrl } from '@/lib/string';
 
 const SPAN_CLASS = {
   1: 'col-span-1',
