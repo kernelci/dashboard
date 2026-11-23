@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('kernelCI_app', '0026_remove_commits_fetched_from_url'),
-        ('kernelCI_app', '0027_hardware_daily_builds_test_origin'),
+        ("kernelCI_app", "0026_remove_commits_fetched_from_url"),
+        ("kernelCI_app", "0027_hardware_daily_builds_test_origin"),
     ]
 
-    operations = [
-    ]
+    operations = []
