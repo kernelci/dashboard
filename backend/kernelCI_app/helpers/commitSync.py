@@ -711,7 +711,6 @@ def _fetch_refspecs_or_rollback(
             refs_before=refs_before,
             shallow_before=shallow_before,
             graphs_before=graphs_before,
-            keep_packs=True,
         )
         return FetchOutcome.FAILED
 
@@ -817,13 +816,12 @@ def _rollback_fetch(
     refs_before: dict[str, str],
     shallow_before: bytes | None,
     graphs_before: tuple[set[str], bytes | None],
-    keep_packs: bool = False,
 ) -> None:
-    """Restore refs, and drop the new packs unless the caller wants to keep them.
+    """Restore refs and drop the new packs.
 
-    A pack that finished writing holds valid objects even when the fetch died
-    afterwards, and git shares them with every other remote. Deleting it means
-    paying for the same download again; only the unfinished `tmp_pack_*` is junk.
+    Keeping a finished pack does not help: refs go back to the old tips, so the
+    next fetch negotiates from those and downloads the same objects again. Keeping
+    them grew the mirror about 7 GiB a day.
     The commit-graph from this attempt is always restored: a graph that outlives
     the pack it describes makes the next fetch write another tmp_pack.
     """
@@ -848,8 +846,6 @@ def _rollback_fetch(
     _restore_commit_graphs(repo_dir, graphs_before)
 
     for path in _pack_paths(repo_dir) - packs_before:
-        if keep_packs and not path.name.startswith("tmp_pack"):
-            continue
         try:
             path.unlink()
         except OSError as exc:

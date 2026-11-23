@@ -910,6 +910,8 @@ class TestShallowMirror:
         pack_dir.mkdir(parents=True, exist_ok=True)
         kept = pack_dir / "pack-kept.pack"
         kept.write_bytes(b"pack")
+        fresh = pack_dir / "pack-fresh.pack"
+        fresh.write_bytes(b"pack")
         temporary = pack_dir / "tmp_pack_dead"
         temporary.write_bytes(b"tmp")
 
@@ -920,13 +922,13 @@ class TestShallowMirror:
             refs_before={},
             shallow_before=None,
             graphs_before=before,
-            keep_packs=True,
         )
 
         assert (graphs / "graph-old").read_bytes() == b"old"
         assert not (graphs / "graph-new").exists()
         assert (graphs / "commit-graph-chain").read_bytes() == b"old\n"
         assert kept.is_file()
+        assert not fresh.exists()
         assert not temporary.exists()
 
     def test_ensure_mirror_drops_incomplete_packs_and_ignores_commit_graph(
