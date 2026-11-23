@@ -61,6 +61,7 @@ services:
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-backend:${IMAGE_TAG:-latest}
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - git-mirror:${GIT_MIRROR_DIR:-/var/lib/kernelci/git-mirror}
         env_file:
             - .env
         environment:

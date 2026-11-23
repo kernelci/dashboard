@@ -98,6 +98,7 @@ services:
             - PROMETHEUS_METRICS_ENABLED=false
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - git-mirror:${GIT_MIRROR_DIR:-/var/lib/kernelci/git-mirror}
         restart: always
         mem_limit: 3g
         networks:
