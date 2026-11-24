@@ -149,6 +149,7 @@ class HardwareDetailsBuilds(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             build_origins=origins["build_origins"],
+            checkout_origins=origins["checkout_origins"],
             build_labs=self.filters.filter_labs["build"],
         )
 

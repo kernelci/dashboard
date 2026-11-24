@@ -246,7 +246,10 @@ class HardwareDetails(APIView):
             tree_index = current_tree.index
 
             # Build-only rows have no test path. Status summary calls is_boot on it.
-            if not builds_only:
+            # The tree status belongs to the commit shown next to it, not the window.
+            if not builds_only and record["build__checkout__git_commit_hash"] == (
+                current_tree.head_git_commit_hash or self.head_hashes[tree_index]
+            ):
                 handle_tree_status_summary(
                     record=record,
                     tree_status_summary=self.tree_status_summary,
@@ -326,6 +329,7 @@ class HardwareDetails(APIView):
         trees_with_selected_commits = get_trees_with_selected_commit(
             trees=trees, selected_commits=self.selected_commits
         )
+        self.head_hashes = {tree.index: tree.head_git_commit_hash for tree in trees}
 
         records = get_hardware_details_data(
             hardware_id=hardware_id,
@@ -333,6 +337,7 @@ class HardwareDetails(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             test_origins=origins["test_origins"],
+            checkout_origins=origins["checkout_origins"],
         )
         build_records = get_hardware_build_data(
             hardware_id=hardware_id,
@@ -340,6 +345,7 @@ class HardwareDetails(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
             build_origins=origins["build_origins"],
+            checkout_origins=origins["checkout_origins"],
         )
 
         if len(records) == 0 and len(build_records) == 0:

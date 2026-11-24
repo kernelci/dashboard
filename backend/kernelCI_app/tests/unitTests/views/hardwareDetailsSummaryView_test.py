@@ -84,6 +84,7 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
             "head_tokens_extra_key": self._body(
                 selectedCommits={"0": "head", "1": "head", "99": "ignored"}
             ),
+            "raw_hashes": self._body(selectedCommits={"0": "abc123", "1": "def456"}),
         }
         for name, body in cases.items():
             with self.subTest(name):
@@ -100,6 +101,27 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         self.assertEqual(len({tree.index for tree in trees}), 2)
         for tree in trees:
             self.assertEqual(tree.selected_commit_status["builds"].PASS, 1)
+
+    def test_tree_status_is_head_only_while_summary_counts_window(self):
+        older = {
+            **SUMMARY_ROW,
+            "status": "FAIL",
+            "config_name": "kselftest",
+            "git_commit_name": "v5.9",
+            "git_commit_hash": "old999",
+        }
+        with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
+            mock_heads.return_value = self.heads
+            mock_query.return_value = [older, SUMMARY_ROW]
+            response = self._post(self._body())
+
+        builds = response.data["summary"]["builds"]["status"]
+        self.assertEqual((builds["PASS"], builds["FAIL"]), (1, 1))
+        [tree] = response.data["common"]["trees"]
+        self.assertEqual(tree["head_git_commit_name"], "v6.0")
+        tree_builds = tree["selected_commit_status"]["builds"]
+        self.assertEqual((tree_builds["PASS"], tree_builds["FAIL"]), (1, 0))
+        self.assertIn("kselftest", response.data["filters"]["all"]["configs"])
 
     def test_empty_selected_summary_keeps_head_trees(self):
         with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
@@ -126,7 +148,6 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
     def test_second_query_when_sql_differs(self):
         cases = {
             "non_head": self._body(selectedCommits={"0": "deadbeef", "1": "head"}),
-            "raw_hashes": self._body(selectedCommits={"0": "abc123", "1": "def456"}),
             "partial_trees": self._body(selectedCommits={"0": "head"}),
             "duration": self._body(filter={"filter_boot.duration_[lte]": ["100"]}),
         }

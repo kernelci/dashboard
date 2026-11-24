@@ -142,6 +142,9 @@ class TestGetHardwareDetailsSummary:
         assert params["git_repository_branch1"] == "for-next"
         assert params["checkout_origin1"] == "broonie"
         assert "tests.origin" not in executed_query
+        assert "builds.origin" not in executed_query
+        # An OR across both platform columns falls back to a tests.start_time scan.
+        assert "OR tests.environment_compatible" not in executed_query
 
     @patch("kernelCI_app.queries.hardware.get_query_cache", return_value=None)
     @patch("kernelCI_app.queries.hardware.set_query_cache")
@@ -160,18 +163,19 @@ class TestGetHardwareDetailsSummary:
             ],
             start_datetime=START_DATE,
             end_datetime=END_DATE,
+            checkout_origins=["maestro"],
         )
 
         executed_query, params = mock_cursor.execute.call_args[0]
+        assert "WITH daily AS MATERIALIZED" in executed_query
         assert "hardware_daily_tests" in executed_query
         assert "hardware_daily_builds" not in executed_query
+        assert "AND checkout_origin = %(checkout_origins)s" in executed_query
+        assert params["checkout_origins"] == "maestro"
         assert "commit_hash0" not in params
         assert params["commit_hash1"] == "deadbeef"
         assert params["tree_name0"] == "mainline"
         assert "OR" in executed_query
-        assert "builds.origin" not in executed_query
-        # An OR across both platform columns falls back to a tests.start_time scan.
-        assert "OR tests.environment_compatible" not in executed_query
 
     @patch("kernelCI_app.queries.hardware.get_query_cache", return_value=None)
     @patch("kernelCI_app.queries.hardware.set_query_cache")
@@ -331,11 +335,13 @@ class TestQueryRecords:
 
         assert result == expected_result
         executed_query, params = mock_cursor.execute.call_args[0]
+        assert "compatibles @> ARRAY[%s]::text[]" in executed_query
         assert "hardware_daily_tests" in executed_query
         assert "hardware_daily_builds" not in executed_query
         assert "checkouts.git_commit_hash IN" not in executed_query
         assert "AND tests.origin" not in executed_query
-        assert params[-3:] == ["hardware", START_DATE, END_DATE]
+        assert params[-4:] == ["hardware", "hardware", START_DATE, END_DATE]
+        assert "checkout_origin =" not in executed_query
         assert "abc123" not in params
         assert "tests.misc," in executed_query
         assert "builds.misc AS build__misc" in executed_query
@@ -352,6 +358,7 @@ class TestQueryRecords:
             history_only=True,
         )
         history_query = mock_cursor.execute.call_args[0][0]
+        assert "checkout_origin =" not in history_query
         assert "tests.misc," not in history_query
         assert "builds.misc" not in history_query
         assert "tests.environment_misc" in history_query
@@ -359,6 +366,23 @@ class TestQueryRecords:
         assert "incidents.test_id AS incidents__test_id" in history_query
         assert "T7.issue_id AS build__incidents__issue__id" in history_query
         assert "tests.misc->>'runtime'" in history_query
+
+        query_records(
+            hardware_id="hardware",
+            trees=[TEST_TREE],
+            start_date=START_DATE,
+            end_date=END_DATE,
+            checkout_origins=["maestro", "broonie"],
+        )
+        origin_query, origin_params = mock_cursor.execute.call_args[0]
+        assert "AND checkout_origin = ANY(%s)" in origin_query
+        assert origin_params[-5:] == [
+            "hardware",
+            "hardware",
+            START_DATE,
+            END_DATE,
+            ["maestro", "broonie"],
+        ]
 
     @patch("kernelCI_app.queries.hardware.connection")
     def test_selected_hash_pins_one_checkout(self, mock_connection):
