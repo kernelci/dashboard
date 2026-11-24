@@ -1,3 +1,4 @@
+import ast
 import json
 from datetime import timedelta
 
@@ -12,13 +13,21 @@ from kernelCI_cache.utils import get_current_timestamp_kcidb_format
 RESEND_INTERVAL_HOURS = 12
 
 
-def _stored_paths(path: list[str] | str | None) -> tuple[str | None, ...]:
-    """Return the value to write, followed by equivalent legacy TextField values."""
-    if not path or path == "%":
-        return "%", "[]", None
+def _canonical_path(path: list[str] | str | None) -> str:
+    """Normalize configured filters and the JSON or Python list strings in older rows."""
+    if isinstance(path, str) and path.lstrip().startswith("["):
+        try:
+            filters = json.loads(path)
+        except json.JSONDecodeError:
+            try:
+                filters = ast.literal_eval(path.strip())
+            except (ValueError, SyntaxError):
+                return path
+        if isinstance(filters, list) and all(isinstance(item, str) for item in filters):
+            path = filters
     if isinstance(path, list):
-        return json.dumps(path), str(path)
-    return (path,)
+        return json.dumps(path) if path else "%"
+    return path or "%"
 
 
 def mark_checkout_notification_as_sent(
@@ -39,7 +48,7 @@ def mark_checkout_notification_as_sent(
             git_repository_branch=git_repository_branch,
             git_repository_url=git_repository_url,
             origin=origin,
-            path=_stored_paths(path)[0],
+            path=_canonical_path(path),
         )
         return True
     except Exception as e:
@@ -115,19 +124,21 @@ def get_unsent_checkout_reports(
         return {}
 
     since = timezone.now() - timedelta(hours=RESEND_INTERVAL_HOURS)
-    sent = set(
+    recent_deliveries = (
         NotificationsCheckout.objects.using("notifications")
         .filter(notification_sent__gte=since)
         .values_list("git_repository_branch", "git_repository_url", "origin", "path")
     )
+    sent = {
+        (branch, url, origin, _canonical_path(path))
+        for branch, url, origin, path in recent_deliveries
+    }
     pending = {}
     for tree, reports in tree_prop_map.items():
         remaining = [
             report
             for report in reports
-            if not any(
-                (*tree, path) in sent for path in _stored_paths(report.get("path"))
-            )
+            if (*tree, _canonical_path(report.get("path"))) not in sent
         ]
         if remaining:
             pending[tree] = remaining

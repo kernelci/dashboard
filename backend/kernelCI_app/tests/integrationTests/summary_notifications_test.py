@@ -12,9 +12,10 @@ pytestmark = pytest.mark.django_db(databases=["default", "notifications"])
 
 TREE = ("master", "https://example.org/linux.git", "maestro")
 REPORT = {"branch": TREE[0], "giturl": TREE[1]}
+PATH_FILTERS = ["boot%", "ltp%"]
 
 
-@pytest.mark.parametrize("path", ["%", ["boot%", "ltp%"]])
+@pytest.mark.parametrize("path", ["%", PATH_FILTERS])
 def test_sent_summary_keeps_unsent_sibling_until_resend_interval_expires(path):
     sent = REPORT if path == "%" else {**REPORT, "path": path}
     sibling = {**REPORT, "path": ["rt-tests%"]}
@@ -45,8 +46,18 @@ def test_sent_summary_keeps_unsent_sibling_until_resend_interval_expires(path):
     )
 
 
-@pytest.mark.parametrize("stored_path", ["['boot%', 'ltp%']", '["boot%", "ltp%"]'])
-def test_recent_summary_recognizes_existing_path_formats(stored_path):
+@pytest.mark.parametrize(
+    ("stored_path", "configured_path"),
+    [
+        ("['boot%', 'ltp%']", PATH_FILTERS),
+        ('["boot%", "ltp%"]', PATH_FILTERS),
+        ('["boot%","ltp%"]', PATH_FILTERS),
+        (None, None),
+        ("[]", None),
+        ("[", "["),
+    ],
+)
+def test_recent_summary_recognizes_existing_path_formats(stored_path, configured_path):
     NotificationsCheckout.objects.using("notifications").create(
         notification_message_id="previous-summary",
         notification_sent=timezone.now(),
@@ -56,5 +67,6 @@ def test_recent_summary_recognizes_existing_path_formats(stored_path):
         origin=TREE[2],
         path=stored_path,
     )
-    reports = {TREE: [{**REPORT, "path": ["boot%", "ltp%"]}]}
+    report = REPORT if configured_path is None else {**REPORT, "path": configured_path}
+    reports = {TREE: [report]}
     assert discard_sent_reports({TREE}, reports, skip_sent_reports=False) == (set(), {})
