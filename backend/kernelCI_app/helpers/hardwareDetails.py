@@ -114,9 +114,14 @@ def get_trees_with_selected_commit(
 
         is_tree_selected = raw_selected_commit is not None
 
-        displayed_commit = get_displayed_commit(
-            tree=tree, selected_commit=raw_selected_commit
-        )
+        # "head" and no selection both mean every checkout in the window.
+        # An empty hash is how the queries tell those apart from a pinned commit.
+        if raw_selected_commit == SELECTED_HEAD_TREE_VALUE:
+            displayed_commit = None
+        else:
+            displayed_commit = get_displayed_commit(
+                tree=tree, selected_commit=raw_selected_commit
+            )
 
         selected.append(
             Tree(
@@ -784,11 +789,12 @@ def process_filters(*, instance, record: Dict) -> None:
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
     if is_all_selected:
         return True
-    return (
-        tree.is_selected is not None
-        and tree.is_selected
-        and tree.head_git_commit_hash == record["build__checkout__git_commit_hash"]
-    )
+    if tree.is_selected is not True:
+        return False
+    # A selected tree with no hash is the "head" token: every checkout in the window.
+    if not tree.head_git_commit_hash:
+        return True
+    return tree.head_git_commit_hash == record["build__checkout__git_commit_hash"]
 
 
 def mutate_properties_to_list(dict: Dict, keys: List[str]) -> None:

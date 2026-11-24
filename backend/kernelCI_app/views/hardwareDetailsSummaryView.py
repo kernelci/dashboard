@@ -13,7 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.constants.hardwareDetails import make_tree_key
+from kernelCI_app.constants.hardwareDetails import (
+    SELECTED_HEAD_TREE_VALUE,
+    make_tree_key,
+)
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -481,16 +484,16 @@ class HardwareDetailsSummary(APIView):
         self,
         tree_heads: list[tuple[str, str, str, str, str, str]],
         selected_commits: Optional[dict[str, str]] = None,
-    ) -> list[tuple[str, str, str, str, str]]:
-        """Each row is the checkout identity plus the selected commit hash."""
+    ) -> list[tuple[str, str, str, str | None, str]]:
+        """Each row is a tree. A missing hash means every checkout in the window."""
         rows = []
-        for key, tree_name, url, branch, commit_hash, checkout_origin in tree_heads:
-            if selected_commits and key not in self.selected_commits:
+        for key, tree_name, url, branch, _commit_hash, checkout_origin in tree_heads:
+            if selected_commits and key not in selected_commits:
                 continue
-            chosen = commit_hash
+            chosen = None
             if selected_commits:
-                selected_commit = self.selected_commits.get(key, "head")
-                if selected_commit != "head":
+                selected_commit = selected_commits.get(key)
+                if selected_commit and selected_commit != SELECTED_HEAD_TREE_VALUE:
                     chosen = selected_commit
             rows.append((tree_name, url, branch, chosen, checkout_origin))
         return rows

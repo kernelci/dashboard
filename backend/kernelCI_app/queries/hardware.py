@@ -650,7 +650,7 @@ def get_hardware_details_data(
     boot_labs: Optional[set[str]] = None,
     test_labs: Optional[set[str]] = None,
 ):
-    cache_key = "hardwareDetailsFullDataByCheckoutV2"
+    cache_key = "hardwareDetailsFullDataByCheckoutV4"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -696,7 +696,7 @@ def get_hardware_build_data(
     build_origins: Optional[list[str]] = None,
     build_labs: Optional[set[str]] = None,
 ):
-    cache_key = "hardwareDetailsBuildDataByCheckout"
+    cache_key = "hardwareDetailsBuildDataByCheckoutV3"
     cache_params = {
         "hardware_id": hardware_id,
         "build_origins": build_origins,
@@ -719,38 +719,120 @@ def get_hardware_build_data(
     return records
 
 
-def _checkout_commit_values(
-    checkouts: list[tuple[str, str, str, str, str]],
-) -> tuple[str, dict[str, str]]:
-    """Hash and origin still match another tree that checked out the same commit."""
-    tuples = []
-    params = {}
+def _daily_checkout_ids(platform: str, start: str, end: str) -> str:
+    """Checkout ids the listing already summed for this platform and window.
 
-    for index, (tree_name, url, branch, commit_hash, checkout_origin) in enumerate(
-        checkouts
-    ):
-        name_key = f"tree_name{index}"
-        url_key = f"git_repository_url{index}"
-        branch_key = f"git_repository_branch{index}"
-        hash_key = f"commit_hash{index}"
-        origin_key = f"checkout_origin{index}"
-        tuples.append(
-            f"(%({name_key})s, %({url_key})s, %({branch_key})s,"
-            f" %({hash_key})s, %({origin_key})s)"
+    hardware_daily_builds is filled from the same test rows, so it adds no ids.
+    """
+    return f"""builds.checkout_id IN (
+        SELECT checkout_id FROM hardware_daily_tests
+        WHERE platform = {platform}
+          AND checkout_day BETWEEN {start}::date AND {end}::date
+    )"""
+
+
+def _in_values(columns: str, rows: list[tuple], keys: tuple[str, ...], *, named: bool):
+    """rows are (index, *values). Named placeholders stay tree_name0, commit_hash1, ..."""
+    if named:
+        params: dict[str, str] = {}
+        slots = []
+        for index, *values in rows:
+            holders = []
+            for key, value in zip(keys, values, strict=True):
+                name = f"{key}{index}"
+                params[name] = value
+                holders.append(f"%({name})s")
+            slots.append("(" + ", ".join(holders) + ")")
+        return f"({columns}) IN (VALUES {', '.join(slots)})", params
+    holder = "(" + ", ".join(["%s"] * len(keys)) + ")"
+    flat = [value for _index, *values in rows for value in values]
+    return f"({columns}) IN ({', '.join([holder] * len(rows))})", flat
+
+
+def _join_clauses(parts: list[str], params: dict | list):
+    if not parts:
+        return "FALSE", params
+    if len(parts) == 1:
+        return parts[0], params
+    return "(" + " OR ".join(parts) + ")", params
+
+
+def _checkout_match(
+    checkouts: list[tuple[str, str, str, str | None, str]],
+    *,
+    named: bool,
+    hardware_id: str | None = None,
+    start_date=None,
+    end_date=None,
+):
+    """A hash pins one checkout. No hash uses the listing's daily checkout ids.
+
+    A mix keeps daily ids for the unpinned trees and the hash for the pinned ones.
+    """
+    window = []
+    pinned = []
+    for index, (tree_name, url, branch, commit_hash, origin) in enumerate(checkouts):
+        if commit_hash:
+            pinned.append((index, tree_name, url, branch, commit_hash, origin))
+        else:
+            window.append((index, tree_name, url, branch, origin))
+
+    parts: list[str] = []
+    params: dict | list = {} if named else []
+    daily = _daily_checkout_ids(
+        *("%(platform)s", "%(start_date)s", "%(end_date)s")
+        if named
+        else ("%s", "%s", "%s")
+    )
+    if window and not pinned:
+        parts.append(daily)
+        if not named:
+            params.extend([hardware_id, start_date, end_date])
+    elif window:
+        identity, extra = _in_values(
+            "checkouts.tree_name, checkouts.git_repository_url, "
+            "checkouts.git_repository_branch, checkouts.origin",
+            window,
+            (
+                "tree_name",
+                "git_repository_url",
+                "git_repository_branch",
+                "checkout_origin",
+            ),
+            named=named,
         )
-        params[name_key] = tree_name
-        params[url_key] = url
-        params[branch_key] = branch
-        params[hash_key] = commit_hash
-        params[origin_key] = checkout_origin
-
-    return ", ".join(tuples), params
+        parts.append(f"({daily} AND {identity})")
+        if named:
+            params.update(extra)
+        else:
+            params.extend([hardware_id, start_date, end_date, *extra])
+    if pinned:
+        clause, extra = _in_values(
+            "checkouts.tree_name, checkouts.git_repository_url, "
+            "checkouts.git_repository_branch, checkouts.git_commit_hash, "
+            "checkouts.origin",
+            pinned,
+            (
+                "tree_name",
+                "git_repository_url",
+                "git_repository_branch",
+                "commit_hash",
+                "checkout_origin",
+            ),
+            named=named,
+        )
+        parts.append(clause)
+        if named:
+            params.update(extra)
+        else:
+            params.extend(extra)
+    return _join_clauses(parts, params)
 
 
 def get_hardware_details_summary(
     *,
     hardware_id: str,
-    checkouts: list[tuple[str, str, str, str, str]],
+    checkouts: list[tuple[str, str, str, str | None, str]],
     builds_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
     boots_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
     tests_duration: Optional[tuple[Optional[int], Optional[int]]] = None,
@@ -772,7 +854,7 @@ def get_hardware_details_summary(
     if tests_duration is None:
         tests_duration = (None, None)
 
-    cache_key = "hardwareDetailsSummaryByCheckoutV3"
+    cache_key = "hardwareDetailsSummaryByCheckoutV5"
 
     tests_cache_params = {
         "hardware_id": hardware_id,
@@ -794,7 +876,7 @@ def get_hardware_details_summary(
     if query_rows is not None:
         return query_rows
 
-    checkout_clause, checkout_params = _checkout_commit_values(checkouts)
+    checkout_clause, checkout_params = _checkout_match(checkouts, named=True)
     test_origin_clause, test_origin_params = _and_origin_clause(
         "tests.origin", test_origins, "test_origins"
     )
@@ -863,13 +945,7 @@ def get_hardware_details_summary(
                 AND tests.start_time >= %(start_date)s
                 AND tests.start_time <= %(end_date)s
                 AND tests.id IN (SELECT id FROM platform_tests)
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN (VALUES {checkout_values}) {builds_duration_clause} {build_lab_clause}
+                AND {checkout_clause} {builds_duration_clause} {build_lab_clause}
             GROUP BY checkouts.id, builds.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot)
             UNION ALL
@@ -908,13 +984,7 @@ def get_hardware_details_summary(
                 AND tests.start_time <= %(end_date)s
                 AND tests.id IN (SELECT id FROM platform_tests)
                 {test_origin_clause}
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN (VALUES {checkout_values}) {boots_tests_duration_clause} {test_lab_clause}
+                AND {checkout_clause} {boots_tests_duration_clause} {test_lab_clause}
             GROUP BY checkouts.id, tests.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot);
     """.format(
@@ -922,7 +992,7 @@ def get_hardware_details_summary(
         boots_tests_duration_clause=get_boot_test_duration_clause(
             boots_duration, tests_duration
         ),
-        checkout_values=checkout_clause,
+        checkout_clause=checkout_clause,
         test_origin_clause=test_origin_clause,
         build_origin_clause=build_origin_clause,
         build_lab_clause=("AND " + build_lab_sql if build_lab_sql else ""),
@@ -960,17 +1030,25 @@ def get_hardware_details_summary(
 
 
 def _checkout_rows(trees: list[Tree]) -> list[tuple]:
-    return [
-        (
-            tree.tree_name or "",
-            tree.git_repository_url or "",
-            tree.git_repository_branch or "",
-            tree.head_git_commit_hash,
-            tree.origin or "",
+    """Unselected trees use the daily checkout ids. A selected hash pins that checkout.
+
+    ``is_selected`` with an empty hash is the explicit ``head`` token: still the window.
+    """
+    selected = [tree for tree in trees if tree.is_selected]
+    source = selected or list(trees)
+    rows = []
+    for tree in source:
+        commit = tree.head_git_commit_hash if tree.is_selected else None
+        rows.append(
+            (
+                tree.tree_name or "",
+                tree.git_repository_url or "",
+                tree.git_repository_branch or "",
+                commit or None,
+                tree.origin or "",
+            )
         )
-        for tree in trees
-        if tree.head_git_commit_hash
-    ]
+    return rows
 
 
 _HISTORY_RECORD_COLUMNS = """
@@ -1062,6 +1140,13 @@ def query_records(
     test_origin_sql, test_origin_params = _positional_origin_sql(
         "tests.origin", test_origins
     )
+    checkout_sql, checkout_params = _checkout_match(
+        checkouts,
+        named=False,
+        hardware_id=hardware_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
     columns_sql = _HISTORY_RECORD_COLUMNS if history_only else _FULL_RECORD_COLUMNS
     query = """
             SELECT
@@ -1092,20 +1177,14 @@ def query_records(
                 {test_origin_sql}
                 AND tests.start_time >= %s
                 AND tests.start_time <= %s
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN ({checkouts})
+                AND {checkout_sql}
                 __LAB_CLAUSE__
             ORDER BY
                 issues."_timestamp" DESC
             """.format(
         columns=columns_sql,
         test_origin_sql=test_origin_sql,
-        checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
+        checkout_sql=checkout_sql,
     )
 
     lab_sql, lab_params = hardware_details_lab_sql(
@@ -1125,7 +1204,7 @@ def query_records(
             start_date,
             end_date,
         ]
-        + [value for checkout in checkouts for value in checkout]
+        + checkout_params
         + lab_values
     )
 
@@ -1156,6 +1235,13 @@ def query_build_records(
     )
     build_lab_sql, build_lab_values = as_positional(build_lab_sql, build_lab_params)
     build_lab_clause = f"AND {build_lab_sql}" if build_lab_sql else ""
+    checkout_sql, checkout_params = _checkout_match(
+        checkouts,
+        named=False,
+        hardware_id=hardware_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
     query = """
             SELECT DISTINCT ON (builds.id)
                 builds.status AS status,
@@ -1221,20 +1307,14 @@ def query_build_records(
                 AND tests.start_time <= %s
                 AND builds.config_name IS NOT NULL
                 AND builds.id NOT LIKE 'maestro:dummy_%%'
-                AND (
-                    checkouts.tree_name,
-                    checkouts.git_repository_url,
-                    checkouts.git_repository_branch,
-                    checkouts.git_commit_hash,
-                    checkouts.origin
-                ) IN ({checkouts})
+                AND {checkout_sql}
                 {build_lab_clause}
             ORDER BY
                 builds.id, tests.start_time DESC
             """.format(
         build_origin_sql=build_origin_sql,
         build_lab_clause=build_lab_clause,
-        checkouts=", ".join(["(%s, %s, %s, %s, %s)"] * len(checkouts)),
+        checkout_sql=checkout_sql,
     )
     params = (
         [
@@ -1246,7 +1326,7 @@ def query_build_records(
             start_date,
             end_date,
         ]
-        + [value for checkout in checkouts for value in checkout]
+        + checkout_params
         + build_lab_values
     )
     with connection.cursor() as cursor:

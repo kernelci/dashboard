@@ -84,7 +84,6 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
             "head_tokens_extra_key": self._body(
                 selectedCommits={"0": "head", "1": "head", "99": "ignored"}
             ),
-            "raw_hashes": self._body(selectedCommits={"0": "abc123", "1": "def456"}),
         }
         for name, body in cases.items():
             with self.subTest(name):
@@ -127,6 +126,7 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
     def test_second_query_when_sql_differs(self):
         cases = {
             "non_head": self._body(selectedCommits={"0": "deadbeef", "1": "head"}),
+            "raw_hashes": self._body(selectedCommits={"0": "abc123", "1": "def456"}),
             "partial_trees": self._body(selectedCommits={"0": "head"}),
             "duration": self._body(filter={"filter_boot.duration_[lte]": ["100"]}),
         }

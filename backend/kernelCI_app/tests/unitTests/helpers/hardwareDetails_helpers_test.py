@@ -192,6 +192,15 @@ class TestGetTreesWithSelectedCommit:
         assert by_origin[1].is_selected is True
         assert by_origin[1].head_git_commit_hash == "pinned"
 
+    def test_head_token_keeps_the_window(self):
+        result = get_trees_with_selected_commit(
+            trees=[base_tree],
+            selected_commits={BASE_TREE_KEY: SELECTED_HEAD_TREE_VALUE},
+        )
+
+        assert result[0].is_selected is True
+        assert result[0].head_git_commit_hash is None
+
 
 class TestGetArchSummaryTyped:
     def test_get_arch_summary_typed(self):
@@ -1362,6 +1371,18 @@ class TestIsRecordTreeSelected:
         tree = MagicMock()
         tree.is_selected = True
         tree.head_git_commit_hash = "abc123"
+
+        result = is_record_tree_selected(
+            record=record, tree=tree, is_all_selected=False
+        )
+
+        assert result is True
+
+    def test_is_record_tree_selected_head_token_keeps_other_commits(self):
+        record = {"build__checkout__git_commit_hash": "older"}
+        tree = MagicMock()
+        tree.is_selected = True
+        tree.head_git_commit_hash = None
 
         result = is_record_tree_selected(
             record=record, tree=tree, is_all_selected=False
