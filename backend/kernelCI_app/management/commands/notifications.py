@@ -71,8 +71,8 @@ from kernelCI_cache.queries.issues import (
     get_unsent_issues,
 )
 from kernelCI_cache.queries.notifications import (
-    RESEND_INTERVAL,
-    check_sent_notifications,
+    RESEND_INTERVAL_HOURS,
+    get_unsent_checkout_reports,
     mark_checkout_notification_as_sent,
     mark_issue_notification_not_sent,
     mark_issue_notification_sent,
@@ -566,19 +566,13 @@ def discard_sent_reports(
     if skip_sent_reports:
         return tree_key_set, tree_prop_map
 
-    key_set_copy = tree_key_set.copy()
-    prop_map_copy = tree_prop_map.copy()
-
-    already_sent_report_checkouts = check_sent_notifications(prop_map_copy)
-    for sent_checkout in already_sent_report_checkouts:
-        key_set_copy.discard(sent_checkout)
-        prop_map_copy.pop(sent_checkout, None)
+    pending = get_unsent_checkout_reports(tree_prop_map)
+    discarded = sum(map(len, tree_prop_map.values())) - sum(map(len, pending.values()))
     print(
-        "Discarded %d reports already sent in the past %s"
-        % (len(already_sent_report_checkouts), RESEND_INTERVAL)
+        f"Discarded {discarded} reports already sent in the past {RESEND_INTERVAL_HOURS} hours"
     )
 
-    return key_set_copy, prop_map_copy
+    return set(pending), pending
 
 
 # TODO: lower the complexity of this function, we are at the limit
