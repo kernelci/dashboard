@@ -228,7 +228,7 @@ const CommitNavigationGraph = ({
   }, [data, missingCommitHashes]);
 
   const canGoNewer = visibleRange[0] > 0;
-  const canGoOlder = visibleRange[1] < (commitsList?.length || 1) - 1;
+  const canGoOlder = visibleRange[1] < (commitsList?.length ?? 0);
 
   const goNewer = useCallback(() => {
     setVisibleRange(([start, end]) => [
@@ -340,7 +340,7 @@ const CommitNavigationGraph = ({
           return '';
         }
         if (context.location === 'tooltip') {
-          return `${row.commitName ?? row.commitHash} - ${formatDate(row.earliestStartTime ?? '-', true)}`;
+          return `${row.commitName || row.commitHash} - ${formatDate(row.earliestStartTime ?? '-', true)}`;
         }
         return getChartXLabel(row);
       },
