@@ -48,6 +48,11 @@ const processorFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
 
 const boardFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => [
   {
+    title: 'global.platform',
+    linkText: valueOrEmpty(info.platform_id),
+    link: info.url,
+  },
+  {
     title: 'global.boardType',
     linkText: valueOrEmpty(humanize(info.board_type)),
   },
@@ -122,6 +127,9 @@ const specs = (fields: ILinkWithIcon[]): JSX.Element[] =>
       key={field.title}
       titleClassName="text-dark-gray2 text-xs font-normal"
       {...field}
+      icon={
+        field.link ? <LinkIcon className="text-blue text-xl" /> : field.icon
+      }
     />
   ));
 
@@ -191,22 +199,20 @@ export const HardwareRegistryCard = ({
     return null;
   }
 
+  const [platform, ...board] = boardFields(info);
+
   return (
     <DetailsInfoCard
       cardTitle="testDetails.hardwareInfo"
       leftIcon={<MdDeveloperBoard className="text-blue text-xl" />}
       data={[
-        {
-          title: 'global.platform' as MessagesKey,
-          linkText: valueOrEmpty(info.platform_id),
-          link: info.url,
-        },
+        platform,
         {
           title: 'global.description' as MessagesKey,
           linkText: valueOrEmpty(info.description),
         },
         ...processorFields(info),
-        ...boardFields(info),
+        ...board,
       ].map(field =>
         field.link
           ? { ...field, icon: <LinkIcon className="text-blue text-xl" /> }
