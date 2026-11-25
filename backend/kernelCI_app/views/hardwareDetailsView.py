@@ -435,7 +435,7 @@ class HardwareDetails(APIView):
                     compatibles=list(self.processed_compatibles - {hardware_id}),
                     in_registry=is_hardware_in_registry(hardware_id),
                     registry=get_first_hardware_registry(
-                        [hardware_id, *self.processed_compatibles]
+                        [hardware_id, *sorted(self.processed_compatibles)]
                     ),
                 ),
             )
