@@ -4,7 +4,6 @@ from unittest.mock import patch
 from django.test import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
-from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.views.treeCommitsHistory import (
     TreeCommitsHistory,
     TreeCommitsHistoryDirect,
@@ -404,8 +403,8 @@ class TestTreeCommitsHistoryList(SimpleTestCase):
         response = self.view.get(request)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.data,
-            {"error": ClientStrings.TREE_COMMITS_HISTORY_NOT_FOUND},
-        )
+        self.assertEqual(response.data[0]["git_commit_hash"], "nonexistent_hash")
+        self.assertEqual(response.data[0]["builds"]["PASS"], 0)
+        self.assertEqual(response.data[0]["boots"]["pass"], 0)
+        self.assertEqual(response.data[0]["tests"]["pass"], 0)
         mock_aggregated.assert_called_once()

@@ -748,12 +748,6 @@ class TreeCommitsHistoryList(BaseTreeCommitsHistory):
             ),
         )
 
-        if not commit_history_list:
-            return create_api_error_response(
-                error_message=ClientStrings.TREE_COMMITS_HISTORY_NOT_FOUND,
-                status_code=HTTPStatus.OK,
-            )
-
         results = self.aggregate_commits(commit_hashes, commit_history_list)
 
         try:

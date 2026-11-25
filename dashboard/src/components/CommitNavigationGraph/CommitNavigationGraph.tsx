@@ -161,15 +161,25 @@ const CommitNavigationGraph = ({
   const plotInfo = plotInfoByTab[currentPageTab];
 
   useEffect(() => {
-    const commits = commitsList;
-    if (!commits?.length) {
-      setVisibleRange([0, 0]);
-      return;
-    }
-    const start = commits.findIndex(c => c === headCommitHash);
-    const last = Math.min(start + NUM_SELECTED_COMMITS, commits.length);
-    setVisibleRange([start, last]);
-  }, [commitsList, headCommitHash]);
+    const commits = commitsList ?? [];
+    setVisibleRange(current => {
+      if (!commits.length) {
+        return [0, 0];
+      }
+      const selected = treeId ? commits.indexOf(treeId) : -1;
+      const [start, end] = current;
+      if (selected >= start && selected < end) {
+        return current;
+      }
+      const head = headCommitHash ? commits.indexOf(headCommitHash) : -1;
+      const index = selected >= 0 ? selected : Math.max(head, 0);
+      const from = Math.min(
+        index,
+        Math.max(0, commits.length - NUM_SELECTED_COMMITS),
+      );
+      return [from, Math.min(from + NUM_SELECTED_COMMITS, commits.length)];
+    });
+  }, [commitsList, headCommitHash, treeId]);
 
   const commitHashes = useMemo(
     () => commitsList?.slice(visibleRange[0], visibleRange[1]) ?? [],

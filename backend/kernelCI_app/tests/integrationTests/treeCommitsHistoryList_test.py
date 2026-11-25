@@ -22,7 +22,7 @@ def request_data(query: dict) -> tuple[Response, dict]:
         (
             {"origin": "maestro", "commit_hashes": "invalid_hash"},
             HTTPStatus.OK,
-            True,
+            False,
         ),
         (
             {"origin": "maestro"},
