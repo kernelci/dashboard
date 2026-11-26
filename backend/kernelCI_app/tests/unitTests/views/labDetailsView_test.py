@@ -12,11 +12,11 @@ class TestLabDetailsView(SimpleTestCase):
         self.factory = APIRequestFactory()
         self.url = "/labs/lava-demo/"
 
-    @patch("kernelCI_app.views.labDetailsView.get_lab_test_rows")
+    @patch("kernelCI_app.views.labDetailsView.get_lab_test_summary")
     @patch("kernelCI_app.views.labDetailsView.get_lab_build_rows")
     def test_get_empty_lab_details(self, mock_builds, mock_tests):
         mock_builds.return_value = []
-        mock_tests.return_value = []
+        mock_tests.return_value = {}
         request = self.factory.get(
             self.url,
             {"origin": "maestro", "interval_in_days": "7"},
