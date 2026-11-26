@@ -562,7 +562,7 @@ class Command(BaseCommand):
     def select_commits_data(self) -> Generator[list[tuple], None, None]:
         query = """
             SELECT id, git_commit_hash, author_identity_id, author_date,
-                   committer_identity_id, committer_date, fetched_from_url
+                   committer_identity_id, committer_date
             FROM commits
             ORDER BY id
         """
@@ -595,7 +595,6 @@ class Command(BaseCommand):
                         author_date=parse_datetime(record[4]) if record[4] else None,
                         committer_identity_id=committer_id,
                         committer_date=parse_datetime(record[7]) if record[7] else None,
-                        fetched_from_url=record[10] or None,
                     )
                 )
                 flat_messages.append((commit_id, record[8] or None, record[9] or None))
@@ -609,7 +608,6 @@ class Command(BaseCommand):
                     author_date=parse_datetime(record[3]) if record[3] else None,
                     committer_identity_id=record[4],
                     committer_date=parse_datetime(record[5]) if record[5] else None,
-                    fetched_from_url=record[6] or None,
                 )
             )
 
@@ -645,6 +643,8 @@ class Command(BaseCommand):
             self.stdout.write("Commits migration completed")
 
     def restore_commits(self) -> None:
+        if "commits.csv" not in self.snapshot_archive.getnames():
+            return
         with TextIOWrapper(self.snapshot_archive.extractfile("commits.csv")) as file:
             self.stdout.write("\nMigrating Commits...")
             reader = csv.reader(file)
@@ -743,6 +743,8 @@ class Command(BaseCommand):
             self.stdout.write("CommitParents migration completed")
 
     def restore_commit_parents(self) -> None:
+        if "commit_parents.csv" not in self.snapshot_archive.getnames():
+            return
         with TextIOWrapper(
             self.snapshot_archive.extractfile("commit_parents.csv")
         ) as file:

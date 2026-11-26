@@ -62,6 +62,7 @@ services:
             CORS_ALLOW_ALL_ORIGINS: true
             TEST_DB_HOST: test_db
             TEST_DB_PORT: 5432
+            SKIP_CRONJOBS: "true"
         command:
             - poetry
             - run

@@ -101,9 +101,23 @@ The monitoring system supports multi-worker Gunicorn deployments using Prometheu
 - `PROMETHEUS_METRICS_PORT`: Port for the metrics aggregator (default: `8001`)
 - `PROMETHEUS_MULTIPROC_DIR`: Directory for multiprocess metric files (default: `/tmp/prometheus_multiproc_dir`)
 
+### Git mirror size
+
+`sync_commit_mirror` writes `GIT_MIRROR_DIR/mirror-size-bytes` when the fetch
+finishes. The aggregator (not `runserver`, and not the cron process) reads
+that file on each scrape:
+
+- `git_mirror_size_bytes` — apparent size of the mirror, in bytes
+- `git_mirror_size_mtime_seconds` — Unix mtime of the size file, so
+  `time() - git_mirror_size_mtime_seconds` is how long ago it was recorded
+
+Both series exist only when `PROMETHEUS_METRICS_ENABLED=true` and a fetch has
+completed. `GitMirrorSizeHigh` in `monitoring/django.rules` fires when the
+size stays above 10 GiB for 30 minutes. Steady state is about 6–8 GiB.
+
 ### Cronjob Healthchecks
 
-The backend can ping healthcheck.io for cronjobs that run Django management commands.
+Scheduled jobs run in the `cron` container. Their output is in `docker compose logs cron`. Those jobs ping healthcheck.io when they run a Django management command.
 
 - The public base URL is defined in code as `HEALTHCHECK_BASE_URL`.
 - Private monitor tokens stay in environment variables and are mapped in Django settings.
