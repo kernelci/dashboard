@@ -27,6 +27,7 @@ import {
 } from '@/api/labDetails';
 
 import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
+import { BaseBanner } from '@/components/Banner/BaseBanner';
 import { BaseCard } from '@/components/Cards/BaseCard';
 import { LineChart } from '@/components/LineChart';
 import { Colors } from '@/components/StatusChart/StatusCharts';
@@ -594,6 +595,9 @@ const LabDetails = (): JSX.Element => {
       title={formatMessage({ id: 'labDetails.title' }, { lab: labName })}
     >
       <div className="flex flex-col gap-6 pb-10" data-test-id="lab-details">
+        <BaseBanner>
+          <FormattedMessage id="labsListing.preview" />
+        </BaseBanner>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <Breadcrumb>
             <BreadcrumbList>
