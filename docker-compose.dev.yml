@@ -33,6 +33,33 @@ services:
             redis:
                 condition: service_started
 
+    # Celery POC (issue #2253). Opt in: `docker compose -f docker-compose.dev.yml --profile celery up -d`
+    celery_worker: &celery
+        profiles: [celery]
+        build:
+            context: ./backend
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - ./backend:/backend
+        env_file: [.env]
+        environment:
+            - PYTHONOPTIMIZE=0
+            - CELERY_POC_INTERVAL_SECONDS=${CELERY_POC_INTERVAL_SECONDS:-}
+            - CELERY_VISIBILITY_TIMEOUT=${CELERY_VISIBILITY_TIMEOUT:-7200}
+        networks: [private]
+        entrypoint: ["poetry", "run"]
+        command: ["celery", "-A", "kernelCI", "worker", "-l", "INFO", "--concurrency=2"]
+        restart: unless-stopped
+        depends_on:
+            dashboard_db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    celery_beat:
+        <<: *celery
+        command: ["celery", "-A", "kernelCI", "beat", "-l", "INFO"]
+
     dashboard_db:
         image: postgres:17
         environment:
