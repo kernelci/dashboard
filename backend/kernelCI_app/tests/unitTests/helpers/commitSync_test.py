@@ -946,6 +946,7 @@ class TestShallowMirror:
         assert _run_git(mirror, "config", "--get", "core.commitGraph") == "false"
         assert _run_git(mirror, "config", "--get", "fetch.writeCommitGraph") == "false"
         assert _run_git(mirror, "config", "--get", "gc.writeCommitGraph") == "false"
+        assert _run_git(mirror, "config", "--get", "maintenance.auto") == "false"
 
 
 class TestMirrorGc:

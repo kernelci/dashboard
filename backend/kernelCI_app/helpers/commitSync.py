@@ -59,12 +59,15 @@ FETCH_ATTEMPTS = 2
 # git.kernel.org's frontend starts answering HTTP 400. Unchunked HTTP/1.1 gets
 # through; the low-speed deadline keeps git from sitting on the dead connection
 # afterwards. Auto-gc would repack a multi-GB mirror in the middle of a run.
+# `gc.auto` does not stop the `git maintenance run --auto` every fetch starts: its
+# repack deletes packs a fetch rollback can then delete again, losing objects.
 MIRROR_GIT_CONFIG = {
     "http.version": "HTTP/1.1",
     "http.postBuffer": str(512 * 1024 * 1024),
     "http.lowSpeedLimit": "1000",
     "http.lowSpeedTime": "300",
     "gc.auto": "0",
+    "maintenance.auto": "false",
     # A treeless pack has no full closure, so the bitmap bare repos write by
     # default aborts repack after the new pack is on disk.
     "repack.writeBitmaps": "false",
