@@ -130,17 +130,13 @@ for each remote (sequential; git locks one repo)
         |   otherwise           git fetch (no filter) <checkout branches>
         |                       or --skip-unfilterable → skip this remote
         |
-        +-- GIT_MIRROR_SHALLOW_SINCE set, and this run is allowed to shorten
-        |       → the same fetch also passes --shallow-since
-        |
         +-- pack too big / incomplete / (filter promised but trees leaked)
-        |       → drop new packs, restore refs and the shallow file;
+        |       → drop new packs, restore refs;
         |         skip this remote this run
         |         (no HEAD retry: same server, same behaviour)
         v
 sync_commit_ingest
 rev-list new tips --not old tips  (topo, reverse)
-tips the shallow file removed are dropped first
         |
         v
 cat-file --batch in 2000-hash chunks → parse → insert commits then edges
@@ -163,39 +159,27 @@ If `tree-names.yaml` is missing, a non-dry run regenerates it the same way
 the ingester does (`treeproof`). Empty allowlist used to make the job a
 silent no-op.
 
-## Shallow window
+## Rollback and gc
 
-`GIT_MIRROR_SHALLOW_SINCE` is empty by default, so fetches stay full-history.
-Set it only after `sync_commit_ingest` has stored the history you want to keep.
-On an empty mirror the first fetch would otherwise never download that history.
+The mirror keeps full history. Fetches do not pass `--shallow-since`. With it,
+a git.kernel.org remote sent most of its history again on every run (about
+2.9 GiB per pack), and GitHub rejected it combined with `--filter`
+(`error processing shallow info`).
 
-Git stores the boundary commits in `GIT_MIRROR_DIR/shallow`. It does not store
-the date, so every later fetch that is allowed to shorten passes
-`--shallow-since` again. That covers a new remote and moves the window forward.
-
-A run passes the flag in two cases:
-
-- The mirror has no `refs/remotes` yet.
-- `synced-tips` exists and, before this fetch, nothing reachable is still
-  pending ingest.
-
-Otherwise the fetch is unchanged. A populated mirror that has never been
-ingested, and a mirror whose last ingest failed, keep their current history.
-A failed or rejected fetch restores the previous `shallow` file and the
+A failed or rejected fetch restores the previous refs and the
 previous `objects/info/commit-graphs` directory, and deletes `tmp_pack_*`.
 The mirror sets `core.commitGraph=false`, so a graph left behind by an
 older run is not read. A graph that names a commit whose pack was deleted
 makes later fetches try to download that commit and leave another temporary
 pack on disk. `fetch.writeCommitGraph` and `gc.writeCommitGraph` stay off.
 
-After the boundary moves, `rev-list --ignore-missing` skips stored tips gc
-already deleted, and does not ask the promisor remote to send them back. The
-commits that remain reachable are parsed again. Existing rows are left alone.
+`rev-list --ignore-missing` skips stored tips gc already deleted, and does
+not ask the promisor remote to send them back. The commits that remain
+reachable are parsed again. Existing rows are left alone.
 
 `sync_commit_gc` runs `git gc --prune=now` with `repack.writeBitmaps=false`.
-Git's own repack progress is written straight to the terminal. Objects
-behind the shallow boundary are removed in that run, and `mirror-size-bytes`
-is rewritten afterwards. A bare repo writes a bitmap by
+Git's own repack progress is written straight to the terminal, and
+`mirror-size-bytes` is rewritten afterwards. A bare repo writes a bitmap by
 default, and a bitmap requires every reachable object. `--filter=tree:0`
 omits trees and blobs, so the bitmap step aborts after the new pack is
 written and the mirror grows. The mirror config sets the same option. It
@@ -319,7 +303,6 @@ poetry run python manage.py sync_commit_gc --mirror-dir /path
 Env:
 
 - `GIT_MIRROR_DIR` — persistent bare repo
-- `GIT_MIRROR_SHALLOW_SINCE` — optional cutoff (`90 days ago`). Empty keeps full history
 - `GIT_SCRATCH_DIR` — ephemeral clones for `--fill-gaps`
 - `SYNC_COMMIT_MESSAGES`: `true` stores `commit_message` subject and body on ingest and `--fill-gaps`. Unset or `false` skips those writes. Existing rows stay.
 - `BACKEND_VOLUME_DIR` — `tree-names.yaml` only

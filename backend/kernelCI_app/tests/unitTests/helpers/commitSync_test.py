@@ -103,10 +103,6 @@ def _point_allowlist(monkeypatch, repo: Path) -> None:
     )
 
 
-def _is_shallow(repo: Path) -> bool:
-    return _run_git(repo, "rev-parse", "--is-shallow-repository") == "true"
-
-
 def _object_exists(repo: Path, git_commit_hash: str) -> bool:
     git = shutil.which("git")
     assert git is not None
@@ -788,75 +784,7 @@ class TestSyncCommitCommands:
         assert "skip_ingest" not in seen or seen.get("skip_ingest") is False
 
 
-class TestShallowMirror:
-    def test_catchup_shortens_and_later_fetch_stays_shallow(
-        self, tmp_path, monkeypatch
-    ):
-        repo, commits = _dated_repo(tmp_path)
-        mirror = tmp_path / "mirror"
-        _point_allowlist(monkeypatch, repo)
-
-        sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
-        assert not _is_shallow(mirror)
-        write_stored_tips(mirror, list_tips(mirror))
-
-        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
-            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
-
-        assert _is_shallow(mirror)
-        assert commits["old"] not in _run_git(mirror, "rev-list", "--remotes").split()
-        assert _object_exists(mirror, commits["old"])
-        gc_mirror(mirror)
-        assert not _object_exists(mirror, commits["old"])
-
-        (repo / "f.txt").write_text("newer\n")
-        _run_git(repo, "add", "f.txt")
-        _run_git(
-            repo,
-            "commit",
-            "-m",
-            "newer",
-            extra_env={
-                "GIT_AUTHOR_DATE": "2026-10-08T00:00:00Z",
-                "GIT_COMMITTER_DATE": "2026-10-08T00:00:00Z",
-            },
-        )
-        newer = _run_git(repo, "rev-parse", "HEAD")
-        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
-            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
-
-        assert _is_shallow(mirror)
-        assert newer in _run_git(mirror, "rev-list", "--remotes").split()
-        assert not _object_exists(mirror, commits["old"])
-
-    def test_pruned_tip_is_not_downloaded_again(self, tmp_path):
-        repo, commits = _dated_repo(tmp_path)
-        _run_git(repo, "config", "uploadpack.allowFilter", "true")
-        mirror = tmp_path / "mirror"
-        ensure_mirror(mirror)
-        assert fetch_remote(
-            mirror,
-            url=f"file://{repo}",
-            branches={"main"},
-            shallow_since="2024-01-01",
-        )
-        assert not _object_exists(mirror, commits["old"])
-
-        new_commit_hashes(mirror, (commits["old"],), limit=1)
-        assert not _object_exists(mirror, commits["old"])
-
-    def test_populated_mirror_without_tips_stays_full(self, tmp_path, monkeypatch):
-        repo, commits = _dated_repo(tmp_path)
-        mirror = tmp_path / "mirror"
-        _point_allowlist(monkeypatch, repo)
-        sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
-
-        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
-            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
-
-        assert not _is_shallow(mirror)
-        assert _object_exists(mirror, commits["old"])
-
+class TestMirrorState:
     def test_missing_stored_tip_does_not_block_ingest(
         self, tmp_path, monkeypatch, commit_store
     ):
@@ -870,32 +798,6 @@ class TestShallowMirror:
 
         assert stats["commits_written"] == 3
         assert set(commit_store[0]) == set(commits.values())
-
-    def test_rollback_restores_shallow_file(self, tmp_path):
-        mirror = tmp_path / "mirror"
-        ensure_mirror(mirror)
-        shallow = mirror / commitSync.SHALLOW_FILENAME
-        shallow.write_bytes(b"changed\n")
-
-        commitSync._rollback_fetch(
-            mirror,
-            name="origin",
-            packs_before=set(),
-            refs_before={},
-            shallow_before=b"kept\n",
-            graphs_before=(set(), None),
-        )
-        assert shallow.read_bytes() == b"kept\n"
-
-        commitSync._rollback_fetch(
-            mirror,
-            name="origin",
-            packs_before=set(),
-            refs_before={},
-            shallow_before=None,
-            graphs_before=(set(), None),
-        )
-        assert not shallow.exists()
 
     def test_rollback_drops_graph_written_by_failed_fetch(self, tmp_path):
         mirror = tmp_path / "mirror"
@@ -921,7 +823,6 @@ class TestShallowMirror:
             name="origin",
             packs_before={kept},
             refs_before={},
-            shallow_before=None,
             graphs_before=before,
         )
 

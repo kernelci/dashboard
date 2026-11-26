@@ -80,7 +80,6 @@ MIRROR_GIT_CONFIG = {
     "fetch.writeCommitGraph": "false",
     "gc.writeCommitGraph": "false",
 }
-SHALLOW_FILENAME = "shallow"
 # A multi-GB repack can take hours. Killing it mid-write leaves the new pack
 # beside the old ones, which is how a failed gc grows the mirror.
 GC_TIMEOUT_SECONDS = 6 * 60 * 60
@@ -178,29 +177,6 @@ def write_stored_tips(repo_dir: Path, tips: Sequence[str]) -> None:
     (repo_dir / TIPS_FILENAME).write_text(text)
 
 
-def shallow_since_for_fetch(repo_dir: Path) -> str | None:
-    """Cutoff for this run, or None when shortening could hide uningested commits.
-
-    An empty mirror can be shallow from the first fetch. A mirror that already
-    has refs waits until synced-tips exists and rev-list has nothing pending.
-    """
-    cutoff = settings.GIT_MIRROR_SHALLOW_SINCE.strip()
-    if not cutoff:
-        return None
-    if not list_tips(repo_dir):
-        out(f"shallow-since={cutoff}: mirror has no refs yet")
-        return cutoff
-    if not (repo_dir / TIPS_FILENAME).is_file():
-        out("shallow-since skipped: ingest has not recorded tips")
-        return None
-    pending = new_commit_hashes(repo_dir, read_stored_tips(repo_dir), limit=1)
-    if pending:
-        out("shallow-since skipped: ingest has not caught up")
-        return None
-    out(f"shallow-since={cutoff}")
-    return cutoff
-
-
 def checkout_branches_by_url() -> dict[str, set[str]]:
     """Branches we already see in checkouts, keyed by sanitized git url."""
     mapping: dict[str, set[str]] = {}
@@ -231,7 +207,6 @@ def fetch_remote(
     verbose_git: bool = False,
     branches: set[str] | None = None,
     skip_unfilterable: bool = False,
-    shallow_since: str | None = None,
 ) -> bool:
     """Fetch the checkout branches of one remote into the shared mirror.
 
@@ -274,7 +249,6 @@ def fetch_remote(
             timeout=timeout,
             verbose_git=verbose_git,
             use_filter=supports_filter,
-            shallow_since=shallow_since,
         )
         if outcome is FetchOutcome.OK:
             return True
@@ -316,14 +290,10 @@ def gc_mirror(repo_dir: Path) -> None:
         )
 
 
-def new_commit_hashes(
-    repo_dir: Path, old_tips: Sequence[str], *, limit: int | None = None
-) -> list[str]:
+def new_commit_hashes(repo_dir: Path, old_tips: Sequence[str]) -> list[str]:
     # `--ignore-missing` skips tips gc already deleted. Without it rev-list
     # aborts, and cat-file would ask the promisor remote to send them back.
     args = ["rev-list", "--ignore-missing", "--reverse", "--topo-order", "--remotes"]
-    if limit is not None:
-        args[1:1] = ["-n", str(limit)]
     stdin: bytes | None = None
     if old_tips:
         # `--not --stdin` does *not* mark stdin lines uninteresting (git treats
@@ -445,7 +415,6 @@ def _fetch_allowlisted_trees(
     verbose_git: bool,
     skip_unfilterable: bool,
     size_before: int,
-    shallow_since: str | None,
 ) -> tuple[int, int]:
     remotes_ok = 0
     remotes_failed = 0
@@ -468,7 +437,6 @@ def _fetch_allowlisted_trees(
             verbose_git=verbose_git,
             branches=branches_by_url.get(url, set()),
             skip_unfilterable=skip_unfilterable,
-            shallow_since=shallow_since,
         )
         elapsed = time.monotonic() - started
         if succeeded:
@@ -561,7 +529,6 @@ def sync_commit_metadata(
                 verbose_git=verbose_git,
                 skip_unfilterable=skip_unfilterable,
                 size_before=size_before,
-                shallow_since=shallow_since_for_fetch(repo_dir),
             )
 
         empty = {
@@ -704,11 +671,9 @@ def _fetch_refspecs_or_rollback(
     timeout: int,
     verbose_git: bool,
     use_filter: bool = True,
-    shallow_since: str | None = None,
 ) -> FetchOutcome:
     packs_before = _pack_paths(repo_dir)
     refs_before = _remote_refs(repo_dir, name)
-    shallow_before = _read_shallow(repo_dir)
     graphs_before = _graph_snapshot(repo_dir)
     try:
         run_git(
@@ -717,7 +682,6 @@ def _fetch_refspecs_or_rollback(
             "--prune",
             "--no-tags",
             *(["--filter=tree:0"] if use_filter else []),
-            *(["--shallow-since", shallow_since] if shallow_since else []),
             *(["--progress"] if verbose_git else []),
             name,
             *refspecs,
@@ -731,7 +695,6 @@ def _fetch_refspecs_or_rollback(
             name=name,
             packs_before=packs_before,
             refs_before=refs_before,
-            shallow_before=shallow_before,
             graphs_before=graphs_before,
         )
         return FetchOutcome.FAILED
@@ -746,7 +709,6 @@ def _fetch_refspecs_or_rollback(
         name=name,
         packs_before=packs_before,
         refs_before=refs_before,
-        shallow_before=shallow_before,
         graphs_before=graphs_before,
     )
     return FetchOutcome.REJECTED
@@ -775,21 +737,6 @@ def _remote_refs(repo_dir: Path, name: str) -> dict[str, str]:
         if sha and ref:
             refs[ref] = sha
     return refs
-
-
-def _read_shallow(repo_dir: Path) -> bytes | None:
-    path = repo_dir / SHALLOW_FILENAME
-    if not path.is_file():
-        return None
-    return path.read_bytes()
-
-
-def _restore_shallow(repo_dir: Path, previous: bytes | None) -> None:
-    path = repo_dir / SHALLOW_FILENAME
-    if previous is None:
-        path.unlink(missing_ok=True)
-        return
-    path.write_bytes(previous)
 
 
 def _graph_dir(repo_dir: Path) -> Path:
@@ -836,7 +783,6 @@ def _rollback_fetch(
     name: str,
     packs_before: set[Path],
     refs_before: dict[str, str],
-    shallow_before: bytes | None,
     graphs_before: tuple[set[str], bytes | None],
 ) -> None:
     """Restore refs and drop the new packs.
@@ -859,11 +805,6 @@ def _rollback_fetch(
             run_git(repo_dir, "update-ref", ref, sha)
         except FetchFailedError as exc:
             logger.warning("could not restore ref %s: %s", ref, exc)
-
-    try:
-        _restore_shallow(repo_dir, shallow_before)
-    except OSError as exc:
-        logger.warning("could not restore %s: %s", SHALLOW_FILENAME, exc)
 
     _restore_commit_graphs(repo_dir, graphs_before)
 

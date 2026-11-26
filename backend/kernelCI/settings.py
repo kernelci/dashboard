@@ -329,9 +329,6 @@ GIT_FETCH_MAX_PACK_BYTES = int(
 )
 # Persistent treeless mirror for commit metadata sync (#2109). Not BACKEND_VOLUME_DIR.
 GIT_MIRROR_DIR = os.environ.get("GIT_MIRROR_DIR", "/var/lib/kernelci/git-mirror")
-# Empty keeps full history. A value such as "90 days ago" is passed to
-# git fetch --shallow-since once the ingest has caught up.
-GIT_MIRROR_SHALLOW_SINCE = os.environ.get("GIT_MIRROR_SHALLOW_SINCE", "").strip()
 # Unset or false: ingest still writes commits, identities, and parent edges,
 # and writes no commit_message rows. true writes subject and message for
 # commits inserted on that run. Hashes already past the tip are not revisited.
