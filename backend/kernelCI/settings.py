@@ -294,6 +294,12 @@ else:
             "django.core.management.call_command",
             ["prune_db", "--older-than", "180 days", "--yes"],
         ),
+        # Regzbot publishes the page after the mail. The issue API reads the stored 200.
+        (
+            "40 * * * *",
+            "django.core.management.call_command",
+            ["confirm_regzbot"],
+        ),
     ]
 
 # Email settings for SMTP backend

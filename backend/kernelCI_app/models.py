@@ -835,10 +835,14 @@ class HardwareRegistryPlatform(models.Model):
 
 
 class RegzbotMessage(models.Model):
-    """First regzbot report Message-ID for an issue. Later sends keep this row."""
+    """First regzbot report Message-ID for an issue. Later sends keep this row.
+
+    confirmed_at stays empty until the tracking page returns HTTP 200.
+    """
 
     issue_id = models.TextField(primary_key=True)
     message_id = models.TextField()
+    confirmed_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "regzbot_messages"
