@@ -8,7 +8,7 @@ import { HiMenu } from 'react-icons/hi';
 
 import Select, { SelectItem } from '@/components/Select/Select';
 import { DEFAULT_ORIGIN } from '@/types/general';
-import { useLabOrigins, useOrigins } from '@/api/origin';
+import { useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
@@ -17,21 +17,9 @@ import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
 import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
 
-type OriginSource = 'checkout' | 'lab';
-
-const OriginSelect = ({
-  originSource,
-}: {
-  originSource: OriginSource;
-}): JSX.Element => {
+const OriginSelect = (): JSX.Element => {
   const { origin } = useSearch({ strict: false });
-  const isLabSource = originSource === 'lab';
-  const { data: originData, status: originStatus } = useOrigins({
-    enabled: !isLabSource,
-  });
-  const { data: labOriginData, status: labOriginStatus } = useLabOrigins({
-    enabled: isLabSource,
-  });
+  const { data: originData, status: originStatus } = useOrigins();
 
   const navigate = useNavigate();
 
@@ -46,14 +34,11 @@ const OriginSelect = ({
   );
 
   const pageOrigins = useMemo(() => {
-    if (isLabSource) {
-      return labOriginData?.origins ?? [];
-    }
     if (!originData) {
       return [];
     }
     return originData.checkout_origins ?? [];
-  }, [isLabSource, labOriginData, originData]);
+  }, [originData]);
 
   const selectItems = useMemo(() => {
     return pageOrigins.map(option => (
@@ -83,7 +68,7 @@ const OriginSelect = ({
     }
   }, [navigate, origin, pageOrigins]);
 
-  if ((isLabSource ? labOriginStatus : originStatus) === 'pending') {
+  if (originStatus === 'pending') {
     return <FormattedMessage id="global.loading" />;
   }
 
@@ -145,10 +130,8 @@ const TopBar = (): JSX.Element => {
 
     return {
       firstUrlLocation,
-      isTreeListing: isTreeListing,
-      isLabsPage: isLabsListing,
       isListingPage: isListingPage,
-      showOriginSelect: isTreeListing || isLabsListing,
+      showOriginSelect: isTreeListing,
     };
   }, [matches]);
 
@@ -169,11 +152,7 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {routeInfo.showOriginSelect && (
-              <OriginSelect
-                originSource={routeInfo.isLabsPage ? 'lab' : 'checkout'}
-              />
-            )}
+            {routeInfo.showOriginSelect && <OriginSelect />}
             <span className="ml-0 flex w-full px-6 lg:ml-14">
               {routeInfo.isListingPage && <SearchBoxNavigate />}
             </span>
