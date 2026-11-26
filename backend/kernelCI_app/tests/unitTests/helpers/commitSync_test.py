@@ -19,12 +19,13 @@ from kernelCI_app.helpers.commitSync import (
     gc_mirror,
     insert_commits,
     list_tips,
+    mirror_lock,
     new_commit_hashes,
     parse_commits,
     sync_commit_metadata,
     write_stored_tips,
 )
-from kernelCI_app.helpers.gitCommit import CommitMetadata
+from kernelCI_app.helpers.gitCommit import CommitMetadata, CommitMetadataError
 
 
 def _run_git(repo: Path, *args: str, extra_env: dict[str, str] | None = None) -> str:
@@ -947,6 +948,20 @@ class TestShallowMirror:
         assert _run_git(mirror, "config", "--get", "fetch.writeCommitGraph") == "false"
         assert _run_git(mirror, "config", "--get", "gc.writeCommitGraph") == "false"
         assert _run_git(mirror, "config", "--get", "maintenance.auto") == "false"
+
+    def test_second_job_fails_without_touching_the_mirror(self, tmp_path):
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        in_flight = mirror / "objects" / "pack" / "tmp_pack_running"
+        in_flight.write_bytes(b"x")
+
+        with mirror_lock(mirror):
+            with pytest.raises(CommitMetadataError, match="another commit sync job"):
+                sync_commit_metadata(mirror_dir=mirror, skip_fetch=True)
+            with pytest.raises(CommitMetadataError, match="another commit sync job"):
+                gc_mirror(mirror)
+
+        assert in_flight.exists()
 
 
 class TestMirrorGc:

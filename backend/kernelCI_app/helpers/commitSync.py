@@ -6,11 +6,13 @@ the optional gap-fill for hashes the mirror does not cover.
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import logging
 import tempfile
 import time
 from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 
@@ -42,6 +44,7 @@ from kernelCI_app.models import (
 logger = logging.getLogger(__name__)
 
 TIPS_FILENAME = "synced-tips"
+LOCK_FILENAME = "commit-sync.lock"
 INSERT_BATCH_SIZE = 1000
 DEFAULT_FETCH_TIMEOUT_SECONDS = 1800
 REV_LIST_TIMEOUT_SECONDS = 3600
@@ -129,6 +132,20 @@ def _drop_incomplete_packs(repo_dir: Path) -> None:
         return
     for path in pack_dir.glob("tmp_pack_*"):
         path.unlink(missing_ok=True)
+
+
+@contextmanager
+def mirror_lock(repo_dir: Path) -> Iterator[None]:
+    """Fail if another job uses the mirror. ensure_mirror, fetch rollback and gc delete packs."""
+    repo_dir.mkdir(parents=True, exist_ok=True)
+    with open(repo_dir / LOCK_FILENAME, "w") as lock_file:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise CommitMetadataError(
+                f"another commit sync job is using {repo_dir}"
+            ) from exc
+        yield
 
 
 def ensure_mirror(repo_dir: Path) -> None:
@@ -285,17 +302,18 @@ def gc_mirror(repo_dir: Path) -> None:
     if not (repo_dir / "HEAD").is_file():
         out(f"sync_commit_gc skipped: {repo_dir} does not exist")
         return
-    ensure_mirror(repo_dir)
-    out(f"sync_commit_gc repacking {repo_dir}")
-    run_git(
-        repo_dir,
-        "-c",
-        "repack.writeBitmaps=false",
-        "gc",
-        "--prune=now",
-        timeout=GC_TIMEOUT_SECONDS,
-        stream=True,
-    )
+    with mirror_lock(repo_dir):
+        ensure_mirror(repo_dir)
+        out(f"sync_commit_gc repacking {repo_dir}")
+        run_git(
+            repo_dir,
+            "-c",
+            "repack.writeBitmaps=false",
+            "gc",
+            "--prune=now",
+            timeout=GC_TIMEOUT_SECONDS,
+            stream=True,
+        )
 
 
 def new_commit_hashes(
@@ -521,46 +539,47 @@ def sync_commit_metadata(
         raise ValueError("skip_fetch and skip_ingest cannot both be set")
 
     repo_dir = Path(mirror_dir or settings.GIT_MIRROR_DIR)
-    ensure_mirror(repo_dir)
-    old_tips = read_stored_tips(repo_dir)
-    size_before = mirror_size_bytes(repo_dir)
-    out(
-        f"mirror={repo_dir} size={_human_bytes(size_before)} "
-        f"known_tips={len(old_tips)} dry_run={dry_run} "
-        f"skip_fetch={skip_fetch} skip_ingest={skip_ingest}"
-    )
-
-    remotes_ok = 0
-    remotes_failed = 0
-    if skip_fetch:
-        out("skipping fetch, using objects already in the mirror")
-    else:
-        remotes_ok, remotes_failed = _fetch_allowlisted_trees(
-            repo_dir,
-            dry_run=dry_run,
-            fetch_timeout=fetch_timeout,
-            verbose_git=verbose_git,
-            skip_unfilterable=skip_unfilterable,
-            size_before=size_before,
-            shallow_since=shallow_since_for_fetch(repo_dir),
+    with mirror_lock(repo_dir):
+        ensure_mirror(repo_dir)
+        old_tips = read_stored_tips(repo_dir)
+        size_before = mirror_size_bytes(repo_dir)
+        out(
+            f"mirror={repo_dir} size={_human_bytes(size_before)} "
+            f"known_tips={len(old_tips)} dry_run={dry_run} "
+            f"skip_fetch={skip_fetch} skip_ingest={skip_ingest}"
         )
 
-    empty = {
-        "remotes_ok": remotes_ok,
-        "remotes_failed": remotes_failed,
-        "parsed": 0,
-        "commits_written": 0,
-        "edges_written": 0,
-        "gaps_fetched": 0,
-        "gaps_written": 0,
-    }
-    if skip_ingest:
-        out("skipping ingest; tips unchanged")
-        return empty
+        remotes_ok = 0
+        remotes_failed = 0
+        if skip_fetch:
+            out("skipping fetch, using objects already in the mirror")
+        else:
+            remotes_ok, remotes_failed = _fetch_allowlisted_trees(
+                repo_dir,
+                dry_run=dry_run,
+                fetch_timeout=fetch_timeout,
+                verbose_git=verbose_git,
+                skip_unfilterable=skip_unfilterable,
+                size_before=size_before,
+                shallow_since=shallow_since_for_fetch(repo_dir),
+            )
 
-    parsed, commits_written, edges_written = _ingest_new_commits(
-        repo_dir, old_tips, dry_run=dry_run
-    )
+        empty = {
+            "remotes_ok": remotes_ok,
+            "remotes_failed": remotes_failed,
+            "parsed": 0,
+            "commits_written": 0,
+            "edges_written": 0,
+            "gaps_fetched": 0,
+            "gaps_written": 0,
+        }
+        if skip_ingest:
+            out("skipping ingest; tips unchanged")
+            return empty
+
+        parsed, commits_written, edges_written = _ingest_new_commits(
+            repo_dir, old_tips, dry_run=dry_run
+        )
     gaps_fetched = 0
     gaps_written = 0
     if fill_gaps:

@@ -109,9 +109,13 @@ Three cron entries on the backend container:
   `commits` or `synced-tips`.
 - `0 10 * * *` `sync_commit_ingest` — ingest new mirror objects (tip delta),
   then insert. Six hours later so a long first fetch is less likely to
-  overlap; do not run both against the same `GIT_MIRROR_DIR` at once.
+  overlap.
 - `0 16 * * 0` `sync_commit_gc` — delete unreachable objects and repack.
   Sunday afternoon, so it does not hold the repo lock during either sync.
+
+The three jobs take `commit-sync.lock` in the mirror. A job that starts while
+another one holds it fails with "another commit sync job is using" and runs
+again at its next slot.
 
 ```
 tree-names.yaml URLs
