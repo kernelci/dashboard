@@ -1,18 +1,33 @@
+import ast
 import json
+from datetime import timedelta
 
-from django.db import connections
+from django.utils import timezone
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.management.commands.helpers.summary import ReportConfigs, TreeKey
 from kernelCI_cache.models import NotificationsCheckout, NotificationsIssue
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 from kernelCI_cache.utils import get_current_timestamp_kcidb_format
 
-RESEND_INTERVAL = "12 hours"
-"""The time interval where a report can be resent.
+RESEND_INTERVAL_HOURS = 12
 
- Meaning that if a report was sent now, it must wait this value until it can be sent again"""
+
+def _canonical_path(path: list[str] | str | None) -> str:
+    """Normalize configured filters and the JSON or Python list strings in older rows."""
+    if isinstance(path, str) and path.lstrip().startswith("["):
+        try:
+            filters = json.loads(path)
+        except json.JSONDecodeError:
+            try:
+                filters = ast.literal_eval(path.strip())
+            except (ValueError, SyntaxError):
+                return path
+        if isinstance(filters, list) and all(isinstance(item, str) for item in filters):
+            path = filters
+    if isinstance(path, list):
+        return json.dumps(path) if path else "%"
+    return path or "%"
 
 
 def mark_checkout_notification_as_sent(
@@ -22,7 +37,7 @@ def mark_checkout_notification_as_sent(
     git_repository_branch: str,
     git_repository_url: str,
     origin: str,
-    path: str,
+    path: list[str] | str | None,
 ) -> bool:
     try:
         timestamp = get_current_timestamp_kcidb_format()
@@ -33,7 +48,7 @@ def mark_checkout_notification_as_sent(
             git_repository_branch=git_repository_branch,
             git_repository_url=git_repository_url,
             origin=origin,
-            path=path,
+            path=_canonical_path(path),
         )
         return True
     except Exception as e:
@@ -101,51 +116,31 @@ def mark_issue_notification_not_sent(
         return False
 
 
-def check_sent_notifications(
+def get_unsent_checkout_reports(
     tree_prop_map: dict[TreeKey, ReportConfigs],
-) -> list[TreeKey]:
-    """
-    Queries the notification_checkout table to see
-    which of the current reports (represented by the tree_prop_map)
-    can be sent again.
-
-    Returns:
-        A list of tuples containing the TreeKeys of the reports that were already sent.
-    """
+) -> dict[TreeKey, ReportConfigs]:
+    """Keep reports whose tree and path have no delivery within the resend interval."""
     if not tree_prop_map:
-        return []
+        return {}
 
-    checkouts_for_checking: list[tuple[str, str, str, str]] = []
-    for tree_props in tree_prop_map.values():
-        for prop in tree_props:
-            prop_path = prop.get("path")
-            # For our purposes, a unique report is defined by these fields
-            checkouts_for_checking.append(
-                (
-                    prop.get("branch"),
-                    prop.get("giturl"),
-                    prop.get("origin", DEFAULT_ORIGIN),
-                    json.dumps(prop_path) if prop_path else "%",
-                )
-            )
+    since = timezone.now() - timedelta(hours=RESEND_INTERVAL_HOURS)
+    recent_deliveries = (
+        NotificationsCheckout.objects.using("notifications")
+        .filter(notification_sent__gte=since)
+        .values_list("git_repository_branch", "git_repository_url", "origin", "path")
+    )
+    sent = {
+        (branch, url, origin, _canonical_path(path))
+        for branch, url, origin, path in recent_deliveries
+    }
+    pending = {}
+    for tree, reports in tree_prop_map.items():
+        remaining = [
+            report
+            for report in reports
+            if (*tree, _canonical_path(report.get("path"))) not in sent
+        ]
+        if remaining:
+            pending[tree] = remaining
 
-    if not checkouts_for_checking:
-        return []
-
-    placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(checkouts_for_checking))
-    query = f"""
-        SELECT
-            git_repository_branch, git_repository_url, origin
-        FROM
-            notifications_checkout
-        WHERE
-            (git_repository_branch, git_repository_url, origin, path) IN ({placeholders})
-            AND notification_sent >= datetime('now', '-{RESEND_INTERVAL}')
-        """
-    with connections["notifications"].cursor() as cursor:
-        cursor.execute(
-            query, [item for checkout in checkouts_for_checking for item in checkout]
-        )
-        sent_reports = cursor.fetchall()
-
-    return sent_reports
+    return pending
