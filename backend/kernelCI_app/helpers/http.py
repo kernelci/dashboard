@@ -11,3 +11,7 @@ def get(url: str, *, timeout: float, **kwargs):
 
 def post(url: str, *, timeout: float, **kwargs):
     return requests.post(url, timeout=(CONNECT_TIMEOUT_IN_SECONDS, timeout), **kwargs)
+
+
+def head(url: str, *, timeout: float, **kwargs):
+    return requests.head(url, timeout=(CONNECT_TIMEOUT_IN_SECONDS, timeout), **kwargs)
