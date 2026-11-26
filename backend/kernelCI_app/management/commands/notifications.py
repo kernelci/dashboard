@@ -12,13 +12,17 @@ from urllib.parse import quote_plus
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import DatabaseError
 
 from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.hardwares import sanitize_hardware
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.helpers.regzbot import record_regzbot_message
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
+    addressed_to_regressions,
+    is_regzbot_issue,
     is_regzbot_tree,
     resolve_regression_recipients,
     send_email_report,
@@ -63,6 +67,7 @@ from kernelCI_app.typeModels.metricsRules import load_metrics_rules, scope_metri
 from kernelCI_app.typeModels.notificationRecipients import (
     NEW_ISSUES_FOLDER,
     RecipientEntry,
+    RecipientFileError,
     load_new_issue_files,
 )
 from kernelCI_app.utils import group_status, is_boot
@@ -313,15 +318,22 @@ def ask_ignore_issue():
             print("Please enter 'y' or 'n'.")
 
 
+def _regzbot_template_args(issue, incidents, message_id):
+    tracked_tree = is_regzbot_tree(issue["tree_name"])
+    return {
+        "is_regzbot_issue": is_regzbot_issue(issue["tree_name"], incidents),
+        "message_id": message_id.strip("<>") if message_id and tracked_tree else None,
+    }
+
+
 def generate_build_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_build.txt.j2")
-    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
-    report = {}
+    regzbot = _regzbot_template_args(issue, incidents, message_id)
+    report = {"is_regzbot_issue": regzbot["is_regzbot_issue"]}
     report["content"] = template.render(
         issue=issue,
         builds=incidents,
-        regzbot_tracked=regzbot_tracked,
-        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
+        **regzbot,
     )
     snippet = (
         issue["comment"]
@@ -336,13 +348,12 @@ def generate_build_issue_report(issue, incidents, message_id=None):
 
 def generate_boot_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_boot.txt.j2")
-    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
-    report = {}
+    regzbot = _regzbot_template_args(issue, incidents, message_id)
+    report = {"is_regzbot_issue": regzbot["is_regzbot_issue"]}
     report["content"] = template.render(
         issue=issue,
         boots=incidents,
-        regzbot_tracked=regzbot_tracked,
-        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
+        **regzbot,
     )
     snippet = (
         issue["comment"]
@@ -440,6 +451,15 @@ def generate_issue_report(
             issue_version=issue_version,
             issue_type=issue_type,
         )
+
+    if msg_id and report["is_regzbot_issue"]:
+        try:
+            if addressed_to_regressions(
+                email_args.delivered_to, email_args.delivered_cc
+            ):
+                record_regzbot_message(issue_id=issue_id, message_id=msg_id)
+        except (RecipientFileError, DatabaseError) as e:
+            log_message(f"Could not record regzbot Message-ID for {issue_id}: {e}")
 
 
 # TODO: Unify with process_test_status_history

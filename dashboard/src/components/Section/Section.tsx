@@ -12,7 +12,7 @@ import BaseCard from '@/components/Cards/BaseCard';
 import { LinkIcon } from '@/components/Icons/Link';
 
 import { cn } from '@/lib/utils';
-import { isUrl } from '@/lib/string';
+import { isHttpUrl, isUrl } from '@/lib/string';
 
 const SPAN_CLASS = {
   1: 'col-span-1',
@@ -77,7 +77,7 @@ export const Subsection = ({
             linkText={url ?? info.linkText}
             unformattedTitle={info.unformattedTitle}
             icon={
-              info.link && !info.icon ? (
+              info.link && isHttpUrl(info.link) && !info.icon ? (
                 <LinkIcon className="text-blue text-xl" />
               ) : (
                 info.icon

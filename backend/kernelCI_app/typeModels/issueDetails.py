@@ -104,6 +104,7 @@ class IssueDetailsResponse(BaseModel):
     misc: Issue__Misc
     categories: Issue__Categories
     extra: Optional[ProcessedExtraDetailedIssues]
+    regzbot_url: Optional[str] = None
 
 
 class IssueDetailsQueryParameters(BaseModel):
