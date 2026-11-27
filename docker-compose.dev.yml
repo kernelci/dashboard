@@ -60,6 +60,26 @@ services:
         <<: *celery
         command: ["celery", "-A", "kernelCI", "beat", "-l", "INFO"]
 
+    # Procrastinate POC (issue #2253). Opt in: `docker compose -f docker-compose.dev.yml --profile procrastinate up -d`
+    procrastinate_worker:
+        profiles: [procrastinate]
+        build:
+            context: ./backend
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - ./backend:/backend
+        env_file: [.env]
+        environment:
+            - PYTHONOPTIMIZE=0
+            - PROCRASTINATE_RETRY_BASE_SECONDS=${PROCRASTINATE_RETRY_BASE_SECONDS:-60}
+        networks: [private]
+        entrypoint: ["poetry", "run"]
+        command: ["python", "manage.py", "procrastinate", "worker", "--wait", "--concurrency=2"]
+        restart: unless-stopped
+        depends_on:
+            dashboard_db:
+                condition: service_healthy
+
     dashboard_db:
         image: postgres:17
         environment:

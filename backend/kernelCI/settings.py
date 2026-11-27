@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "django_crontab",
+    "procrastinate.contrib.django",
 ]
 
 MIDDLEWARE = [
@@ -397,6 +398,13 @@ CELERY_BEAT_SCHEDULE = {
             ["--monitoring-id=delete_unused_hardware_status"],
         ),
     },
+}
+
+# Procrastinate POC (issue #2253): Postgres-backed jobs in the default DB.
+PROCRASTINATE_AUTODISCOVER_MODULE_NAME = "procrastinate_tasks"
+PROCRASTINATE_WORKER_DEFAULTS = {
+    "update_heartbeat_interval": 10,
+    "stalled_worker_timeout": 30,
 }
 
 # Password validation
