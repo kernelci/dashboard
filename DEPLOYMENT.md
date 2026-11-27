@@ -284,6 +284,8 @@ the tag. Migrations are not reverted; check them before rolling back past one.
 `main` back into `staging`.
 
 #### Things that are easy to get wrong
+- This only works for commits that already contain this workflow. A tag on an earlier
+commit runs that commit's workflow, which has no `release/*` trigger, so nothing deploys.
 
 - Tag only commits on `main`; any other commit fails the deploy before images are built.
 - Pushing a tag deploys immediately. There is no confirmation step, so diff
