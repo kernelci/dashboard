@@ -11,7 +11,7 @@ The `notifications` management command provides a flexible tool for generating a
 poetry run ./manage.py notifications --action=<action> [options]
 ```
 
-If you are running the project in a docker container, you should add a `docker compose run --rm backend` to get a container of the backend running separately in order to use environment variables and existing connections to the database and be able to send notifications.
+If you are running the project in a docker container, you should add a `docker compose -f docker-compose.dev.yml run --rm backend` to get a container of the backend running separately in order to use environment variables and existing connections to the database and be able to send notifications.
 
 
 ## Actions

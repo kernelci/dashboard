@@ -251,7 +251,7 @@ The running server process has the module in `sys.modules` and keeps serving fro
 
 The crash surfaces on the **next reload** (when another watched file changes), because Django then tries to re-import everything from scratch and finds the file missing. At that point the container exits.
 
-**How to handle:** restore the file before making any other change, or immediately run `docker compose up -d backend` after restoring it.
+**How to handle:** restore the file before making any other change, or immediately run `docker compose -f docker-compose.dev.yml up -d backend` after restoring it.
 
 If a `.pyc` file for the deleted module still exists in `__pycache__/`, Python will silently load from it even after the source is gone. Remove the stale `.pyc` to force the error to surface earlier:
 

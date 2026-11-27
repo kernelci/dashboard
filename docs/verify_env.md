@@ -17,32 +17,32 @@ Command: `verify_env`
 
 ```bash
 # Run default non-destructive checks (db + redis + email + storage + env/secrets)
-docker compose run --rm backend poetry run python3 manage.py verify_env
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env
 
 # Check only DB aliases and skip redis + email
 
-docker compose run --rm backend poetry run python3 manage.py verify_env \
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env \
   --check-db --database-alias default,notifications
 
 # Check redis endpoint only
 
-docker compose run --rm backend poetry run python3 manage.py verify_env --check-redis
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env --check-redis
 
 # Validate email backend only
 
-docker compose run --rm backend poetry run python3 manage.py verify_env --check-email
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env --check-email
 
 # Validate storage permissions only
 
-docker compose run --rm backend poetry run python3 manage.py verify_env --check-storage
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env --check-storage
 
 # Validate storage and create missing directories (normally reports as failure)
 
-docker compose run --rm backend poetry run python3 manage.py verify_env --check-storage --create-dirs
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env --check-storage --create-dirs
 
 # Validate env/secrets sanity only
 
-docker compose run --rm backend poetry run python3 manage.py verify_env --check-env
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env --check-env
 ```
 
 ## Send a test email
@@ -50,7 +50,7 @@ docker compose run --rm backend poetry run python3 manage.py verify_env --check-
 Use `--send-test-email` together with `--to-email`.
 
 ```bash
-docker compose run --rm backend poetry run python3 manage.py verify_env \
+docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env \
   --send-test-email \
   --to-email your-email@example.com
 ```
