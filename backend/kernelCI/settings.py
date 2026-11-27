@@ -16,6 +16,8 @@ import sys
 import threading
 from pathlib import Path
 
+from celery.schedules import crontab
+
 from utils.development_metrics import start_development_metrics_server
 from utils.validation import is_boolean_or_string_true
 
@@ -75,6 +77,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "django_crontab",
+    "procrastinate.contrib.django",
 ]
 
 MIDDLEWARE = [
@@ -362,6 +365,46 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": f"redis://{REDIS_HOST}:6379",
     }
+}
+
+# Celery POC (issue #2253). Runs only where a worker/beat process is started.
+# Broker and results use their own Redis DBs, the cache stays on DB 0.
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", f"redis://{REDIS_HOST}:6379/1")
+CELERY_RESULT_BACKEND = os.environ.get(
+    "CELERY_RESULT_BACKEND", f"redis://{REDIS_HOST}:6379/2"
+)
+CELERY_RESULT_EXPIRES = 60 * 60 * 24
+CELERY_TASK_TIME_LIMIT = 60 * 60
+CELERY_TASK_LOCK_TTL = CELERY_TASK_TIME_LIMIT + 60
+# Must exceed the longest task: acks_late tasks unacked past this are redelivered.
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "visibility_timeout": int(os.environ.get("CELERY_VISIBILITY_TIMEOUT", 2 * 60 * 60))
+}
+CELERY_BEAT_SCHEDULE_FILENAME = os.path.join(
+    os.environ.get("BACKEND_VOLUME_DIR", "/volume_data"), "celerybeat-schedule"
+)
+# Same job and schedule as the CRONJOBS entry. The interval override is for demos.
+_celery_poc_interval = os.environ.get("CELERY_POC_INTERVAL_SECONDS")
+CELERY_BEAT_SCHEDULE = {
+    "delete_unused_hardware_status": {
+        "task": "kernelCI_app.tasks.run_management_command",
+        "schedule": (
+            float(_celery_poc_interval)
+            if _celery_poc_interval
+            else crontab(minute="0", hour="0", day_of_week="1")
+        ),
+        "args": (
+            "delete_unused_hardware_status",
+            ["--monitoring-id=delete_unused_hardware_status"],
+        ),
+    },
+}
+
+# Procrastinate POC (issue #2253): Postgres-backed jobs in the default DB.
+PROCRASTINATE_AUTODISCOVER_MODULE_NAME = "procrastinate_tasks"
+PROCRASTINATE_WORKER_DEFAULTS = {
+    "update_heartbeat_interval": 10,
+    "stalled_worker_timeout": 30,
 }
 
 # Password validation
