@@ -1,6 +1,6 @@
 # Background tasks: POCs
 
-Celery and Procrastinate POCs below. Same job, same scenarios.
+Celery and Procrastinate POCs below. Same job, same scenarios. The recommendation is at the end: [Recommendation](#recommendation).
 
 Issue: [#2253](https://github.com/kernelci/dashboard/issues/2253). Status: POCs, nothing is wired into production. `CRONJOBS` is unchanged.
 
@@ -25,11 +25,11 @@ All 14 entries live in `CRONJOBS` (`backend/kernelCI/settings.py`), registered b
 
 Cron behavior today:
 
-- **Retries:** none. A failed run waits for the next schedule.
-- **Overlap:** nothing prevents it. `recompute_*` runs hourly and every 6h, so the two can overlap.
-- **Failure detection:** only the 7 jobs with a monitoring id. The rest are visible only in container logs.
-- **Deployment:** a job killed by a container restart is lost until its next slot.
-- **Missed runs:** if the container is down at the scheduled minute, the run is skipped.
+- Retries: none. A failed run waits for the next schedule.
+- Overlap: nothing prevents it. `recompute_*` runs hourly and every 6h, so the two can overlap.
+- Failure detection: only the 7 jobs with a monitoring id. The rest are visible only in container logs.
+- Deployment: a job killed by a container restart is lost until its next slot.
+- Missed runs: if the container is down at the scheduled minute, the run is skipped.
 
 ## Celery POC
 
@@ -68,12 +68,12 @@ Everything below ran on the dev compose stack (Celery 5.6.3, Redis 8 from `docke
 | Failure | A failing command is retried 3 times with backoff, then the task ends in `FAILURE` with the traceback (`celery result <id>`). Lock is released. The healthcheck `fail` ping fires on every attempt. |
 | Overlap | Same job sent twice at once: the second returns `skipped` in 1ms, the side effect ran once. |
 | Graceful deploy (`docker stop -t 90`) | Worker waits for the running task, side effect completes once, message acked. |
-| Hard kill mid-run (default `visibility_timeout`, 2h) | Task is **not** redelivered and the lock stays until its TTL (61 min). The job is effectively lost for up to 2h, worse than cron. |
+| Hard kill mid-run (default `visibility_timeout`, 2h) | Task is not redelivered and the lock stays until its TTL (61 min). The job is effectively lost for up to 2h, worse than cron. |
 | Hard kill mid-run (`visibility_timeout`=30s) | Task redelivered about 100s after the kill with the same task id, takes the lock back and finishes. Side effect log: `START` twice, `END` once. |
 
 Takeaways:
 
-- Retry and "run again after a crash" only produce clean results for **idempotent** jobs. `notifications` sends email, so a redelivery after a partial send can duplicate it. Those jobs need their own dedup before they use retries.
+- Retry and "run again after a crash" only produce clean results for idempotent jobs. `notifications` sends email, so a redelivery after a partial send can duplicate it. Those jobs need their own dedup before they use retries.
 - `visibility_timeout` must be longer than the longest job, otherwise Redis redelivers a task that is still running (the lock then turns it into `skipped`). That is the trade-off for recovery speed after a hard kill.
 - Celery does not stop duplicates by itself. The lock in `tasks.py` is the part that does.
 
@@ -82,23 +82,9 @@ Takeaways:
 - `kombu 5.7` (pulled by `celery 5.6`) needs `redis-py>=6.1`. `pyproject.toml` moved from `redis<6` to `redis>=6.1,<7`. The Django `RedisCache` backend works on 6.4 (unit tests are unchanged by the bump).
 - `delete_unused_hardware_status` without `--dry-run` fails today against the dev database with Postgres `stack depth limit exceeded`. The same error happens when the command is run directly, so this is not Celery. The batched `pk__in` over composite keys is the likely cause. Not fixed here.
 
-## Comparison (cron vs Celery)
-
-| | cron (current) | Celery + beat |
-| --- | --- | --- |
-| Scheduling | `CRONJOBS`, one crontab per container | `CELERY_BEAT_SCHEDULE`, one beat process (must stay a singleton) |
-| Retries | none | built in |
-| Overlap | none | needs a lock (small, in `tasks.py`) |
-| Failure visibility | healthcheck.io for 7 jobs, logs | result backend, task states, optional Flower, healthcheck.io unchanged |
-| Hard kill / deploy | job lost until next slot | graceful: fine. Hard kill: lost until `visibility_timeout` |
-| Deployment overhead | none | 2 more processes (worker about 195 MiB, beat about 110 MiB), `celery` + `redis>=6.1` deps, Redis DBs 1 and 2 |
-| Reuses existing Redis | n/a | yes, no new service |
-
-See the three-way table after the Procrastinate section.
-
 ## Procrastinate POC
 
-[Procrastinate](https://procrastinate.readthedocs.io) keeps jobs in Postgres. No Redis, no broker, no separate scheduler: the worker also runs the periodic tasks.
+[Procrastinate](https://procrastinate.readthedocs.io) keeps jobs in Postgres. It needs no Redis, no broker and no separate scheduler, because the worker also runs the periodic tasks.
 
 ### What the POC does
 
@@ -140,7 +126,7 @@ Notes:
 
 - `RetryStrategy(max_attempts=N)` allows N retries, so N+1 runs. The task uses `max_attempts=3`.
 - Recovery after a crash needs `retry_stalled_jobs`. Without it the job stays `doing` forever.
-- Same rule as Celery: rerunning a job restarts it from the beginning. Only idempotent jobs are safe to rerun (not `notifications`).
+- Like Celery, rerunning a job restarts it from the beginning. Only idempotent jobs are safe to rerun (not `notifications`).
 - Cost: 47 migrations and write traffic in the main `default` database. The queue is durable with the database, so a host crash does not lose it.
 
 ## Three-way comparison
@@ -150,7 +136,7 @@ Notes:
 | Extra processes | none | worker + beat | 1 worker |
 | Memory (measured, dev) | n/a | about 195 + 110 MiB | about 85 MiB |
 | Needs | nothing | Redis, `celery`, `redis>=6.1` | Postgres (already used), `procrastinate`, `psycopg-pool`, `croniter` |
-| Scheduling | `CRONJOBS` | beat (singleton) | built in the worker, safe with several workers |
+| Scheduling | `CRONJOBS` | beat (singleton) | built in the worker, deduplicated in the database (not tested with several workers) |
 | Retries | none | built in | built in |
 | Overlap | none | custom Redis lock (skip) | `lock` (serialise) + `queueing_lock` |
 | Failure visibility | healthcheck.io for 7 jobs | result backend | SQL tables, healthcheck.io unchanged |
@@ -158,8 +144,59 @@ Notes:
 | Durability | none | Redis persistence | Postgres |
 | Main risk | no retry, no overlap guard | `redis` major bump, 2 processes | schema in the main DB, jobs share DB load |
 
-## Preliminary assessment
+## Recommendation
 
-- Jobs that would gain the most: `recompute_*` (overlap protection, idempotent, retries are safe), `delete_unused_hardware_status`, `prune_db`, `update_hardware_registry`.
-- Jobs to leave on cron until they are made idempotent: `notifications`.
-- Final recommendation, rollout and rollback steps wait for the decision between the options above.
+Adopt Procrastinate. Keep cron for the jobs that are not safe to rerun.
+
+Why:
+
+- It is the lightest option that covers what cron lacks (retries, overlap control, failure history, recovery after a crash). One worker of about 85 MiB, no beat, no new service.
+- It reuses Postgres, which the project already runs and backs up. Celery would add a hard dependency on the Redis queue and a `redis-py` major bump (5 to 6), plus two processes of about 305 MiB together.
+- Recovery after a hard kill took about 1 minute. Celery with the default `visibility_timeout` took up to 2h, and shortening it risks duplicate runs.
+- Job state is plain SQL, so "what ran, when, and why did it fail" needs no extra tooling.
+
+Costs to accept:
+
+- 47 migrations and `procrastinate_*` tables in the main `default` database. The queue shares its load and its backups. Pointing `PROCRASTINATE_DATABASE_ALIAS` at a separate database on the same server is possible but was not tested.
+- Recovery depends on our own `retry_stalled_jobs` task. If it stops, stalled jobs stay in `doing`.
+- It has no Flower-like UI, and fewer third-party tools than Celery.
+- A rerun restarts the job from the beginning. Neither option resumes mid-job.
+
+When to pick something else:
+
+- Celery only makes sense if we need many workers, routing, or task chains. Nothing in the 14 jobs needs them.
+- If the team does not want schema changes in the main DB, the fallback is cron plus `supercronic` and a lock (not tested). It gives logs and overlap control, but no retries or recovery.
+
+### Which jobs to migrate
+
+| Job | Migrate? | Why |
+| --- | --- | --- |
+| `recompute_hardware_daily`, `recompute_lab_daily` (both intervals) | Yes, first | DELETE + INSERT per day, safe to rerun. They overlap today (hourly and every 6h), so `lock` helps most. |
+| `delete_unused_hardware_status`, `prune_db` | Yes | Delete by cutoff, rerun just continues. Note the `stack depth limit exceeded` failure above, fix it first or retries only repeat the error. |
+| `update_hardware_registry` | Yes | Syncs from a remote index, rerun converges. |
+| `publish_visitor_requests`, `warm_metrics_cache` | Later | Write Prometheus counters or cache. Confirm that a duplicate run is harmless. |
+| `notifications` (new_issues) | Not yet | It records sent state, but a crash between sending and recording can send twice. Add a dedup check first. |
+| `notifications` (summaries, metrics, hardware) | Not yet | One email per period. No per-period "already sent" guard was found. A retry could send it twice. |
+
+### Rollout
+
+1. Merge the code with the worker service disabled. Cron keeps running everything. The migrations only add tables.
+2. Add a `procrastinate_worker` service to the staging compose file, same backend image, `mem_limit` of about 256m and `restart: always`. Watch for a week: `procrastinate_jobs` status counts and worker memory.
+3. Move one job at a time, starting with `recompute_*`. In the same deploy, delete its entry from `CRONJOBS` and add its periodic task, so it never runs from both. Keep the healthcheck ping inside the command.
+4. Alert on `failed` jobs and on `doing` jobs older than the longest job. Keep the existing healthcheck.io monitors during the move.
+5. Repeat on production after staging has run each job at least once on its real schedule.
+6. Make the `notifications` jobs idempotent, then move them.
+7. Remove django-crontab only after the last job moves.
+
+### Rollback
+
+- Per job: put the entry back in `CRONJOBS`, remove the periodic task, redeploy. The next cron slot runs it.
+- Whole feature: stop `procrastinate_worker`. Cron entries for jobs not yet removed keep working.
+- The tables can stay (they are idle). To remove them, run `manage.py migrate procrastinate zero` and drop `procrastinate.contrib.django` from `INSTALLED_APPS`. Run this only after the worker is stopped.
+
+### Open items
+
+- Test a separate database for the queue.
+- Test `supercronic` as the zero-dependency baseline if the team wants it.
+- Fix the `delete_unused_hardware_status` stack depth failure.
+- Decide who owns the `retry_stalled_jobs` alert.
