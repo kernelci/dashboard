@@ -616,7 +616,7 @@ class HardwareDetailsSummary(APIView):
             else:
                 unfiltered_summary = get_hardware_details_summary(
                     hardware_id=hardware_id,
-                    checkouts=head_checkouts,
+                    checkouts=(selected_checkouts if covers_heads else head_checkouts),
                     start_datetime=self.start_datetime,
                     end_datetime=self.end_datetime,
                     test_origins=origins["test_origins"],
