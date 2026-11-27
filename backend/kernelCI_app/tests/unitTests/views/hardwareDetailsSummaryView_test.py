@@ -111,6 +111,27 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         for tree in trees:
             self.assertEqual(tree.selected_commit_status["builds"].PASS, 1)
 
+    def test_tree_status_is_head_only_while_summary_counts_window(self):
+        older = {
+            **SUMMARY_ROW,
+            "status": "FAIL",
+            "config_name": "kselftest",
+            "git_commit_name": "v5.9",
+            "git_commit_hash": "old999",
+        }
+        with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
+            mock_heads.return_value = self.heads
+            mock_query.return_value = [older, SUMMARY_ROW]
+            response = self._post(self._body())
+
+        builds = response.data["summary"]["builds"]["status"]
+        self.assertEqual((builds["PASS"], builds["FAIL"]), (1, 1))
+        [tree] = response.data["common"]["trees"]
+        self.assertEqual(tree["head_git_commit_name"], "v6.0")
+        tree_builds = tree["selected_commit_status"]["builds"]
+        self.assertEqual((tree_builds["PASS"], tree_builds["FAIL"]), (1, 0))
+        self.assertIn("kselftest", response.data["filters"]["all"]["configs"])
+
     def test_empty_selected_summary_keeps_head_trees(self):
         with patch(HEADS_PATCH) as mock_heads, patch(QUERY_PATCH) as mock_query:
             mock_heads.return_value = self.heads
@@ -134,11 +155,37 @@ class TestHardwareDetailsSummarySkipTwinQuery(SimpleTestCase):
         self.assertTrue(response.data["common"]["in_registry"])
 
     def test_second_query_when_sql_differs(self):
+        window = [
+            ("mainline", "https://git.kernel.org", "master", None, "maestro"),
+            ("next", "https://git.kernel.org", "master", None, "maestro"),
+        ]
+        heads = [
+            ("mainline", "https://git.kernel.org", "master", "abc123", "maestro"),
+            ("next", "https://git.kernel.org", "master", "def456", "maestro"),
+        ]
         cases = {
-            "non_head": self._body(selectedCommits={"0": "deadbeef", "1": "head"}),
-            "partial_trees": self._body(selectedCommits={"0": "head"}),
-            "duration": self._body(filter={"filter_boot.duration_[lte]": ["100"]}),
+            "non_head": (
+                self._body(selectedCommits={"0": "deadbeef", "1": "head"}),
+                heads,
+            ),
+            "partial_trees": (self._body(selectedCommits={"0": "head"}), heads),
+            "duration": (
+                self._body(filter={"filter_boot.duration_[lte]": ["100"]}),
+                window,
+            ),
         }
-        for name, body in cases.items():
+        for name, (body, second_checkouts) in cases.items():
             with self.subTest(name):
-                self._assert_query_count(body, 2)
+                with (
+                    patch(HEADS_PATCH) as mock_heads,
+                    patch(QUERY_PATCH) as mock_query,
+                ):
+                    mock_heads.return_value = self.heads
+                    mock_query.return_value = [SUMMARY_ROW]
+                    response = self._post(body)
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertEqual(mock_query.call_count, 2)
+                    self.assertEqual(
+                        mock_query.call_args_list[1].kwargs["checkouts"],
+                        second_checkouts,
+                    )

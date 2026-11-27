@@ -13,7 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.constants.hardwareDetails import make_tree_key
+from kernelCI_app.constants.hardwareDetails import (
+    SELECTED_HEAD_TREE_VALUE,
+    make_tree_key,
+)
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -482,16 +485,16 @@ class HardwareDetailsSummary(APIView):
         self,
         tree_heads: list[tuple[str, str, str, str, str, str]],
         selected_commits: Optional[dict[str, str]] = None,
-    ) -> list[tuple[str, str, str, str, str]]:
-        """Each row is the checkout identity plus the selected commit hash."""
+    ) -> list[tuple[str, str, str, str | None, str]]:
+        """Each row is a tree. A missing hash means every checkout in the window."""
         rows = []
-        for key, tree_name, url, branch, commit_hash, checkout_origin in tree_heads:
-            if selected_commits and key not in self.selected_commits:
+        for key, tree_name, url, branch, _commit_hash, checkout_origin in tree_heads:
+            if selected_commits and key not in selected_commits:
                 continue
-            chosen = commit_hash
+            chosen = None
             if selected_commits:
-                selected_commit = self.selected_commits.get(key, "head")
-                if selected_commit != "head":
+                selected_commit = selected_commits.get(key)
+                if selected_commit and selected_commit != SELECTED_HEAD_TREE_VALUE:
                     chosen = selected_commit
             rows.append((tree_name, url, branch, chosen, checkout_origin))
         return rows
@@ -566,6 +569,7 @@ class HardwareDetailsSummary(APIView):
                 end_datetime=self.end_datetime,
                 test_origins=origins["test_origins"],
                 build_origins=origins["build_origins"],
+                checkout_origins=origins["checkout_origins"],
                 build_labs=filters.filter_labs["build"],
                 boot_labs=filters.filter_labs["boot"],
                 test_labs=filters.filter_labs["test"],
@@ -585,7 +589,18 @@ class HardwareDetailsSummary(APIView):
 
             # TODO: necessary due to the fact we return filter info,
             # a dedicated endpoint for filters is important
-            head_checkouts = self.select_commits_hashes(tree_heads)
+            head_checkouts = [
+                (tree_name, url, branch, commit_hash, origin)
+                for _key, tree_name, url, branch, commit_hash, origin in tree_heads
+            ]
+            head_hashes = {
+                (tree_name, url, branch, origin): commit_hash
+                for _key, tree_name, url, branch, commit_hash, origin in tree_heads
+            }
+            covers_heads = len(selected_checkouts) == len(head_hashes) and all(
+                commit_hash in (None, head_hashes.get((tree_name, url, branch, origin)))
+                for tree_name, url, branch, commit_hash, origin in selected_checkouts
+            )
             duration_in_sql = any(
                 duration is not None
                 for duration in (
@@ -597,26 +612,42 @@ class HardwareDetailsSummary(APIView):
                     filters.filterTestDurationMax,
                 )
             )
-            if selected_checkouts == head_checkouts and not duration_in_sql:
+            if covers_heads and not duration_in_sql:
                 unfiltered_summary = summary
             else:
                 unfiltered_summary = get_hardware_details_summary(
                     hardware_id=hardware_id,
-                    checkouts=head_checkouts,
+                    checkouts=(selected_checkouts if covers_heads else head_checkouts),
                     start_datetime=self.start_datetime,
                     end_datetime=self.end_datetime,
                     test_origins=origins["test_origins"],
                     build_origins=origins["build_origins"],
+                    checkout_origins=origins["checkout_origins"],
                 )
 
             if not unfiltered_summary:
                 return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
 
+            # The tree table pairs these statuses with each head commit name.
+            head_summary = [
+                row
+                for row in unfiltered_summary
+                if head_hashes.get(
+                    (
+                        row["tree_name"] or "",
+                        row["git_repository_url"] or "",
+                        row["git_repository_branch"] or "",
+                        row["origin"] or "",
+                    )
+                )
+                == row["git_commit_hash"]
+            ]
+
             builds_summary, boots_summary, tests_summary = self.aggregate_summaries(
                 summary, hardware_id
             )
             all_trees, all_compatibles = self.aggregate_common(
-                unfiltered_summary, hardware_id
+                head_summary, hardware_id
             )
             all_filters, builds_filters, boots_filters, tests_filters = (
                 self.aggregate_filters(
