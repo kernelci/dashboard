@@ -87,8 +87,8 @@ jobs:
             cd dashboard-staging
             git fetch --depth 1 origin "${IMAGE_TAG}"
             git checkout --detach "${IMAGE_TAG}"
-            export IMAGE_TAG=${IMAGE_TAG}
-            export DASHBOARD_VERSION=${DASHBOARD_VERSION}
+            sed -i '/^IMAGE_TAG=/d;/^DASHBOARD_VERSION=/d' .env
+            printf '\nIMAGE_TAG=%s\nDASHBOARD_VERSION=%s\n' '${IMAGE_TAG}' '${DASHBOARD_VERSION}' >> .env
             docker compose pull --policy=always
             docker compose up -d --remove-orphans --no-build
           EOF
