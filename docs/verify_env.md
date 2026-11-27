@@ -22,7 +22,7 @@ docker compose run --rm backend poetry run python3 manage.py verify_env
 # Check only DB aliases and skip redis + email
 
 docker compose run --rm backend poetry run python3 manage.py verify_env \
-  --check-db --database-alias default,notifications
+  --check-db --database-alias default
 
 # Check redis endpoint only
 

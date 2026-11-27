@@ -288,11 +288,9 @@ HTTP tests.
 The commands also set `DJANGO_SETTINGS_MODULE=kernelCI.test_settings` explicitly. The
 `--use-local-db` flag alone is not enough: `pytest-django` reads the `DJANGO_SETTINGS_MODULE`
 ini option from `pyproject.toml` (`kernelCI.settings`) and configures Django before
-`conftest.py` can switch it. Under `kernelCI.settings` the `cache`/`notifications` DBs are
-file-based sqlite under `/volume_data`, which does not exist on the CI runner; the parallel
-(`-n 4`) test-DB setup then fails with "unable to open database file". `test_settings` uses
-in-memory sqlite instead, and the env var wins over the ini, so it forces the correct
-settings.
+`conftest.py` can switch it. `test_settings` points the `default` database at the test
+Postgres (`kcidb_test` on `test_db`) and disables migrations, which is what the
+DB-backed tests expect.
 
 ### Running Specific Tests
 

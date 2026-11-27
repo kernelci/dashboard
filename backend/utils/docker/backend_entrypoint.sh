@@ -48,17 +48,16 @@ chmod +x ./setup-dashboard-db.sh
 ./setup-dashboard-db.sh
 
 
-# Assure that the sqlite folder exists and export the variable for crond
+# Tree name data and an optional notifications.sqlite3 live here.
 export BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR:-/volume_data}
 mkdir -p "$BACKEND_VOLUME_DIR"
 
-# Update the sqlite cache db
-chmod +x ./migrate-cache-db.sh
-./migrate-cache-db.sh
-
-# Update the MAIN db
+# Update the MAIN db (includes notification tables)
 chmod +x ./migrate-app-db.sh
 ./migrate-app-db.sh
+
+# Copy notification history off sqlite when an existing deploy still has the file.
+poetry run ./manage.py import_notification_sqlite
 
 # Add and start cronjobs in background and emit logs to container stdout.
 poetry run ./manage.py crontab add

@@ -75,11 +75,6 @@ export DB_CONN_HEALTH_CHECKS=True
 > [!NOTE]
 > It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, you can export `DEBUG_DB_VARS=True` to check the database connection info in the terminal, allowing you to determine if the characters got escaped as intended. **This variable should NOT be set to True in production**.
 
-#### SQLite
-
-Before running the server, you must also update a local SQLite database used for caching. You can simply run the [migrate-cache-db.sh](./migrate-cache-db.sh) script, which will update the migrations if needed and apply them.
-
-
 ## Running the server
 
 After connecting to the database, execute the server with:
@@ -92,8 +87,9 @@ poetry run python3 manage.py runserver
 
 We have a couple of useful scripts:
 
-* [migrate-cache-db.sh](./migrate-cache-db.sh) will create and apply migrations for the cache SQLite database. This runs automatically when running on docker, but you have to run it mannually otherwise.
-* [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, generally used for the local database. This does not run automatically in order to avoid potential problems. Be aware that *if* you have write permissions to the production database it will be changed, so double check that you are connected to the right one (but usually developers won't have write access to the production database anyway).
+* [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, including the notification tables. This does not run automatically outside Docker, in order to avoid potential problems. Be aware that *if* you have write permissions to the production database it will be changed, so double check that you are connected to the right one (but usually developers won't have write access to the production database anyway).
+
+Notification history lives in PostgreSQL (`notifications_checkout` and `notifications_issue`). An existing deploy that still has `notifications.sqlite3` under `BACKEND_VOLUME_DIR` copies that file in on startup with `import_notification_sqlite`. You can run the same command by hand. A second run does not insert rows that are already stored.
 
 It is important to note that Django automatically creates migrations based on changes to the models when running the first command of the scripts above. You can edit the migrations manually, and you can also run the commands by hand if you want more control over it.
 

@@ -107,7 +107,7 @@ If you introduce a syntax error, Vite surfaces it in the browser overlay and in 
 
 ## Running database migrations
 
-The backend container runs migrations automatically on startup through `backend/utils/docker/backend_entrypoint.sh`. That entrypoint calls `backend/migrate-app-db.sh` for the default PostgreSQL database and `backend/migrate-cache-db.sh` for the SQLite cache / notifications databases.
+The backend container runs migrations automatically on startup through `backend/utils/docker/backend_entrypoint.sh`. That entrypoint calls `backend/migrate-app-db.sh` for PostgreSQL, then `import_notification_sqlite` when `notifications.sqlite3` is present.
 
 For staging and production, coordinate schema changes (especially migrations that add
 new tables) before deploy; see [Database schema changes](../DEPLOYMENT.md#database-schema-changes)

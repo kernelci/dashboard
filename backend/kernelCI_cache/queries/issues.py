@@ -1,4 +1,4 @@
-from django.db import connections
+from django.db import connection
 
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import log_message
@@ -19,7 +19,7 @@ def get_unsent_issues() -> list[UnsentIssueKeys]:
             N.notification_sent IS NULL
         """
 
-    with connections["notifications"].cursor() as cursor:
+    with connection.cursor() as cursor:
         cursor.execute(query)
         results = dict_fetchall(cursor)
 
@@ -49,7 +49,7 @@ def get_all_issue_keys() -> list[IssueKeyTuple]:
             notifications_issue
     """
 
-    with connections["notifications"].cursor() as cursor:
+    with connection.cursor() as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
 

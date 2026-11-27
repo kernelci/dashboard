@@ -6,8 +6,6 @@ Inherits from test_settings but enables migrations for proper database setup.
 
 from kernelCI.test_settings import *  # noqa: F403, F401
 
-# Enable migrations for kernelCI_app, but keep kernelCI_cache migrations disabled
-# to avoid issues with migrations that access the notifications database
-MIGRATION_MODULES = {
-    "kernelCI_cache": None,
-}
+# test_settings disables every migration. Perf tests need the real schema,
+# including the notification tables on the default database.
+MIGRATION_MODULES = {}
