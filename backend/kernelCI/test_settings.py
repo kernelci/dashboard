@@ -19,14 +19,6 @@ DATABASES = {
             "connect_timeout": 5,
         },
     },
-    "cache": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    },
-    "notifications": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    },
 }
 
 

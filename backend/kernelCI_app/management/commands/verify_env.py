@@ -434,9 +434,7 @@ class Command(BaseCommand):
         return results
 
     def _collect_storage_paths(self) -> list[tuple[str, str]]:
-        cache_path = settings.DATABASES["cache"]["NAME"]
-        notifications_path = settings.DATABASES["notifications"]["NAME"]
-        storage_paths = [
+        return [
             ("BACKEND_DATA_DIR", settings.BACKEND_DATA_DIR),
             ("BACKEND_VOLUME_DIR", settings.BACKEND_VOLUME_DIR),
             (
@@ -446,15 +444,6 @@ class Command(BaseCommand):
                 ),
             ),
         ]
-
-        for alias, db_name in (
-            ("cache_sqlite", cache_path),
-            ("notifications_sqlite", notifications_path),
-        ):
-            if db_name and db_name != ":memory:":
-                storage_paths.append((f"sqlite:{alias}", db_name))
-
-        return storage_paths
 
     def _check_environment_values(self) -> list[tuple[str, bool, str]]:
         checks = [

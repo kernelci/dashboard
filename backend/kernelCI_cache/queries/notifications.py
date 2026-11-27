@@ -1,6 +1,6 @@
 import json
 
-from django.db import connections
+from django.db import connection
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.logger import log_message
@@ -26,7 +26,7 @@ def mark_checkout_notification_as_sent(
 ) -> bool:
     try:
         timestamp = get_current_timestamp_kcidb_format()
-        NotificationsCheckout.objects.using("notifications").create(
+        NotificationsCheckout.objects.create(
             notification_message_id=msg_id,
             notification_sent=timestamp,
             checkout_id=checkout_id,
@@ -51,7 +51,7 @@ def mark_issue_notification_sent(
     """Creates an entry for an issue notification"""
     try:
         timestamp = get_current_timestamp_kcidb_format()
-        NotificationsIssue.objects.using("notifications").update_or_create(
+        NotificationsIssue.objects.update_or_create(
             issue_id=issue_id,
             issue_version=issue_version,
             issue_type=issue_type,
@@ -80,17 +80,13 @@ def mark_issue_notification_not_sent(
       False if any exception occurs
     """
     try:
-        issue_exists = (
-            NotificationsIssue.objects.using("notifications")
-            .filter(
-                issue_id=issue_id,
-                issue_version=issue_version,
-            )
-            .exists()
-        )
+        issue_exists = NotificationsIssue.objects.filter(
+            issue_id=issue_id,
+            issue_version=issue_version,
+        ).exists()
 
         if not issue_exists:
-            NotificationsIssue.objects.using("notifications").create(
+            NotificationsIssue.objects.create(
                 issue_id=issue_id,
                 issue_version=issue_version,
                 issue_type=issue_type,
@@ -140,12 +136,12 @@ def check_sent_notifications(
             notifications_checkout
         WHERE
             (git_repository_branch, git_repository_url, origin, path) IN ({placeholders})
-            AND notification_sent >= datetime('now', '-{RESEND_INTERVAL}')
+            AND notification_sent >= NOW() - CAST(%s AS interval)
         """
-    with connections["notifications"].cursor() as cursor:
-        cursor.execute(
-            query, [item for checkout in checkouts_for_checking for item in checkout]
-        )
+    params = [item for checkout in checkouts_for_checking for item in checkout]
+    params.append(RESEND_INTERVAL)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
         sent_reports = cursor.fetchall()
 
     return sent_reports

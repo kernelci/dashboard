@@ -335,20 +335,8 @@ kcidb_config = {
 if os.environ.get("DB_SESSION_OPTIONS"):
     kcidb_config["OPTIONS"]["options"] = os.environ["DB_SESSION_OPTIONS"]
 
-cache_db_config = {
-    "ENGINE": "django.db.backends.sqlite3",
-    "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
-}
-
-notifications_db_config = {
-    "ENGINE": "django.db.backends.sqlite3",
-    "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
-}
-
 DATABASES = {
     "default": kcidb_config,
-    "cache": cache_db_config,
-    "notifications": notifications_db_config,
 }
 
 if DEBUG_DB_VARS:
