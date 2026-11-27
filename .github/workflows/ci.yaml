@@ -35,9 +35,9 @@ jobs:
           path: ./dashboard/node_modules
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6.1.1
         with:
-          version: 9.15.2
+          package_json_file: dashboard/package.json
 
       - name: Installing dependencies with pnpm
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
@@ -62,9 +62,9 @@ jobs:
           path: ./dashboard/node_modules
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6.1.1
         with:
-          version: 9.15.2
+          package_json_file: dashboard/package.json
 
       - uses: actions/setup-node@v4
         with:
@@ -96,9 +96,9 @@ jobs:
           path: ./dashboard/node_modules
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6.1.1
         with:
-          version: 9.15.2
+          package_json_file: dashboard/package.json
 
       - uses: actions/setup-node@v4
         with:
