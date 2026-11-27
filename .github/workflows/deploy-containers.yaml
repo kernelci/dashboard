@@ -119,10 +119,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Image publish summary
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
           echo "### Published GHCR Images" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Ref: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Ref: \`${REF_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Commit SHA: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
