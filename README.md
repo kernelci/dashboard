@@ -20,7 +20,7 @@ A Python http server built with [Django](https://www.djangoproject.com/) + [DRF]
 
 ## Quick run
 
-If you want to just run the project, you can try out pre-built images with the [docker-compose-next.yml](./docker-compose-next.yml) file. This pulls images from GHCR and runs them locally without needing to rebuild them. You may still need to set up environment variables, so read the docs.
+If you want to just run the project, you can try out pre-built images with the [docker-compose-next.yml](./docker-compose-next.yml) file. This pulls images from GHCR and runs them locally without needing to rebuild them. Set `IMAGE_TAG` to a commit SHA the publish workflow has already pushed. Other environment variables are covered in [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Build
 
@@ -31,7 +31,7 @@ Create a .env file in /dashboard, check and set the variables and their values
  cp ./dashboard/.env.example ./dashboard/.env
 ```
 
-With docker, you can start just the frontend with `docker compose up --build proxy`. It is also possible to run the dashboard outside of it for development purposes.
+With docker, you can start the dev stack with `docker compose -f docker-compose.dev.yml up --build proxy`. It is also possible to run the dashboard outside of it for development purposes.
 
 We use `pnpm` to help with the package management. Install the dependencies with
 ```sh
@@ -86,18 +86,18 @@ It is also possible to run the backend outside of docker for development purpose
 
 ### Common
 
-Startup the services:
+Startup the services. Local docker is `docker-compose.dev.yml`. Staging is `docker-compose.yml`, and that file requires `IMAGE_TAG`.
  ```sh
- docker compose up --build -d
+ docker compose -f docker-compose.dev.yml up --build -d
  ```
- Docker exposes port 80 (that you don't need to enter in the URL) instead of 5173 and 8000 that is used when running the dashboard project outside of docker.
- So you can hit the frontend with `http://localhost`  and the backend with `http://localhost/api` when running locally.
+ The dev proxy listens on port 9000. The frontend is also on port 5173, and the backend on port 8000.
+ Hit the frontend through the proxy at `http://localhost:9000` and the backend at `http://localhost:8000/api`. See [docs/dev-environment.md](docs/dev-environment.md).
 
 Make sure that docker has the right permissions and has access to the environment variables. One way to do that is to set up a docker permission group.
 
 If you are running the commands for exporting the environment variables and running docker separately, you can run docker with admin privileges and allowing environment variables with:
 ```sh
-sudo -E docker compose up --build -d
+sudo -E docker compose -f docker-compose.dev.yml up --build -d
 ```
 Or you can also run the env exports and docker compose within the root user by running `sudo su`.
 
@@ -109,7 +109,7 @@ export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
 export DB_NAME=kcidb
 export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 > [Note] If you are going to run using only the local database, the DB_NAME should be `dashboard` and the `DB_USER` and `DB_PASSWORD` should be `admin` (for now). This simply follows what is going to be setup by the `dashboard_db` service on docker compose.
@@ -146,7 +146,7 @@ See details about our new [notifications](docs/notifications.md) system.
 
 If you want to verify container/deployment environment settings before running services, use:
 
- - `docker compose run --rm backend poetry run python3 manage.py verify_env` for DB/Redis/Email + storage + env/secrets checks
+ - `docker compose -f docker-compose.dev.yml run --rm backend poetry run python3 manage.py verify_env` for DB/Redis/Email + storage + env/secrets checks
 - [docs/verify_env.md](docs/verify_env.md) for detailed examples, including test email sending to a specific destination
   - Destination is required with `--send-test-email` and `--to-email`.
 

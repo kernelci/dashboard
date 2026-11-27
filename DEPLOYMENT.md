@@ -179,7 +179,9 @@ cp .env.example .env
 #    ALLOWED_HOSTS → e.g. ["backend", "your-domain.com"]
 #    CORS_ALLOWED_ORIGINS → e.g. ["https://your-domain.com"]
 
-# 3. Start services
+# 3. Start services. IMAGE_TAG is a commit SHA already published to GHCR.
+export IMAGE_TAG=<commit-sha>
+docker compose -f docker-compose-next.yml pull
 docker compose -f docker-compose-next.yml up -d
 
 # 4. Verify frontend
@@ -194,7 +196,9 @@ curl http://localhost:8000/api/ # (direct access)
 ### (Optional) Run with ingester and aggregation processor
 
 ```bash
-# Set INGESTER_SPOOL_DIR in .env to the host path where submissions arrive
+# Set INGESTER_SPOOL_DIR in .env to the host path where submissions arrive.
+# IMAGE_TAG is a commit SHA already published to GHCR.
+export IMAGE_TAG=<commit-sha>
 docker compose -f docker-compose-next.yml --profile=with_commands up -d
 ```
 
@@ -280,12 +284,12 @@ can apply the permission grants the migrations do not cover.
 
 - Rollback: tag an older commit on `main` with the next `release/YYYYMMDD.N` and push
 the tag. Migrations are not reverted; check them before rolling back past one.
+- This only works for commits that already contain this workflow. A tag on an earlier
+commit runs that commit's workflow, which has no `release/*` trigger, so nothing deploys.
 - Hotfix: merge a reviewed pull request into `main`, tag the merge commit, then merge
 `main` back into `staging`.
 
 #### Things that are easy to get wrong
-- This only works for commits that already contain this workflow. A tag on an earlier
-commit runs that commit's workflow, which has no `release/*` trigger, so nothing deploys.
 
 - Tag only commits on `main`; any other commit fails the deploy before images are built.
 - Pushing a tag deploys immediately. There is no confirmation step, so diff
@@ -356,6 +360,8 @@ sh .github/scripts/deploy_collect_compose_status.sh docker-compose-next.yml
 ---
 
 ## Profile Reference
+
+`IMAGE_TAG` must be a commit SHA already published to GHCR. The update steps above export it.
 
 | Command | Services |
 |---------|----------|

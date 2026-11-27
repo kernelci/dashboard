@@ -1,4 +1,5 @@
 # docker-compose-next.yml — Pre-built images, single .env file
+# Set IMAGE_TAG to a commit SHA already published to GHCR. See DEPLOYMENT.md.
 # Usage:
 #   Production (external DB):  docker compose -f docker-compose-next.yml up -d
 #   Staging (local DB):        docker compose -f docker-compose-next.yml --profile=local-db up -d

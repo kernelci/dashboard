@@ -19,7 +19,7 @@ echo "PROMETHEUS_METRICS_PORT=8001" >> .env.backend
 echo "PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc_dir" >> .env.backend
 
 # Start the backend with monitoring enabled
-docker compose up -d backend
+docker compose -f docker-compose.dev.yml up -d backend
 
 # The backend will automatically expose port 8001 for metrics when PROMETHEUS_METRICS_ENABLED=true
 ```
